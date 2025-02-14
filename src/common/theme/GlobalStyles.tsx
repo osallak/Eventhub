@@ -1,32 +1,32 @@
 import { GlobalStyles as MUIGlobalStyles } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-const GlobalStyles = () => {
+export default function GlobalStyles() {
   const theme = useTheme();
   return (
     <MUIGlobalStyles
       styles={{
         '*': {
-          borderWidth: 0,
-          borderStyle: 'solid',
+          margin: 0,
+          padding: 0,
           boxSizing: 'border-box',
         },
         html: {
-          margin: 0,
-          padding: 0,
           width: '100%',
           height: '100%',
           WebkitOverflowScrolling: 'touch',
         },
         body: {
-          margin: 0,
-          padding: 0,
           width: '100%',
           height: '100%',
+          margin: 0,
+          padding: 0,
         },
         '#__next': {
           width: '100%',
           height: '100%',
+          margin: 0,
+          padding: 0,
         },
         input: {
           '&[type=number]': {
@@ -54,8 +54,6 @@ const GlobalStyles = () => {
           color: theme.palette.primary.main,
         },
       }}
-    ></MUIGlobalStyles>
+    />
   );
-};
-
-export default GlobalStyles;
+}

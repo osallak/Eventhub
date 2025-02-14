@@ -1,16 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
-import Footer from './Footer';
-import Leftbar, { LEFTBAR_WIDTH } from './Leftbar';
-import Topbar from './Topbar';
-import Box from '@mui/material/Box';
-import { Container, useTheme, Button, Typography, AppBar, Toolbar, IconButton, Menu, MenuItem } from '@mui/material';
-import Stack from '@mui/material/Stack';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/router';
-import { menuItems, profileMenuItems } from '../defs/menu-items';
 import { AccountCircle } from '@mui/icons-material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import {
+  alpha,
+  AppBar,
+  Button,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+  useScrollTrigger,
+  useTheme,
+} from '@mui/material';
+import Box from '@mui/material/Box';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { menuItems, profileMenuItems } from '../defs/menu-items';
+import Footer from './Footer';
 
 interface ILayoutProps {
   children: React.ReactNode;
@@ -25,6 +34,28 @@ const Layout = (props: ILayoutProps) => {
   const { t } = useTranslation('common');
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Handle scroll transparency
+  const trigger = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 0,
+  });
+
+  // Add this new state to track scroll position
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Add this effect to handle scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = 300; // Increased from 100 to 300 for slower transition
+      const progress = Math.min(scrollY / maxScroll, 1);
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     setDisplay(!underMaintenance);
@@ -100,53 +131,159 @@ const Layout = (props: ILayoutProps) => {
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
       <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Event Manager
-            </Typography>
-            
-            {menuItems.map((item) => (
-              <Button
-                key={item.id}
-                color="inherit"
-                onClick={() => router.push(item.link)}
-                startIcon={item.icon}
+        <AppBar
+          position="fixed"
+          elevation={0}
+          sx={{
+            background: `rgba(255, 255, 255, ${scrollProgress})`,
+            transition: 'all 0.5s ease',
+            backdropFilter: scrollProgress > 0 ? 'blur(20px)' : 'none',
+            borderBottom: scrollProgress > 0.9 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+            color: scrollProgress > 0.9 ? 'text.primary' : 'white',
+            boxShadow: 'none',
+          }}
+        >
+          <Container
+            maxWidth={false}
+            sx={{
+              px: 0,
+            }}
+          >
+            <Toolbar
+              sx={{
+                minHeight: { xs: 56, md: 64 },
+                px: { xs: 2, sm: 4, md: 8 },
+                py: 1,
+                justifyContent: 'space-between',
+              }}
+            >
+              {/* Logo */}
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  letterSpacing: '-0.5px',
+                  marginLeft: { xs: 0, md: '-21px' },
+                  '&:hover': {
+                    opacity: 0.9,
+                  },
+                }}
+                onClick={() => router.push('/')}
               >
-                {item.text}
-              </Button>
-            ))}
-
-            <IconButton
-              size="large"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              {profileMenuItems.map((item) => (
-                <MenuItem 
-                  key={item.id}
-                  onClick={() => handleMenuItemClick(item.url)}
+                Event
+                <span
+                  style={{
+                    color: scrollProgress > 0.9 ? '#2196F3' : '#fff',
+                    opacity: scrollProgress > 0.9 ? 1 : 0.95,
+                  }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {item.icon}
-                    {item.title}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Toolbar>
+                  Manager
+                </span>
+              </Typography>
+
+              {/* Navigation Items */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {menuItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    color="inherit"
+                    onClick={() => router.push(item.link)}
+                    startIcon={item.icon}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.95rem',
+                      fontWeight: 500,
+                      px: 2,
+                      py: 1,
+                      borderRadius: 2,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        backgroundColor:
+                          scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
+                        transform: 'translateY(-1px)',
+                      },
+                    }}
+                  >
+                    {item.text}
+                  </Button>
+                ))}
+
+                {/* Profile Menu */}
+                <IconButton
+                  size="large"
+                  onClick={handleMenu}
+                  color="inherit"
+                  sx={{
+                    ml: 1,
+                    border: '1px solid',
+                    borderColor: scrollProgress > 0.9 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
+                    '&:hover': {
+                      backgroundColor:
+                        scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
+                    },
+                  }}
+                >
+                  <AccountCircle />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                  PaperProps={{
+                    elevation: 3,
+                    sx: {
+                      mt: 1.5,
+                      minWidth: 220,
+                      borderRadius: 2,
+                      overflow: 'visible',
+                      border: '1px solid',
+                      borderColor: 'rgba(0,0,0,0.08)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    },
+                  }}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                  {profileMenuItems.map((item) => (
+                    <MenuItem
+                      key={item.id}
+                      onClick={() => handleMenuItemClick(item.url)}
+                      sx={{
+                        py: 1.5,
+                        px: 2.5,
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          color: 'text.primary',
+                          '& .MuiSvgIcon-root': {
+                            fontSize: 20,
+                            color: 'text.secondary',
+                          },
+                        }}
+                      >
+                        {item.icon}
+                        <Typography variant="body2">{item.title}</Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Box>
+            </Toolbar>
+          </Container>
         </AppBar>
-        
-        <Container maxWidth="lg" sx={{ mt: 4 }}>
-          {children}
-        </Container>
+
+        {children}
+        <Footer />
       </Box>
     </div>
   );

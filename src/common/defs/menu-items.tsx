@@ -1,15 +1,25 @@
-import Routes from '@common/defs/routes';
-import { CRUD_ACTION, NavGroup } from '@common/defs/types';
-import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomizeRounded';
-import Namespaces from '@common/defs/namespaces';
 import {
-  Group,
-  Search as SearchIcon,
   Add as AddIcon,
   Event as EventIcon,
-  Settings as SettingsIcon,
+  History as HistoryIcon,
   Logout as LogoutIcon,
+  Search as SearchIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
+
+interface NavGroup {
+  id: string;
+  text: string;
+  icon: React.ReactNode;
+  link: string;
+}
+
+interface MenuItem {
+  id: string;
+  title: string;
+  url: string;
+  icon: React.ReactNode;
+}
 
 export const menuItems: NavGroup[] = [
   {
@@ -32,6 +42,12 @@ export const profileMenuItems: MenuItem[] = [
     title: 'Upcoming Events',
     url: '/events/upcoming',
     icon: <EventIcon />,
+  },
+  {
+    id: 'history',
+    title: 'History',
+    url: '/events/history',
+    icon: <HistoryIcon />,
   },
   {
     id: 'settings',
