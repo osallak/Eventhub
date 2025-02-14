@@ -12,8 +12,9 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/router';
 import { menuItems } from '../common/defs/menu-items';
+import type { PageComponent } from './_app'; // Add this import
 
-const Home: React.FC = () => {
+const Home: PageComponent = () => {
   const router = useRouter();
   const isAuthenticated = false; // We'll replace this with real auth later
 
@@ -140,20 +141,20 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          minHeight: '90vh',
+          minHeight: { xs: '80vh', md: '90vh' },
           width: '100vw',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           backgroundImage:
-            'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), url("/images/hero-bg.jpg")',
+            'linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url("/images/hero-bg.jpg")',
           backgroundSize: 'cover',
-          backgroundPosition: 'top',
+          backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
           marginTop: '-72px',
-          paddingTop: '64px',
+          paddingTop: { xs: '48px', sm: '64px' },
         }}
       >
         <Container
@@ -166,13 +167,13 @@ const Home: React.FC = () => {
         >
           <Grid container spacing={4}>
             <Grid item xs={12} md={8} lg={6}>
-              <Stack spacing={4}>
+              <Stack spacing={{ xs: 3, md: 4 }}>
                 <Typography
                   variant="h1"
                   sx={{
                     color: 'white',
                     fontWeight: 800,
-                    fontSize: { xs: '3rem', sm: '4rem', md: '5rem' },
+                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem', lg: '5rem' },
                     lineHeight: 1.1,
                     letterSpacing: '-0.02em',
                   }}
@@ -188,39 +189,53 @@ const Home: React.FC = () => {
                   sx={{
                     color: 'white',
                     opacity: 0.9,
-                    fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.5rem' },
+                    fontSize: { xs: '1rem', sm: '1.2rem', md: '1.4rem' },
                     maxWidth: '600px',
+                    lineHeight: 1.5,
                   }}
                 >
                   All-in-one platform for event lovers. Find and create events.
                   <br />
                   Join communities. Make memories.
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  {menuItems.map((item) => (
-                    <Button
-                      key={item.id}
-                      variant="contained"
-                      size="large"
-                      onClick={() => router.push(item.link)}
-                      startIcon={item.icon}
-                      sx={{
-                        py: 1.5,
-                        px: 4,
-                        borderRadius: 2,
-                        fontSize: '1.1rem',
-                        textTransform: 'none',
-                        backgroundColor: item.id === 'discover' ? 'primary.main' : 'white',
-                        color: item.id === 'discover' ? 'white' : 'text.primary',
-                        '&:hover': {
-                          backgroundColor: item.id === 'discover' ? 'primary.dark' : 'grey.100',
-                        },
-                      }}
-                    >
-                      {item.text}
-                    </Button>
-                  ))}
-                </Box>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={{ xs: 2, sm: 3 }}
+                  sx={{
+                    mt: { xs: 2, sm: 3 },
+                    justifyContent: { xs: 'center', sm: 'flex-start' },
+                  }}
+                >
+                  {menuItems
+                    .filter((item) => item.id === 'discover')
+                    .map((item) => (
+                      <Button
+                        key={item.id}
+                        variant="contained"
+                        size="large"
+                        onClick={() => router.push(item.link)}
+                        sx={{
+                          py: 1.4,
+                          px: { xs: 2.5, sm: 4 },
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          backgroundColor: '#0095F6',
+                          color: 'white',
+                          boxShadow: 'none',
+                          fontWeight: 500,
+                          height: '42px',
+                          maxWidth: { xs: '160px', sm: 'none' },
+                          '&:hover': {
+                            backgroundColor: '#1976D2',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        {item.text}
+                      </Button>
+                    ))}
+                </Stack>
               </Stack>
             </Grid>
           </Grid>
@@ -513,45 +528,92 @@ const Home: React.FC = () => {
       </Box>
 
       {/* Create and Join Section */}
-      <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
+      <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: 'grey.50' }}>
         <Container maxWidth="lg">
-          <Grid container spacing={6} alignItems="center">
+          <Grid
+            container
+            spacing={{ xs: 4, md: 6 }}
+            alignItems="center"
+            direction={{ xs: 'column', md: 'row' }}
+          >
             <Grid item xs={12} md={6}>
               <Box
                 component="img"
                 src="/images/placeholder.jpg"
                 sx={{
                   width: '100%',
+                  maxWidth: { xs: '400px', md: '100%' },
                   borderRadius: 2,
                   boxShadow: 3,
+                  display: 'block',
+                  mx: 'auto',
                 }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography
-                variant="subtitle1"
-                sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}
+              <Box
+                sx={{
+                  textAlign: { xs: 'left', md: 'left' },
+                }}
               >
-                CREATE AND PLAY
-              </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 3 }}>
-                Create & join events,
-                <br />
-                Make memories 🏆
-              </Typography>
-              <Typography color="text.secondary" sx={{ mb: 4 }}>
-                Discover & create events with your friends or find new people with similar
-                interests. Join events and activities easily. Simply, e.g. WhatsApp is just not the
-                right platform to do it.
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => router.push('/events/create')}
-                sx={{ py: 1.5, px: 4 }}
-              >
-                Create event
-              </Button>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    color: 'primary.main',
+                    fontWeight: 600,
+                    mb: { xs: 1, md: 2 },
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  }}
+                >
+                  CREATE AND MANAGE
+                </Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    mb: { xs: 2, md: 3 },
+                    fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                  }}
+                >
+                  Create & organize events,
+                  <br />
+                  Build communities 🎯
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  sx={{
+                    mb: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  }}
+                >
+                  Organize and manage your events efficiently. Connect with participants, handle
+                  registrations, and create memorable experiences.
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => router.push('/events/create')}
+                  sx={{
+                    py: 1.4,
+                    px: { xs: 2.5, sm: 4 },
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    backgroundColor: '#0095F6',
+                    color: 'white',
+                    boxShadow: 'none',
+                    fontWeight: 500,
+                    height: '42px',
+                    maxWidth: { xs: '160px', sm: 'none' },
+                    '&:hover': {
+                      backgroundColor: '#1976D2',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  Create event
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </Container>
@@ -610,5 +672,8 @@ const Home: React.FC = () => {
     </Box>
   );
 };
+
+// Add this to tell the Layout if it's a landing page
+Home.isLandingPage = true;
 
 export default Home;

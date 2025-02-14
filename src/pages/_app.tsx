@@ -31,13 +31,18 @@ import { useRouter } from 'next/router';
 //    }
 // }
 
+// Change from ComponentType to FC
+export interface PageComponent extends React.FC<Record<string, unknown>> {
+  isLandingPage?: boolean;
+}
+
 const App = ({ Component, pageProps }: AppProps) => {
   const { initialized: authInitialized } = useAuth();
   if (!authInitialized) {
     return <LoadingScreen />;
   }
   return (
-    <Layout>
+    <Layout isLandingPage={(Component as PageComponent).isLandingPage}>
       <Component {...pageProps} />
     </Layout>
   );
@@ -93,8 +98,8 @@ const AppWrapper = (props: AppProps) => {
               values: {
                 xs: 0,
                 sm: 600,
-                md: 960,
-                lg: 1280,
+                md: 1024,
+                lg: 1200,
                 xl: 1920,
               },
             },
