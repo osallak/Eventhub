@@ -1,28 +1,146 @@
 import {
   Box,
   Button,
-  Container,
-  Grid,
-  Typography,
-  Paper,
   Card,
   CardContent,
   CardMedia,
   Chip,
+  Container,
+  Grid,
   Stack,
+  Typography,
 } from '@mui/material';
 import { useRouter } from 'next/router';
 import { menuItems } from '../common/defs/menu-items';
 
 const Home: React.FC = () => {
   const router = useRouter();
+  const isAuthenticated = false; // We'll replace this with real auth later
+
+  const renderYourEventsSection = () => {
+    if (!isAuthenticated) {
+      return (
+        <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+          <Container maxWidth="lg">
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+                px: 4,
+                borderRadius: 4,
+                bgcolor: 'grey.50',
+                border: '1px dashed',
+                borderColor: 'grey.300',
+              }}
+            >
+              <Typography variant="h4" sx={{ mb: 2, fontWeight: 700 }}>
+                Log in to See Your Events
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+                Join our community to track your events, manage registrations, and connect with
+                other event enthusiasts.
+              </Typography>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => router.push('/auth/login')}
+                  sx={{ px: 4 }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => router.push('/auth/register')}
+                  sx={{ px: 4 }}
+                >
+                  Create Account
+                </Button>
+              </Stack>
+            </Box>
+          </Container>
+        </Box>
+      );
+    }
+
+    // For logged-in users with no events
+    const hasEvents = false; // This will be replaced with real data check later
+
+    if (!hasEvents) {
+      return (
+        <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+          <Container maxWidth="lg">
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+                px: 4,
+                borderRadius: 4,
+                bgcolor: 'grey.50',
+                border: '1px dashed',
+                borderColor: 'grey.300',
+              }}
+            >
+              <Typography variant="h4" sx={{ mb: 2, fontWeight: 700 }}>
+                No Events Yet
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+                Start your journey by creating your first event or join existing ones.
+              </Typography>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => router.push('/events/create')}
+                  sx={{ px: 4 }}
+                >
+                  Create Event
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => router.push('/events')}
+                  sx={{ px: 4 }}
+                >
+                  Discover Events
+                </Button>
+              </Stack>
+            </Box>
+          </Container>
+        </Box>
+      );
+    }
+
+    // Return the events list for logged-in users with events
+    return (
+      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+        <Container maxWidth={false}>
+          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, px: { xs: 2, sm: 4, md: 8 } }}>
+            Your events
+          </Typography>
+          {/* ... rest of the infinite scroll events section ... */}
+        </Container>
+      </Box>
+    );
+  };
 
   return (
-    <Box>
+    <Box sx={{ margin: 0, padding: 0 }}>
       {/* Hero Section */}
       <Box
         sx={{
-          minHeight: '100vh',
+          minHeight: '90vh',
           width: '100vw',
           position: 'relative',
           display: 'flex',
@@ -30,15 +148,17 @@ const Home: React.FC = () => {
           backgroundImage:
             'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), url("/images/hero-bg.jpg")',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          marginTop: -8,
+          backgroundPosition: 'top',
+          backgroundRepeat: 'no-repeat',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
+          marginTop: '-72px',
+          paddingTop: '64px',
         }}
       >
-        <Container 
+        <Container
           maxWidth={false}
-          sx={{ 
+          sx={{
             px: { xs: 2, sm: 4, md: 8 },
             maxWidth: '1800px',
             mx: 'auto',
@@ -63,10 +183,10 @@ const Home: React.FC = () => {
                   <br />
                   Connect.
                 </Typography>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    color: 'white', 
+                <Typography
+                  variant="h5"
+                  sx={{
+                    color: 'white',
                     opacity: 0.9,
                     fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.5rem' },
                     maxWidth: '600px',
@@ -108,232 +228,285 @@ const Home: React.FC = () => {
       </Box>
 
       {/* Popular Events Section */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           py: 8,
           width: '100vw',
           position: 'relative',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
-          overflow: 'hidden', // Important for animation
+          overflow: 'hidden',
         }}
       >
         <Container maxWidth={false}>
           <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, px: { xs: 2, sm: 4, md: 8 } }}>
             Popular events
           </Typography>
-          
-          {/* Infinite Scroll Container */}
+
+          {/* Scroll Container */}
           <Box
             sx={{
               position: 'relative',
-              '&::before, &::after': {
-                content: '""',
-                position: 'absolute',
-                width: '200px',
-                height: '100%',
-                zIndex: 2,
-              },
-              '&::before': {
-                left: 0,
-                background: 'linear-gradient(to right, white, transparent)',
-              },
-              '&::after': {
-                right: 0,
-                background: 'linear-gradient(to left, white, transparent)',
+              padding: { xs: 2, sm: 4, md: 8 },
+              overflowX: 'auto',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none',
               },
             }}
           >
+            {/* Wrapper for infinite scroll */}
             <Box
               sx={{
                 display: 'flex',
+                width: 'fit-content',
                 gap: 3,
-                overflowX: 'auto',
                 animation: 'scroll 40s linear infinite',
                 '@keyframes scroll': {
                   '0%': { transform: 'translateX(0)' },
-                  '100%': { transform: 'translateX(calc(-280px * 5 - 1.5rem * 5))' }, // Account for both card width and gap
+                  '100%': { transform: 'translateX(calc(-280px * 5 - 1.5rem * 5))' }, // Exact width of one set
                 },
                 '&:hover': {
                   animationPlayState: 'paused',
                 },
-                px: { xs: 2, sm: 4, md: 8 },
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-                '&::-webkit-scrollbar': {
-                  display: 'none',
-                },
-                scrollBehavior: 'smooth',
               }}
             >
               {/* First set */}
-              {[...Array(5)].map((_, index) => (
-                <Card
-                  key={`first-${index}`}
-                  sx={{
-                    minWidth: 280,
-                    flex: '0 0 auto',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s',
-                      boxShadow: 3,
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="div"
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {[...Array(5)].map((_, index) => (
+                  <Card
+                    key={`first-${index}`}
                     sx={{
-                      height: 140,
-                      bgcolor: 'grey.300',
-                      position: 'relative',
+                      width: 280,
+                      flex: 'none',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        transition: 'all 0.3s',
+                        boxShadow: 3,
+                      },
                     }}
                   >
-                    <Chip
-                      label="ANYONE"
-                      size="small"
+                    <CardMedia
+                      component="div"
                       sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: 'success.main',
-                        color: 'white',
+                        height: 140,
+                        bgcolor: 'grey.300',
+                        position: 'relative',
                       }}
-                    />
-                  </CardMedia>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Event Title {(index % 5) + 1}
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {12 + index} Spots left
+                    >
+                      <Chip
+                        label="ANYONE"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          left: 12,
+                          bgcolor: 'success.main',
+                          color: 'white',
+                        }}
+                      />
+                    </CardMedia>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Event Title {(index % 5) + 1}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Venue: Event Center {(index % 3) + 1}, City
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
-              {/* Second set (exact duplicate) */}
-              {[...Array(5)].map((_, index) => (
-                <Card
-                  key={`second-${index}`}
-                  sx={{
-                    minWidth: 280,
-                    flex: '0 0 auto',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s',
-                      boxShadow: 3,
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="div"
+                      <Stack spacing={1}>
+                        <Typography variant="body2" color="text.secondary">
+                          {12 + index} Spots left
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Venue: Event Center {(index % 3) + 1}, City
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+
+              {/* Second set */}
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {[...Array(5)].map((_, index) => (
+                  <Card
+                    key={`second-${index}`}
                     sx={{
-                      height: 140,
-                      bgcolor: 'grey.300',
-                      position: 'relative',
+                      width: 280,
+                      flex: 'none',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        transition: 'all 0.3s',
+                        boxShadow: 3,
+                      },
                     }}
                   >
-                    <Chip
-                      label="ANYONE"
-                      size="small"
+                    <CardMedia
+                      component="div"
                       sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: 'success.main',
-                        color: 'white',
+                        height: 140,
+                        bgcolor: 'grey.300',
+                        position: 'relative',
                       }}
-                    />
-                  </CardMedia>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Event Title {(index % 5) + 1}
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {12 + index} Spots left
+                    >
+                      <Chip
+                        label="ANYONE"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          left: 12,
+                          bgcolor: 'success.main',
+                          color: 'white',
+                        }}
+                      />
+                    </CardMedia>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Event Title {(index % 5) + 1}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Venue: Event Center {(index % 3) + 1}, City
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
-              {/* Third set (exact duplicate) */}
-              {[...Array(5)].map((_, index) => (
-                <Card
-                  key={`third-${index}`}
-                  sx={{
-                    minWidth: 280,
-                    flex: '0 0 auto',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s',
-                      boxShadow: 3,
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="div"
+                      <Stack spacing={1}>
+                        <Typography variant="body2" color="text.secondary">
+                          {12 + index} Spots left
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Venue: Event Center {(index % 3) + 1}, City
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+
+              {/* Third set for seamless scrolling */}
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {[...Array(5)].map((_, index) => (
+                  <Card
+                    key={`third-${index}`}
                     sx={{
-                      height: 140,
-                      bgcolor: 'grey.300',
-                      position: 'relative',
+                      width: 280,
+                      flex: 'none',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        transition: 'all 0.3s',
+                        boxShadow: 3,
+                      },
                     }}
                   >
-                    <Chip
-                      label="ANYONE"
-                      size="small"
+                    <CardMedia
+                      component="div"
                       sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: 'success.main',
-                        color: 'white',
+                        height: 140,
+                        bgcolor: 'grey.300',
+                        position: 'relative',
                       }}
-                    />
-                  </CardMedia>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Event Title {(index % 5) + 1}
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {12 + index} Spots left
+                    >
+                      <Chip
+                        label="ANYONE"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          left: 12,
+                          bgcolor: 'success.main',
+                          color: 'white',
+                        }}
+                      />
+                    </CardMedia>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Event Title {(index % 5) + 1}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
+                      <Stack spacing={1}>
+                        <Typography variant="body2" color="text.secondary">
+                          {12 + index} Spots left
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Venue: Event Center {(index % 3) + 1}, City
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+
+              {/* Fourth set for seamless scrolling */}
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {[...Array(5)].map((_, index) => (
+                  <Card
+                    key={`fourth-${index}`}
+                    sx={{
+                      width: 280,
+                      flex: 'none',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        transition: 'all 0.3s',
+                        boxShadow: 3,
+                      },
+                    }}
+                  >
+                    <CardMedia
+                      component="div"
+                      sx={{
+                        height: 140,
+                        bgcolor: 'grey.300',
+                        position: 'relative',
+                      }}
+                    >
+                      <Chip
+                        label="ANYONE"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          left: 12,
+                          bgcolor: 'success.main',
+                          color: 'white',
+                        }}
+                      />
+                    </CardMedia>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Event Title {(index % 5) + 1}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Venue: Event Center {(index % 3) + 1}, City
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Stack spacing={1}>
+                        <Typography variant="body2" color="text.secondary">
+                          {12 + index} Spots left
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Venue: Event Center {(index % 3) + 1}, City
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
             </Box>
           </Box>
         </Container>
@@ -367,9 +540,9 @@ const Home: React.FC = () => {
                 Make memories 🏆
               </Typography>
               <Typography color="text.secondary" sx={{ mb: 4 }}>
-                Discover & create events with your friends or find new people with similar interests.
-                Join events and activities easily. Simply, e.g. WhatsApp is just not the right platform
-                to do it.
+                Discover & create events with your friends or find new people with similar
+                interests. Join events and activities easily. Simply, e.g. WhatsApp is just not the
+                right platform to do it.
               </Typography>
               <Button
                 variant="contained"
@@ -384,89 +557,51 @@ const Home: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Featured Events Section */}
-      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+      {renderYourEventsSection()}
+
+      {/* How It Works Section */}
+      <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
         <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            Featured Events
+          <Typography variant="h4" sx={{ mb: 6, textAlign: 'center', fontWeight: 700 }}>
+            How It Works
           </Typography>
-          <Grid container spacing={4}>
-            {[1, 2, 3].map((item) => (
-              <Grid item xs={12} md={4} key={item}>
-                <Card sx={{ height: '100%' }}>
-                  <CardMedia
-                    component="div"
+          <Grid container spacing={6}>
+            {[
+              {
+                step: '1',
+                title: 'Create Account',
+                desc: 'Sign up in seconds and join our community of event enthusiasts',
+              },
+              {
+                step: '2',
+                title: 'Find Events',
+                desc: 'Discover events that match your interests and schedule',
+              },
+              {
+                step: '3',
+                title: 'Join or Create',
+                desc: 'Participate in existing events or create your own to bring people together',
+              },
+            ].map((item) => (
+              <Grid item xs={12} md={4} key={item.step}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography
+                    variant="h1"
                     sx={{
-                      height: 200,
-                      bgcolor: 'grey.300',
+                      color: 'primary.main',
+                      opacity: 0.15,
+                      fontSize: '4.5rem',
+                      fontWeight: 800,
+                      mb: 2,
                     }}
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h6">
-                      Event Title {item}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-                      incididunt ut labore et dolore magna aliqua.
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Categories Section */}
-      <Box sx={{ py: 8 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            Event Categories
-          </Typography>
-          <Grid container spacing={3}>
-            {['Music', 'Sports', 'Technology', 'Arts', 'Food', 'Business'].map((category) => (
-              <Grid item xs={12} sm={6} md={4} key={category}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    textAlign: 'center',
-                    bgcolor: 'background.neutral',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      bgcolor: 'background.paper',
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s',
-                      boxShadow: 2,
-                    },
-                  }}
-                >
-                  <Typography variant="h6">{category}</Typography>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Extra Section for Scrolling */}
-      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            Why Choose Us
-          </Typography>
-          <Grid container spacing={4}>
-            {['Easy to Use', 'Secure Platform', 'Great Community', '24/7 Support'].map((item) => (
-              <Grid item xs={12} md={6} key={item}>
-                <Paper sx={{ p: 4 }}>
-                  <Typography variant="h6" gutterBottom>
-                    {item}
+                  >
+                    {item.step}
                   </Typography>
-                  <Typography color="text.secondary">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-                    nostrud exercitation ullamco laboris.
+                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                    {item.title}
                   </Typography>
-                </Paper>
+                  <Typography color="text.secondary">{item.desc}</Typography>
+                </Box>
               </Grid>
             ))}
           </Grid>

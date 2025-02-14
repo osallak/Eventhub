@@ -109,9 +109,9 @@ const AppWrapper = (props: AppProps) => {
   }
   return (
     <>
+      <CssBaseline />
       <StyledEngineProvider injectFirst>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
           <GlobalStyles />
           <DataProvider>
             <RoutingHistoryProvider>

@@ -19,6 +19,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { menuItems, profileMenuItems } from '../defs/menu-items';
+import Footer from './Footer';
 
 interface ILayoutProps {
   children: React.ReactNode;
@@ -37,8 +38,24 @@ const Layout = (props: ILayoutProps) => {
   // Handle scroll transparency
   const trigger = useScrollTrigger({
     disableHysteresis: true,
-    threshold: 100,
+    threshold: 0,
   });
+
+  // Add this new state to track scroll position
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Add this effect to handle scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = 300; // Increased from 100 to 300 for slower transition
+      const progress = Math.min(scrollY / maxScroll, 1);
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     setDisplay(!underMaintenance);
@@ -116,21 +133,26 @@ const Layout = (props: ILayoutProps) => {
       <Box sx={{ flexGrow: 1 }}>
         <AppBar
           position="fixed"
-          elevation={trigger ? 4 : 0}
+          elevation={0}
           sx={{
-            background: trigger ? 'rgba(255, 255, 255, 0.98)' : 'transparent',
-            transition: 'all 0.3s ease-in-out',
-            backdropFilter: trigger ? 'blur(20px)' : 'none',
-            borderBottom: trigger ? '1px solid rgba(0,0,0,0.05)' : 'none',
-            color: trigger ? 'text.primary' : 'white',
-            boxShadow: trigger ? '0px 1px 8px rgba(0,0,0,0.05)' : 'none',
+            background: `rgba(255, 255, 255, ${scrollProgress})`,
+            transition: 'all 0.5s ease',
+            backdropFilter: scrollProgress > 0 ? 'blur(20px)' : 'none',
+            borderBottom: scrollProgress > 0.9 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+            color: scrollProgress > 0.9 ? 'text.primary' : 'white',
+            boxShadow: 'none',
           }}
         >
-          <Container maxWidth="lg">
+          <Container
+            maxWidth={false}
+            sx={{
+              px: 0,
+            }}
+          >
             <Toolbar
               sx={{
-                minHeight: { xs: 64, md: 80 },
-                px: { xs: 2, md: 3 },
+                minHeight: { xs: 56, md: 64 },
+                px: { xs: 2, sm: 4, md: 8 },
                 py: 1,
                 justifyContent: 'space-between',
               }}
@@ -144,6 +166,7 @@ const Layout = (props: ILayoutProps) => {
                   fontSize: '1.5rem',
                   cursor: 'pointer',
                   letterSpacing: '-0.5px',
+                  marginLeft: { xs: 0, md: '-21px' },
                   '&:hover': {
                     opacity: 0.9,
                   },
@@ -153,8 +176,8 @@ const Layout = (props: ILayoutProps) => {
                 Event
                 <span
                   style={{
-                    color: trigger ? '#2196F3' : '#fff',
-                    opacity: trigger ? 1 : 0.95,
+                    color: scrollProgress > 0.9 ? '#2196F3' : '#fff',
+                    opacity: scrollProgress > 0.9 ? 1 : 0.95,
                   }}
                 >
                   Manager
@@ -178,7 +201,8 @@ const Layout = (props: ILayoutProps) => {
                       borderRadius: 2,
                       transition: 'all 0.2s',
                       '&:hover': {
-                        backgroundColor: trigger ? alpha('#000', 0.04) : alpha('#fff', 0.15),
+                        backgroundColor:
+                          scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
                         transform: 'translateY(-1px)',
                       },
                     }}
@@ -195,9 +219,10 @@ const Layout = (props: ILayoutProps) => {
                   sx={{
                     ml: 1,
                     border: '1px solid',
-                    borderColor: trigger ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
+                    borderColor: scrollProgress > 0.9 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
                     '&:hover': {
-                      backgroundColor: trigger ? alpha('#000', 0.04) : alpha('#fff', 0.15),
+                      backgroundColor:
+                        scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
                     },
                   }}
                 >
@@ -257,12 +282,8 @@ const Layout = (props: ILayoutProps) => {
           </Container>
         </AppBar>
 
-        {/* Add toolbar spacing */}
-        <Toolbar />
-
-        <Container maxWidth="lg" sx={{ mt: 4 }}>
-          {children}
-        </Container>
+        {children}
+        <Footer />
       </Box>
     </div>
   );
