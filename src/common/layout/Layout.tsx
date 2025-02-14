@@ -1,17 +1,22 @@
 import { AccountCircle } from '@mui/icons-material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   alpha,
   AppBar,
   Button,
   Container,
+  Drawer,
   IconButton,
   Menu,
   MenuItem,
+  Stack,
   Toolbar,
   Typography,
   useScrollTrigger,
   useTheme,
+  Grid,
+  Divider,
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Head from 'next/head';
@@ -20,13 +25,15 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { menuItems, profileMenuItems } from '../defs/menu-items';
 import Footer from './Footer';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ILayoutProps {
   children: React.ReactNode;
+  isLandingPage?: boolean;
 }
 
 const Layout = (props: ILayoutProps) => {
-  const { children } = props;
+  const { children, isLandingPage = false } = props;
   const theme = useTheme();
   const [openLeftbar, setOpenLeftbar] = useState(true);
   const [display, setDisplay] = useState(true);
@@ -34,6 +41,8 @@ const Layout = (props: ILayoutProps) => {
   const { t } = useTranslation('common');
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle scroll transparency
   const trigger = useScrollTrigger({
@@ -41,21 +50,21 @@ const Layout = (props: ILayoutProps) => {
     threshold: 0,
   });
 
-  // Add this new state to track scroll position
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  // Add this effect to handle scroll
   useEffect(() => {
+    if (!isLandingPage) {
+      return;
+    }
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const maxScroll = 300; // Increased from 100 to 300 for slower transition
+      const maxScroll = 300;
       const progress = Math.min(scrollY / maxScroll, 1);
       setScrollProgress(progress);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isLandingPage]);
 
   useEffect(() => {
     setDisplay(!underMaintenance);
@@ -135,11 +144,13 @@ const Layout = (props: ILayoutProps) => {
           position="fixed"
           elevation={0}
           sx={{
-            background: `rgba(255, 255, 255, ${scrollProgress})`,
+            background: isLandingPage
+              ? `rgba(255, 255, 255, ${scrollProgress})`
+              : 'rgba(255, 255, 255, 1)',
             transition: 'all 0.5s ease',
-            backdropFilter: scrollProgress > 0 ? 'blur(20px)' : 'none',
-            borderBottom: scrollProgress > 0.9 ? '1px solid rgba(0,0,0,0.05)' : 'none',
-            color: scrollProgress > 0.9 ? 'text.primary' : 'white',
+            backdropFilter: isLandingPage && scrollProgress > 0 ? 'blur(20px)' : 'none',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            color: isLandingPage && scrollProgress < 0.9 ? 'white' : 'text.primary',
             boxShadow: 'none',
           }}
         >
@@ -184,8 +195,8 @@ const Layout = (props: ILayoutProps) => {
                 </span>
               </Typography>
 
-              {/* Navigation Items */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Desktop Navigation - Hide on mobile */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
                 {menuItems.map((item) => (
                   <Button
                     key={item.id}
@@ -278,9 +289,104 @@ const Layout = (props: ILayoutProps) => {
                   ))}
                 </Menu>
               </Box>
+
+              {/* Mobile Menu Button - Show only on mobile */}
+              <IconButton
+                sx={{ display: { xs: 'flex', md: 'none' } }}
+                onClick={() => setMobileMenuOpen(true)}
+                color="inherit"
+              >
+                <MenuIcon />
+              </IconButton>
             </Toolbar>
           </Container>
         </AppBar>
+
+        {/* Mobile Menu Drawer */}
+        <Drawer
+          anchor="top"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          PaperProps={{
+            sx: {
+              width: '100%',
+              bgcolor: 'background.paper',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+            },
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Menu
+              </Typography>
+              <IconButton onClick={() => setMobileMenuOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            {/* Menu Items in Grid */}
+            <Grid container spacing={1} sx={{ mb: 1 }}>
+              {menuItems.map((item) => (
+                <Grid item xs={6} key={item.id}>
+                  <Button
+                    fullWidth
+                    startIcon={item.icon}
+                    onClick={() => {
+                      router.push(item.link);
+                      setMobileMenuOpen(false);
+                    }}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      color: 'text.primary',
+                      py: 1,
+                      px: 2,
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    {item.text}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Profile Items */}
+            <Divider sx={{ my: 1 }} />
+            <Grid container spacing={1}>
+              {profileMenuItems.map((item) => (
+                <Grid item xs={6} key={item.id}>
+                  <Button
+                    fullWidth
+                    startIcon={item.icon}
+                    onClick={() => {
+                      handleMenuItemClick(item.url);
+                      setMobileMenuOpen(false);
+                    }}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      color: 'text.primary',
+                      py: 1,
+                      px: 2,
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    {item.title}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </Drawer>
 
         {children}
         <Footer />

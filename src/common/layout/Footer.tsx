@@ -1,11 +1,21 @@
+import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import FacebookRoundedIcon from '@mui/icons-material/FacebookRounded';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import YouTubeIcon from '@mui/icons-material/YouTube';
-import { Button, Container, Grid, Link, Stack, Typography } from '@mui/material';
+import {
+  Collapse,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { Box } from '@mui/system';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import { menuItems } from '../defs/menu-items';
 
 interface SocialMedia {
@@ -13,6 +23,109 @@ interface SocialMedia {
   icon: JSX.Element;
   link: string;
 }
+
+// Move components outside Footer
+const DesktopSection = ({
+  title,
+  items,
+  onItemClick,
+}: {
+  title: string;
+  items: Array<{ text: string; link: string }>;
+  onItemClick: (link: string) => void;
+}) => (
+  <Box>
+    <Typography
+      variant="subtitle1"
+      sx={{
+        fontWeight: 600,
+        mb: 3,
+        color: 'text.primary',
+        letterSpacing: '0.5px',
+      }}
+    >
+      {title}
+    </Typography>
+    <Stack spacing={2}>
+      {items.map((item, index) => (
+        <Typography
+          key={index}
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            '&:hover': {
+              color: 'primary.main',
+              transform: 'translateX(4px)',
+            },
+          }}
+          onClick={() => onItemClick(item.link)}
+        >
+          {item.text}
+        </Typography>
+      ))}
+    </Stack>
+  </Box>
+);
+
+const MobileSection = ({
+  title,
+  items,
+  expanded,
+  onToggle,
+  onItemClick,
+}: {
+  title: string;
+  items: Array<{ text: string; link: string }>;
+  expanded: boolean;
+  onToggle: () => void;
+  onItemClick: (link: string) => void;
+}) => (
+  <>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        py: 2,
+        cursor: 'pointer',
+      }}
+      onClick={onToggle}
+    >
+      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        {title}
+      </Typography>
+      <IconButton
+        sx={{
+          transform: expanded ? 'rotate(180deg)' : 'none',
+          transition: 'transform 0.3s',
+        }}
+      >
+        <ExpandMoreIcon />
+      </IconButton>
+    </Box>
+    <Collapse in={expanded}>
+      <Stack spacing={2} sx={{ pb: 2 }}>
+        {items.map((item, index) => (
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              cursor: 'pointer',
+              '&:hover': { color: 'primary.main' },
+            }}
+            onClick={() => onItemClick(item.link)}
+          >
+            {item.text}
+          </Typography>
+        ))}
+      </Stack>
+    </Collapse>
+    <Divider />
+  </>
+);
 
 const Footer = () => {
   const socialMedias: SocialMedia[] = [
@@ -38,116 +151,206 @@ const Footer = () => {
     },
   ];
   const router = useRouter();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  const handleToggle = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
   return (
-    <Box
-      component="footer"
-      sx={{
-        py: 8,
-        bgcolor: 'background.default',
-        borderTop: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Grid container spacing={8}>
-          {/* Left section */}
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
-              Event<span style={{ color: '#2196F3' }}>Manager</span>
+    <Box>
+      {/* Main Footer */}
+      <Box
+        sx={{
+          bgcolor: 'grey.50',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          mt: { xs: 4, md: 8 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              py: { xs: 4, md: 8 },
+              px: { xs: 2, md: 4 },
+            }}
+          >
+            {/* Desktop Layout */}
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+              <Grid
+                container
+                spacing={6}
+                sx={{
+                  justifyContent: 'space-between',
+                }}
+              >
+                {/* Logo and Description Section */}
+                <Grid item xs={12} md={4}>
+                  <Typography
+                    variant="h6"
+                    component="div"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '1.5rem',
+                      mb: 2,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => router.push('/')}
+                  >
+                    Event<span style={{ color: '#2196F3' }}>Manager</span>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300 }}>
+                    Your all-in-one platform for discovering, creating, and managing events. Connect
+                    with people who share your interests.
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                    {socialMedias.map((social, index) => (
+                      <IconButton
+                        key={index}
+                        size="small"
+                        sx={{
+                          color: 'text.secondary',
+                          '&:hover': {
+                            color: 'primary.main',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.2s',
+                        }}
+                        href={social.link}
+                        target="_blank"
+                      >
+                        {social.icon}
+                      </IconButton>
+                    ))}
+                  </Stack>
+                </Grid>
+
+                {/* Navigation Sections */}
+                <Grid item xs={12} md={7}>
+                  <Grid container spacing={4}>
+                    <Grid item xs={12} sm={4}>
+                      <DesktopSection
+                        title="Menu"
+                        items={menuItems.map((item) => ({ text: item.text, link: item.link }))}
+                        onItemClick={(link) => router.push(link)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <DesktopSection
+                        title="Information"
+                        items={[
+                          { text: 'About Us', link: '/about' },
+                          { text: 'Terms of Service', link: '/terms' },
+                          { text: 'Privacy Policy', link: '/privacy' },
+                          { text: 'FAQ', link: '/faq' },
+                        ]}
+                        onItemClick={(link) => router.push(link)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <DesktopSection
+                        title="Contact"
+                        items={[
+                          { text: 'Support', link: '/support' },
+                          { text: 'Contact Us', link: '/contact' },
+                          { text: 'Feedback', link: '/feedback' },
+                          {
+                            text: 'Email: support@eventmanager.com',
+                            link: 'mailto:support@eventmanager.com',
+                          },
+                          { text: 'Phone: +1 234 567 890', link: 'tel:+1234567890' },
+                        ]}
+                        onItemClick={(link) => router.push(link)}
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Mobile Layout - Show only on xs and sm */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              <MobileSection
+                title="Menu"
+                items={menuItems.map((item) => ({ text: item.text, link: item.link }))}
+                expanded={expandedSection === 'Menu'}
+                onToggle={() => handleToggle('Menu')}
+                onItemClick={(link) => router.push(link)}
+              />
+              <MobileSection
+                title="Information"
+                items={[
+                  { text: 'About Us', link: '/about' },
+                  { text: 'Terms of Service', link: '/terms' },
+                  { text: 'Privacy Policy', link: '/privacy' },
+                  { text: 'FAQ', link: '/faq' },
+                ]}
+                expanded={expandedSection === 'Information'}
+                onToggle={() => handleToggle('Information')}
+                onItemClick={(link) => router.push(link)}
+              />
+              <MobileSection
+                title="Contact"
+                items={[
+                  { text: 'Support', link: '/support' },
+                  { text: 'Contact Us', link: '/contact' },
+                  { text: 'Feedback', link: '/feedback' },
+                  {
+                    text: 'Email: support@eventmanager.com',
+                    link: 'mailto:support@eventmanager.com',
+                  },
+                  { text: 'Phone: +1 234 567 890', link: 'tel:+1234567890' },
+                ]}
+                expanded={expandedSection === 'Contact'}
+                onToggle={() => handleToggle('Contact')}
+                onItemClick={(link) => router.push(link)}
+              />
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Bottom Bar */}
+      <Box
+        sx={{
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          py: 2,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 0 },
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              © 2024 EventManager. All rights reserved.
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 2 }}>
-              Get out there & discover your next event
-            </Typography>
-            <Typography
-              component="a"
-              href="mailto:support@eventmanager.com"
+            <Stack
+              direction="row"
+              spacing={3}
               sx={{
-                color: 'text.secondary',
-                textDecoration: 'none',
-                '&:hover': { color: 'primary.main' },
+                '& a': {
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': { color: 'primary.main' },
+                },
               }}
             >
-              support@eventmanager.com
-            </Typography>
-            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-              {socialMedias.map((socialMedia, socialMediaIndex) => (
-                <Link
-                  key={socialMediaIndex}
-                  href={socialMedia.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  sx={{
-                    color: 'text.secondary',
-                    borderRadius: 2,
-                    padding: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all, 0.15s',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    },
-                  }}
-                >
-                  {socialMedia.icon}
-                </Link>
-              ))}
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/terms">Terms</Link>
+              <Link href="/cookies">Cookies</Link>
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-              © {new Date().getFullYear()} EventManager. All rights reserved
-            </Typography>
-          </Grid>
-
-          {/* Menu section */}
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6" sx={{ mb: 3 }}>
-              Menu
-            </Typography>
-            <Stack spacing={2}>
-              {menuItems.map((item) => (
-                <Button
-                  key={item.id}
-                  onClick={() => router.push(item.link)}
-                  sx={{
-                    color: 'text.secondary',
-                    textTransform: 'none',
-                    justifyContent: 'flex-start',
-                    padding: 0,
-                    '&:hover': { color: 'primary.main' },
-                  }}
-                >
-                  {item.text}
-                </Button>
-              ))}
-            </Stack>
-          </Grid>
-
-          {/* Information section */}
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6" sx={{ mb: 3 }}>
-              Information
-            </Typography>
-            <Stack spacing={2}>
-              {['Terms and conditions', 'Privacy policy', 'Feedback form'].map((text) => (
-                <Button
-                  key={text}
-                  onClick={() => router.push('#')}
-                  sx={{
-                    color: 'text.secondary',
-                    textTransform: 'none',
-                    justifyContent: 'flex-start',
-                    padding: 0,
-                    '&:hover': { color: 'primary.main' },
-                  }}
-                >
-                  {text}
-                </Button>
-              ))}
-            </Stack>
-          </Grid>
-        </Grid>
-      </Container>
+          </Box>
+        </Container>
+      </Box>
     </Box>
   );
 };
