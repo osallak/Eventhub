@@ -1,6 +1,6 @@
-import { Theme, createTheme } from '@mui/material';
+import { Theme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
-import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider } from '@mui/material/styles';
 import Layout from '@common/layout/Layout';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
@@ -25,6 +25,7 @@ import { appWithTranslation } from 'next-i18next';
 import { frFR, enUS, esES } from '@mui/material/locale';
 import { getUserLanguage } from '@common/components/lib/utils/language';
 import { useRouter } from 'next/router';
+import { ThemeProvider } from '@common/contexts/ThemeContext';
 
 // declare module '@mui/material/Button' { // If we add a color, then we need to add the color in each component
 //    interface ButtonPropsColorOverrides {
@@ -49,74 +50,16 @@ const App = ({ Component, pageProps }: AppProps) => {
 };
 const AppWrapper = (props: AppProps) => {
   const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
-  const [theme, setTheme] = useState<Theme | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     setRootElement(() => document.querySelector('#__next'));
   }, []);
 
-  const getLocale = (lang: string) => {
-    switch (lang) {
-      case 'en':
-        return enUS;
-      case 'es':
-        return esES;
-      default:
-        return frFR;
-    }
-  };
-
-  useEffect(() => {
-    const checkAndRedirectLocale = () => {
-      const userLang = getUserLanguage();
-      const currentLang = router.locale;
-
-      if (userLang && currentLang !== userLang) {
-        router.push({ pathname: router.pathname, query: router.query }, router, {
-          locale: userLang,
-        });
-      }
-    };
-
-    checkAndRedirectLocale();
-  }, [router]);
-
-  useEffect(() => {
-    if (rootElement) {
-      const locale = getLocale(router.locale || 'fr');
-      setTheme(() =>
-        createTheme(
-          {
-            palette,
-            typography,
-            shape: { borderRadius: 12 },
-            shadows,
-            customShadows,
-            components: ComponentsOverrides,
-            breakpoints: {
-              values: {
-                xs: 0,
-                sm: 600,
-                md: 1024,
-                lg: 1200,
-                xl: 1920,
-              },
-            },
-          },
-          locale
-        )
-      );
-    }
-  }, [rootElement]);
-  if (!theme) {
-    return <LoadingScreen />;
-  }
   return (
     <>
       <CssBaseline />
       <StyledEngineProvider injectFirst>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider>
           <GlobalStyles />
           <DataProvider>
             <RoutingHistoryProvider>

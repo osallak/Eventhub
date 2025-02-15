@@ -1,26 +1,26 @@
+import { Topbar } from '@common/layout/Topbar';
+import {
+  Close as CloseIcon,
+  FilterList as FilterIcon,
+  Refresh as RefreshIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
 import {
   Box,
-  Container,
-  Grid,
-  Typography,
+  Button,
   Card,
   CardContent,
   CardMedia,
   Chip,
+  Drawer,
+  Grid,
+  IconButton,
+  InputAdornment,
+  MenuItem,
   Stack,
   TextField,
-  InputAdornment,
-  IconButton,
-  Button,
-  MenuItem,
-  Drawer,
+  Typography,
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  Refresh as RefreshIcon,
-  Close as CloseIcon,
-} from '@mui/icons-material';
 import { useState } from 'react';
 
 // Move FiltersContent outside
@@ -39,7 +39,7 @@ const FiltersContent = ({
 }) => (
   <>
     {showTitle && (
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+      <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
         Filters
       </Typography>
     )}
@@ -84,7 +84,7 @@ const FiltersContent = ({
 
     {/* Date & Time */}
     <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
         When
       </Typography>
       <Stack spacing={2}>
@@ -130,7 +130,7 @@ const FiltersContent = ({
 
     {/* Event Type */}
     <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
         Event type
       </Typography>
       <Stack spacing={1}>
@@ -158,7 +158,7 @@ const FiltersContent = ({
 
     {/* Additional Filters */}
     <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
         Additional filters
       </Typography>
       <Stack spacing={1}>
@@ -204,8 +204,14 @@ const DiscoverEvents = () => {
 
   return (
     <Box>
+      <Topbar isLandingPage={false} scrollProgress={1} />
       {/* Main Container */}
-      <Box sx={{ display: 'flex' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.default'),
+        }}
+      >
         {/* Desktop Filters - Hidden on mobile */}
         <Box
           sx={{
@@ -215,21 +221,43 @@ const DiscoverEvents = () => {
             ml: { md: 8 },
             backgroundColor: 'background.paper',
             borderRadius: 2,
-            boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-            p: 3,
-            height: 'fit-content',
+            boxShadow: (theme) => theme.shadows[1],
+            height: 'calc(100vh - 100px)',
             position: 'sticky',
             top: 88,
-            overflowY: 'auto',
+            overflow: 'hidden',
           }}
         >
-          <FiltersContent
-            selectedDateOption={selectedDateOption}
-            setSelectedDateOption={setSelectedDateOption}
-            showCustomDate={showCustomDate}
-            setShowCustomDate={setShowCustomDate}
-            showTitle
-          />
+          <Box
+            sx={{
+              height: '100%',
+              overflowY: 'auto',
+              p: 3,
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                borderRadius: '3px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+              },
+            }}
+          >
+            <FiltersContent
+              selectedDateOption={selectedDateOption}
+              setSelectedDateOption={setSelectedDateOption}
+              showCustomDate={showCustomDate}
+              setShowCustomDate={setShowCustomDate}
+              showTitle
+            />
+          </Box>
         </Box>
 
         {/* Main Content */}
@@ -257,67 +285,69 @@ const DiscoverEvents = () => {
                 xs: '1.75rem',
                 sm: '2rem',
               },
+              color: 'text.primary',
             }}
           >
             Discover events
           </Typography>
 
-          {/* Events Grid */}
-          <Grid
-            container
-            spacing={3}
+          {/* Search and Filter Bar */}
+          <Box
             sx={{
-              '& .MuiGrid-item': {
-                width: {
-                  xs: '100%',
-                  sm: '50%',
-                  lg: '33.333%',
-                },
-              },
+              display: 'flex',
+              gap: 2,
+              mb: 4,
+              flexDirection: { xs: 'column', sm: 'row' },
             }}
           >
-            {[...Array(9)].map((_, index) => (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                lg={4}
-                key={index}
-                sx={{
-                  '& .MuiCard-root': {
-                    height: { sm: '100%' },
-                  },
-                  '& .MuiCardMedia-root': {
-                    height: {
-                      xs: 200,
-                      sm: 240,
-                      lg: 200,
-                    },
-                  },
-                  '& .MuiTypography-h6': {
-                    fontSize: {
-                      xs: '1.25rem',
-                      sm: '1.5rem',
-                      lg: '1.25rem',
-                    },
-                  },
-                  '& .MuiTypography-body2': {
-                    fontSize: {
-                      xs: '0.875rem',
-                      sm: '1rem',
-                      lg: '0.875rem',
-                    },
-                  },
-                }}
-              >
+            <TextField
+              fullWidth
+              placeholder="Search events..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="inherit" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                flex: 1,
+                '& .MuiInputBase-root': {
+                  color: 'text.primary',
+                },
+                '& .MuiInputBase-input::placeholder': {
+                  color: 'text.secondary',
+                  opacity: 1,
+                },
+              }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<FilterIcon />}
+              onClick={() => setMobileFiltersOpen(true)}
+              sx={{
+                display: { md: 'none' },
+                color: 'text.primary',
+                borderColor: 'divider',
+              }}
+            >
+              Filters
+            </Button>
+          </Box>
+
+          {/* Events Grid */}
+          <Grid container spacing={3}>
+            {[...Array(12)].map((_, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card
                   sx={{
                     height: '100%',
-                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    bgcolor: 'background.paper',
+                    transition: 'transform 0.2s',
                     '&:hover': {
                       transform: 'translateY(-4px)',
-                      transition: 'all 0.3s',
-                      boxShadow: 3,
                     },
                   }}
                 >
@@ -325,7 +355,7 @@ const DiscoverEvents = () => {
                     component="div"
                     sx={{
                       height: 200,
-                      bgcolor: 'grey.300',
+                      bgcolor: 'background.neutral',
                       position: 'relative',
                     }}
                   >
@@ -337,25 +367,25 @@ const DiscoverEvents = () => {
                         top: 12,
                         left: 12,
                         bgcolor: 'success.main',
-                        color: 'white',
+                        color: 'success.contrastText',
                       }}
                     />
                   </CardMedia>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
                       Event Title {index + 1}
                     </Typography>
                     <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         {12 + index} Spots left
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         Date: Mar {1 + index}, 2024 • 19:00-21:00
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         Venue: Event Center {(index % 3) + 1}, City
                       </Typography>
                     </Stack>
@@ -404,8 +434,8 @@ const DiscoverEvents = () => {
         PaperProps={{
           sx: {
             height: '90vh',
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            borderTopLeftRadius: (theme) => theme.shape.borderRadius * 2,
+            borderTopRightRadius: (theme) => theme.shape.borderRadius * 2,
             px: 2,
             py: 3,
           },
@@ -415,7 +445,7 @@ const DiscoverEvents = () => {
           <Box
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
               Filters
             </Typography>
             <IconButton onClick={() => setMobileFiltersOpen(false)}>

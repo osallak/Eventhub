@@ -24,6 +24,17 @@ interface CustomShadowOptions {
   card: string;
   dialog: string;
   dropdown: string;
+  transition: {
+    duration: {
+      shortest: number;
+      shorter: number;
+      short: number;
+      standard: number;
+      complex: number;
+      enteringScreen: number;
+      leavingScreen: number;
+    };
+  };
 }
 
 declare module '@mui/material/styles' {
@@ -57,6 +68,17 @@ const customShadows = {
   card: `0 0 2px 0 ${alpha(color, 0.2)}, 0 12px 24px -4px ${alpha(color, 0.12)}`,
   dialog: `-40px 40px 80px -8px ${alpha(color, 0.24)}`,
   dropdown: `0 0 2px 0 ${alpha(color, 0.24)}, -20px 20px 40px -4px ${alpha(color, 0.24)}`,
+  transition: {
+    duration: {
+      shortest: 150,
+      shorter: 200,
+      short: 250,
+      standard: 300,
+      complex: 375,
+      enteringScreen: 225,
+      leavingScreen: 195,
+    },
+  },
 };
 
 export default customShadows;
