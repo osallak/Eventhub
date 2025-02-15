@@ -1,22 +1,18 @@
-import { AccountCircle } from '@mui/icons-material';
+import { useTheme as useAppTheme } from '@common/contexts/ThemeContext';
+import { Topbar } from '@common/layout/Topbar';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import {
-  alpha,
-  AppBar,
   Button,
-  Container,
+  Divider,
   Drawer,
+  Grid,
   IconButton,
-  Menu,
-  MenuItem,
-  Stack,
-  Toolbar,
   Typography,
   useScrollTrigger,
   useTheme,
-  Grid,
-  Divider,
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import Head from 'next/head';
@@ -25,7 +21,6 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { menuItems, profileMenuItems } from '../defs/menu-items';
 import Footer from './Footer';
-import CloseIcon from '@mui/icons-material/Close';
 
 interface ILayoutProps {
   children: React.ReactNode;
@@ -43,6 +38,7 @@ const Layout = (props: ILayoutProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { mode, toggleMode } = useAppTheme();
 
   // Handle scroll transparency
   const trigger = useScrollTrigger({
@@ -69,10 +65,6 @@ const Layout = (props: ILayoutProps) => {
   useEffect(() => {
     setDisplay(!underMaintenance);
   }, [underMaintenance]);
-
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -134,173 +126,27 @@ const Layout = (props: ILayoutProps) => {
   }
 
   return (
-    <div>
+    <Box
+      sx={{
+        bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.default'),
+        minHeight: '100vh',
+      }}
+    >
       <Head>
         <title>{process.env.NEXT_PUBLIC_APP_TITLE}</title>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar
-          position="fixed"
-          elevation={0}
-          sx={{
-            background: isLandingPage
-              ? `rgba(255, 255, 255, ${scrollProgress})`
-              : 'rgba(255, 255, 255, 1)',
-            transition: 'all 0.5s ease',
-            backdropFilter: isLandingPage && scrollProgress > 0 ? 'blur(20px)' : 'none',
-            borderBottom: '1px solid rgba(0,0,0,0.05)',
-            color: isLandingPage && scrollProgress < 0.9 ? 'white' : 'text.primary',
-            boxShadow: 'none',
-          }}
-        >
-          <Container
-            maxWidth={false}
-            sx={{
-              px: 0,
-            }}
-          >
-            <Toolbar
-              sx={{
-                minHeight: { xs: 56, md: 64 },
-                px: { xs: 2, sm: 4, md: 8 },
-                py: 1,
-                justifyContent: 'space-between',
-              }}
-            >
-              {/* Logo */}
-              <Typography
-                variant="h6"
-                component="div"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  letterSpacing: '-0.5px',
-                  marginLeft: { xs: 0, md: '-21px' },
-                  '&:hover': {
-                    opacity: 0.9,
-                  },
-                }}
-                onClick={() => router.push('/')}
-              >
-                Event
-                <span
-                  style={{
-                    color: scrollProgress > 0.9 ? '#2196F3' : '#fff',
-                    opacity: scrollProgress > 0.9 ? 1 : 0.95,
-                  }}
-                >
-                  Manager
-                </span>
-              </Typography>
-
-              {/* Desktop Navigation - Hide on mobile */}
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
-                {menuItems.map((item) => (
-                  <Button
-                    key={item.id}
-                    color="inherit"
-                    onClick={() => router.push(item.link)}
-                    startIcon={item.icon}
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: '0.95rem',
-                      fontWeight: 500,
-                      px: 2,
-                      py: 1,
-                      borderRadius: 2,
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        backgroundColor:
-                          scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
-                        transform: 'translateY(-1px)',
-                      },
-                    }}
-                  >
-                    {item.text}
-                  </Button>
-                ))}
-
-                {/* Profile Menu */}
-                <IconButton
-                  size="large"
-                  onClick={handleMenu}
-                  color="inherit"
-                  sx={{
-                    ml: 1,
-                    border: '1px solid',
-                    borderColor: scrollProgress > 0.9 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
-                    '&:hover': {
-                      backgroundColor:
-                        scrollProgress > 0.9 ? alpha('#000', 0.04) : alpha('#fff', 0.15),
-                    },
-                  }}
-                >
-                  <AccountCircle />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                  PaperProps={{
-                    elevation: 3,
-                    sx: {
-                      mt: 1.5,
-                      minWidth: 220,
-                      borderRadius: 2,
-                      overflow: 'visible',
-                      border: '1px solid',
-                      borderColor: 'rgba(0,0,0,0.08)',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    },
-                  }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  {profileMenuItems.map((item) => (
-                    <MenuItem
-                      key={item.id}
-                      onClick={() => handleMenuItemClick(item.url)}
-                      sx={{
-                        py: 1.5,
-                        px: 2.5,
-                        '&:hover': {
-                          backgroundColor: 'action.hover',
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.5,
-                          color: 'text.primary',
-                          '& .MuiSvgIcon-root': {
-                            fontSize: 20,
-                            color: 'text.secondary',
-                          },
-                        }}
-                      >
-                        {item.icon}
-                        <Typography variant="body2">{item.title}</Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </Box>
-
-              {/* Mobile Menu Button - Show only on mobile */}
-              <IconButton
-                sx={{ display: { xs: 'flex', md: 'none' } }}
-                onClick={() => setMobileMenuOpen(true)}
-                color="inherit"
-              >
-                <MenuIcon />
-              </IconButton>
-            </Toolbar>
-          </Container>
-        </AppBar>
+      <Box
+        sx={{
+          flexGrow: 1,
+          bgcolor: 'transparent',
+        }}
+      >
+        <Topbar
+          isLandingPage={isLandingPage}
+          scrollProgress={scrollProgress}
+          onMobileMenuOpen={() => setMobileMenuOpen(true)}
+        />
 
         {/* Mobile Menu Drawer */}
         <Drawer
@@ -328,6 +174,26 @@ const Layout = (props: ILayoutProps) => {
                 <CloseIcon />
               </IconButton>
             </Box>
+
+            {/* Add theme toggle for mobile */}
+            <Button
+              fullWidth
+              startIcon={mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              onClick={toggleMode}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+            </Button>
 
             {/* Menu Items in Grid */}
             <Grid container spacing={1} sx={{ mb: 1 }}>
@@ -391,7 +257,7 @@ const Layout = (props: ILayoutProps) => {
         {children}
         <Footer />
       </Box>
-    </div>
+    </Box>
   );
 };
 

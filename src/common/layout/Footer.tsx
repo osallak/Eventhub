@@ -93,13 +93,14 @@ const MobileSection = ({
       }}
       onClick={onToggle}
     >
-      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
         {title}
       </Typography>
       <IconButton
         sx={{
           transform: expanded ? 'rotate(180deg)' : 'none',
           transition: 'transform 0.3s',
+          color: 'text.secondary',
         }}
       >
         <ExpandMoreIcon />
@@ -162,10 +163,13 @@ const Footer = () => {
       {/* Main Footer */}
       <Box
         sx={{
-          bgcolor: 'grey.50',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50'),
           borderTop: '1px solid',
           borderColor: 'divider',
-          mt: { xs: 4, md: 8 },
+          mt: {
+            xs: 0,
+            md: 8,
+          },
         }}
       >
         <Container maxWidth="lg">
@@ -186,19 +190,21 @@ const Footer = () => {
               >
                 {/* Logo and Description Section */}
                 <Grid item xs={12} md={4}>
-                  <Typography
-                    variant="h6"
-                    component="div"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '1.5rem',
-                      mb: 2,
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => router.push('/')}
-                  >
-                    Event<span style={{ color: '#2196F3' }}>Manager</span>
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: '1.5rem',
+                        cursor: 'pointer',
+                        color: 'text.primary',
+                      }}
+                      onClick={() => router.push('/')}
+                    >
+                      Event<span style={{ color: 'primary.main' }}>Manager</span>
+                    </Typography>
+                  </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300 }}>
                     Your all-in-one platform for discovering, creating, and managing events. Connect
                     with people who share your interests.
@@ -270,6 +276,18 @@ const Footer = () => {
 
             {/* Mobile Layout - Show only on xs and sm */}
             <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '1.5rem',
+                    color: 'text.primary',
+                  }}
+                >
+                  Event<span style={{ color: 'primary.main' }}>Manager</span>
+                </Typography>
+              </Box>
               <MobileSection
                 title="Menu"
                 items={menuItems.map((item) => ({ text: item.text, link: item.link }))}
@@ -313,7 +331,7 @@ const Footer = () => {
       {/* Bottom Bar */}
       <Box
         sx={{
-          bgcolor: 'background.paper',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.paper'),
           borderTop: '1px solid',
           borderColor: 'divider',
           py: 2,
@@ -340,7 +358,10 @@ const Footer = () => {
                   color: 'text.secondary',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
-                  '&:hover': { color: 'primary.main' },
+                  transition: 'color 0.2s',
+                  '&:hover': {
+                    color: 'primary.main',
+                  },
                 },
               }}
             >

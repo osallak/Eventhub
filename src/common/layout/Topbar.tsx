@@ -1,112 +1,59 @@
-import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import { useTheme } from '@common/contexts/ThemeContext';
 import Routes from '@common/defs/routes';
+import useAuth from '@modules/auth/hooks/api/useAuth';
+import { AccountCircle, Language as LanguageIcon } from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Box,
   Button,
   Container,
+  Divider,
   Drawer,
   IconButton,
-  List,
-  ListItem,
   ListItemButton,
-  ListItemIcon,
-  ListItemText,
+  Menu,
+  MenuItem,
   Toolbar,
+  Typography,
   styled,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import Stack from '@mui/material/Stack';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import useAuth from '@modules/auth/hooks/api/useAuth';
-import Stack from '@mui/material/Stack';
-import Logo from '@common/assets/svgs/Logo';
-import { ArrowForwardIos, Logout } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import Link from 'next/link';
-import { setUserLanguage } from '@common/components/lib/utils/language';
 
-interface TopbarItem {
-  label: string;
-  link?: string;
-  onClick?: () => void;
-  dropdown?: Array<{
-    label: string;
-    link?: string;
-    value?: string;
-    onClick?: () => void;
-  }>;
+interface TopbarProps {
+  isLandingPage?: boolean;
+  scrollProgress?: number;
+  onMobileMenuOpen?: () => void;
 }
 
-const Topbar = () => {
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+];
+
+export const Topbar = ({
+  isLandingPage = false,
+  scrollProgress = 1,
+  onMobileMenuOpen,
+}: TopbarProps) => {
+  console.log('Topbar rendering');
   const { t } = useTranslation(['topbar']);
   const router = useRouter();
   const { asPath } = router;
   const [showDrawer, setShowDrawer] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const { user, logout } = useAuth();
-
-  const dropdownWidth = 137;
-  const toggleSidebar = () => {
-    setShowDrawer((oldValue) => !oldValue);
-  };
-  const navItems: TopbarItem[] = [
-    {
-      label: t('topbar:home'),
-      link: Routes.Common.Home,
-      onClick: () => router.push(Routes.Common.Home),
-    },
-    {
-      label: t('topbar:language'),
-      dropdown: [
-        {
-          label: t('topbar:language_french'),
-          link: asPath,
-          value: 'fr',
-        },
-        {
-          label: t('topbar:language_english'),
-          link: `${asPath}`,
-          value: 'en',
-        },
-        {
-          label: t('topbar:language_spanish'),
-          link: `${asPath}`,
-          value: 'es',
-        },
-      ],
-    },
-    {
-      label: 'Utilisateur',
-      dropdown: [
-        {
-          label: 'Mon Profil',
-          link: Routes.Users.Me,
-          onClick: () => router.push(Routes.Users.Me),
-        },
-        {
-          label: 'Déconnexion',
-          onClick: () => logout(),
-        },
-      ],
-    },
-  ];
-
-  const toggleDropdown = () => {
-    setShowDropdown((oldValue) => !oldValue);
-  };
-
-  const onNavButtonClick = (item: TopbarItem) => {
-    if (item.dropdown) {
-      return toggleDropdown;
-    }
-    return () => {
-      setShowDrawer(false);
-      if (item.onClick) {
-        item.onClick();
-      }
-    };
-  };
+  const { mode, toggleMode } = useTheme();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [languageMenu, setLanguageMenu] = useState<null | HTMLElement>(null);
 
   const onAuthButtonClick = (mode: string) => {
     if (router.pathname === Routes.Common.Home) {
@@ -132,484 +79,415 @@ const Topbar = () => {
     }
   };
 
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLanguageClick = (event: React.MouseEvent<HTMLElement>) => {
+    setLanguageMenu(event.currentTarget);
+  };
+
+  const handleLanguageClose = () => {
+    setLanguageMenu(null);
+  };
+
+  // Add this helper function
+  const getBackgroundColor = (theme: any) => {
+    if (isLandingPage) {
+      const color = theme.palette.mode === 'dark' ? '33, 33, 33' : '255, 255, 255';
+      return `rgba(${color}, ${scrollProgress})`;
+    }
+    return theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.background.paper;
+  };
+
+  // Use onMobileMenuOpen if provided, otherwise use local state
+  const handleMobileMenuOpen = () => {
+    if (onMobileMenuOpen) {
+      onMobileMenuOpen();
+    } else {
+      setMobileMenuOpen(true);
+    }
+  };
+
   return (
     <AppBar
-      position="static"
+      position="fixed"
+      elevation={0}
       sx={{
-        boxShadow: (theme) => theme.customShadows.z1,
-        backgroundColor: 'common.white',
+        background: (theme) => getBackgroundColor(theme),
+        transition: 'all 0.5s ease',
+        backdropFilter: isLandingPage && scrollProgress > 0 ? 'blur(20px)' : 'none',
+        borderBottom: '1px solid',
+        borderColor: (theme) =>
+          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+        color: (theme) =>
+          isLandingPage && scrollProgress < 0.9 ? '#fff' : theme.palette.text.primary,
+        boxShadow: 'none',
       }}
     >
       <Container>
-        <Toolbar sx={{ px: { xs: 0, sm: 0 } }}>
-          <Stack flexDirection="row" alignItems="center" flexGrow={1}>
-            <Logo
-              id="topbar-logo"
-              onClick={() => router.push(Routes.Common.Home)}
-              sx={{ cursor: 'pointer' }}
-            />
-          </Stack>
-          <List sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-            <>
-              {navItems.map((item, index) => {
-                if (item.label === 'Utilisateur') {
-                  return null;
-                }
-                return (
-                  <ListItem
-                    key={index}
-                    sx={{
-                      width: 'fit-content',
-                    }}
-                  >
-                    <StyledListItemButton
-                      sx={{
-                        ...(router.pathname === item.link && {
-                          color: 'primary.main',
-                        }),
-                        ...(item.dropdown && {
-                          borderTopLeftRadius: 24,
-                          borderTopRightRadius: 24,
-                          borderBottomLeftRadius: 0,
-                          borderBottomRightRadius: 0,
-                          width: dropdownWidth,
-                          display: 'flex',
-                          alignItems: 'center',
-                          '&:hover': {
-                            backgroundColor: 'transparent',
-                            boxShadow: (theme) => theme.customShadows.z12,
-                            '.MuiTypography-root': {
-                              fontWeight: 'bold',
-                            },
-                            '.dropdown-menu': {
-                              visibility: 'visible',
-                            },
-                            '.MuiTouchRipple-child': {
-                              backgroundColor: 'transparent',
-                            },
-                          },
-                        }),
-                      }}
-                      onClick={onNavButtonClick(item)}
-                    >
-                      {!item.dropdown ? (
-                        <>{item.label}</>
-                      ) : (
-                        <>
-                          <ListItemText>{item.label}</ListItemText>
-                          <KeyboardArrowDown />
-                          <List
-                            className="dropdown-menu"
-                            sx={{
-                              backgroundColor: 'common.white',
-                              boxShadow: (theme) => theme.customShadows.z12,
-                              position: 'absolute',
-                              top: 48,
-                              left: 0,
-                              padding: 0,
-                              width: dropdownWidth,
-                              borderBottomLeftRadius: 24,
-                              borderBottomRightRadius: 24,
-                              visibility: 'hidden',
-                              zIndex: 1000000,
-                            }}
-                          >
-                            {item.dropdown.map((dropdownItem, dropdownItemIndex) => {
-                              return (
-                                <ListItem
-                                  key={dropdownItemIndex}
-                                  sx={{
-                                    padding: 0,
-                                    display: 'unset',
-                                  }}
-                                >
-                                  <Link href={dropdownItem.link!} locale={dropdownItem.value}>
-                                    <ListItemButton
-                                      sx={{
-                                        display: 'flex',
-                                        gap: 1,
-                                        paddingX: 2,
-                                        paddingY: 1.5,
-                                        borderRadius: 0,
-                                        zIndex: 1000000,
-                                        '&:hover': {
-                                          backgroundColor: 'primary.dark',
-                                          color: 'primary.contrastText',
-                                        },
-                                        ...(item.dropdown?.length === dropdownItemIndex + 1 && {
-                                          borderBottomLeftRadius: 24,
-                                          borderBottomRightRadius: 24,
-                                        }),
-                                      }}
-                                      onClick={() => {
-                                        onNavButtonClick(dropdownItem);
-                                        setUserLanguage(dropdownItem.value!);
-                                      }}
-                                    >
-                                      {dropdownItem.label}
-                                    </ListItemButton>
-                                  </Link>
-                                </ListItem>
-                              );
-                            })}
-                          </List>
-                        </>
-                      )}
-                    </StyledListItemButton>
-                  </ListItem>
-                );
-              })}
-            </>
-            {!user ? (
-              <>
-                <ListItem
-                  sx={{
-                    width: 'fit-content',
-                  }}
-                >
-                  <StyledListItemButton
-                    onClick={() => onAuthButtonClick('login')}
-                    sx={{
-                      ...(router.pathname === Routes.Auth.Login && {
-                        color: 'primary.main',
-                      }),
-                    }}
-                  >
-                    {t('topbar:login')}
-                  </StyledListItemButton>
-                </ListItem>
-                <ListItem
-                  sx={{
-                    width: 'fit-content',
-                  }}
-                >
-                  <Button
-                    variant="contained"
-                    endIcon={
-                      <ArrowForwardIos
-                        fontSize="small"
-                        className="arrow-icon"
-                        sx={{ fontSize: '12px', transition: 'all, 0.15s' }}
-                      />
-                    }
-                    onClick={() => onAuthButtonClick('register')}
-                    sx={{
-                      display: { xs: 'none', md: 'flex' },
-                      '&:hover': {
-                        '.arrow-icon': {
-                          transform: 'translateX(0.25rem)',
-                        },
-                      },
-                    }}
-                  >
-                    {t('topbar:register')}
-                  </Button>
-                </ListItem>
-              </>
-            ) : (
-              <>
-                <ListItem
-                  key="user-options"
-                  sx={{
-                    width: 'fit-content',
-                  }}
-                >
-                  <StyledListItemButton
-                    sx={{
-                      borderTopLeftRadius: 24,
-                      borderTopRightRadius: 24,
-                      borderBottomLeftRadius: 0,
-                      borderBottomRightRadius: 0,
-                      width: 160,
-                      display: 'flex',
-                      alignItems: 'center',
-                      '&:hover': {
-                        backgroundColor: 'transparent',
-                        boxShadow: (theme) => theme.customShadows.z12,
-                        '.MuiTypography-root': {
-                          fontWeight: 'bold',
-                        },
-                        '.dropdown-menu': {
-                          visibility: 'visible',
-                        },
-                        '.MuiTouchRipple-child': {
-                          backgroundColor: 'transparent',
-                        },
-                      },
-                    }}
-                  >
-                    <>
-                      <ListItemText>{navItems[2].label}</ListItemText>
-                      <KeyboardArrowDown />
-                      <List
-                        className="dropdown-menu"
-                        sx={{
-                          backgroundColor: 'common.white',
-                          boxShadow: (theme) => theme.customShadows.z12,
-                          position: 'absolute',
-                          top: 48,
-                          left: 0,
-                          width: 160,
-                          padding: 0,
-                          borderBottomLeftRadius: 24,
-                          borderBottomRightRadius: 24,
-                          visibility: 'hidden',
-                          zIndex: 1000000,
-                        }}
-                      >
-                        {navItems[2].dropdown?.map((dropdownItem, dropdownItemIndex) => {
-                          return (
-                            <ListItem
-                              key={dropdownItemIndex}
-                              sx={{
-                                padding: 0,
-                              }}
-                            >
-                              <ListItemButton
-                                sx={{
-                                  ...(router.pathname === dropdownItem.link && {
-                                    color: 'primary.main',
-                                  }),
-                                  display: 'flex',
-                                  gap: 1,
-                                  paddingX: 2,
-                                  paddingY: 1.5,
-                                  borderRadius: 0,
-                                  zIndex: 1000000,
-                                  '&:hover': {
-                                    backgroundColor: 'primary.dark',
-                                    color: 'primary.contrastText',
-                                  },
-                                  ...(navItems[2].dropdown?.length === dropdownItemIndex + 1 && {
-                                    borderBottomLeftRadius: 24,
-                                    borderBottomRightRadius: 24,
-                                  }),
-                                }}
-                                onClick={onNavButtonClick(dropdownItem)}
-                              >
-                                {dropdownItem.label}
-                              </ListItemButton>
-                            </ListItem>
-                          );
-                        })}
-                      </List>
-                    </>
-                  </StyledListItemButton>
-                </ListItem>
-              </>
-            )}
-          </List>
-          <IconButton
-            onClick={() => toggleSidebar()}
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Logo */}
+          <Typography
+            variant="h6"
+            component="div"
             sx={{
-              display: { md: 'none', sm: 'flex' },
+              fontWeight: 800,
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              letterSpacing: '-0.5px',
             }}
+            onClick={() => router.push('/')}
           >
-            <MenuIcon fontSize="medium" sx={{ color: 'grey.700' }} />
+            Event<span style={{ color: '#2196F3' }}>Manager</span>
+          </Typography>
+
+          {/* Desktop Navigation */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
+            <Button
+              color="inherit"
+              onClick={() => router.push('/events')}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              }}
+            >
+              Discover Events
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => router.push('/events/create')}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              }}
+            >
+              Create Event
+            </Button>
+
+            {/* Language Menu */}
+            <IconButton
+              onClick={handleLanguageClick}
+              sx={{
+                color: 'inherit',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <LanguageIcon />
+            </IconButton>
+            <Menu
+              anchorEl={languageMenu}
+              open={Boolean(languageMenu)}
+              onClose={handleLanguageClose}
+              PaperProps={{
+                elevation: 3,
+                sx: {
+                  mt: 1.5,
+                  minWidth: 150,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                },
+              }}
+            >
+              {LANGUAGES.map((lang) => (
+                <MenuItem
+                  key={lang.code}
+                  onClick={() => {
+                    // Language change logic will go here
+                    handleLanguageClose();
+                  }}
+                >
+                  {lang.label}
+                </MenuItem>
+              ))}
+            </Menu>
+
+            {/* Theme Toggle */}
+            <IconButton onClick={toggleMode} sx={{ color: 'inherit' }}>
+              {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+            </IconButton>
+
+            {/* Profile Menu */}
+            <IconButton
+              onClick={handleProfileClick}
+              sx={{
+                ml: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <AccountCircle />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              PaperProps={{
+                elevation: 3,
+                sx: {
+                  mt: 1.5,
+                  minWidth: 200,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                },
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  router.push('/events/history');
+                  handleClose();
+                }}
+              >
+                History
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  router.push('/events/upcoming');
+                  handleClose();
+                }}
+              >
+                Upcoming Events
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  router.push('/settings');
+                  handleClose();
+                }}
+              >
+                Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem
+                onClick={() => {
+                  logout();
+                  handleClose();
+                }}
+              >
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
+
+          {/* Mobile Menu Button */}
+          <IconButton sx={{ display: { md: 'none' } }} onClick={handleMobileMenuOpen}>
+            <MenuIcon />
           </IconButton>
         </Toolbar>
       </Container>
-      <Drawer anchor="right" open={showDrawer} onClose={() => setShowDrawer(false)}>
-        <List
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            fontWeight: 700,
-            width: 250,
-          }}
-        >
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        anchor="top"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        PaperProps={{
+          sx: {
+            width: '100%',
+            bgcolor: 'background.paper',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: 16,
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          {/* Header */}
           <Box
             sx={{
-              padding: 4,
-              '.topbar-logo': {
-                width: '250px',
-              },
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
             }}
           >
-            <Logo id="responsive-topbar-logo" />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Menu
+            </Typography>
+            <IconButton onClick={() => setMobileMenuOpen(false)}>
+              <CloseIcon />
+            </IconButton>
           </Box>
-          {navItems.map((item, index) => {
-            if (item.label === 'Utilisateur') {
-              return null;
-            }
-            return (
-              <ListItem
-                key={index}
-                disablePadding
-                sx={{
-                  ...(item.dropdown && {
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }),
-                }}
-              >
-                <ListItemButton
-                  onClick={!item.dropdown ? onNavButtonClick(item) : toggleDropdown}
-                  sx={{
-                    width: '100%',
-                  }}
-                >
-                  <ListItemText
-                    primaryTypographyProps={{
-                      ...(router.pathname === item.link && {
-                        color: 'primary.main',
-                      }),
-                    }}
-                  >
-                    {item.label}
-                  </ListItemText>
-                  {item.dropdown && (
-                    <ListItemIcon color="grey.800" sx={{ minWidth: 'unset' }}>
-                      <KeyboardArrowDown sx={{ color: 'grey.800' }} />
-                    </ListItemIcon>
-                  )}
-                </ListItemButton>
-                {item.dropdown && (
-                  <List
-                    sx={{
-                      width: '100%',
-                      transition: 'all, 0.2s',
-                      height: 0,
-                      paddingY: 0,
-                      ...(showDropdown && {
-                        height: `calc(${item.dropdown.length} * 48px)`,
-                      }),
-                    }}
-                    className="dropdown-list"
-                  >
-                    {item.dropdown.map((dropdownItem, dropdownItemIndex) => {
-                      return (
-                        <ListItem
-                          key={dropdownItemIndex}
-                          sx={{
-                            padding: 0,
-                            visibility: 'hidden',
-                            ...(showDropdown && {
-                              visibility: 'visible',
-                            }),
-                            display: 'unset',
-                          }}
-                        >
-                          <Link href={dropdownItem.link!} locale={dropdownItem.value}>
-                            <ListItemButton
-                              onClick={() => {
-                                onNavButtonClick(dropdownItem);
-                                setUserLanguage(dropdownItem.value!);
-                              }}
-                              sx={{
-                                display: 'flex',
-                                gap: 1,
-                                paddingLeft: 4,
-                              }}
-                            >
-                              <ListItemText>{dropdownItem.label}</ListItemText>
-                            </ListItemButton>
-                          </Link>
-                        </ListItem>
-                      );
-                    })}
-                  </List>
-                )}
-              </ListItem>
-            );
-          })}
-          <ListItem key="profile" disablePadding>
-            <ListItemButton
-              onClick={() => router.push(Routes.Users.Me)}
+
+          {/* Main Menu Items */}
+          <Stack spacing={1}>
+            <Button
+              fullWidth
+              onClick={() => {
+                router.push('/events');
+                setMobileMenuOpen(false);
+              }}
               sx={{
-                width: '100%',
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
               }}
             >
-              <ListItemText
-                primaryTypographyProps={{
-                  ...(router.pathname === Routes.Users.Me && {
-                    color: 'primary.main',
-                  }),
-                }}
-              >
-                Mon Profil
-              </ListItemText>
-            </ListItemButton>
-          </ListItem>
-          {!user ? (
-            <>
-              <ListItem
-                disablePadding
-                sx={{
-                  backgroundColor: 'transparent',
-                  marginBottom: 3,
-                }}
-              >
-                <ListItemButton
-                  onClick={() => {
-                    setShowDrawer(false);
-                    router.push(Routes.Auth.Login);
-                  }}
-                >
-                  <ListItemText
-                    primaryTypographyProps={{
-                      ...(router.pathname === Routes.Auth.Login && {
-                        color: 'primary.main',
-                      }),
-                    }}
-                  >
-                    {t('topbar:login')}
-                  </ListItemText>
-                </ListItemButton>
-              </ListItem>
+              Discover Events
+            </Button>
+
+            <Button
+              fullWidth
+              onClick={() => {
+                router.push('/events/create');
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              Create Event
+            </Button>
+
+            {/* Language Options */}
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: 'text.secondary',
+                px: 2,
+                pt: 2,
+                pb: 1,
+                fontWeight: 500,
+              }}
+            >
+              Language
+            </Typography>
+            {LANGUAGES.map((lang) => (
               <Button
-                variant="contained"
-                endIcon={
-                  <ArrowForwardIos
-                    fontSize="small"
-                    className="arrow-icon"
-                    sx={{ fontSize: '12px', transition: 'all, 0.15s' }}
-                  />
-                }
+                key={lang.code}
+                fullWidth
                 onClick={() => {
-                  setShowDrawer(false);
-                  router.push(Routes.Auth.Register);
+                  // Language change logic will go here
+                  setMobileMenuOpen(false);
                 }}
                 sx={{
-                  display: 'flex',
-                  flex: 1,
-                  width: 150,
-                  '&:hover': {
-                    '.arrow-icon': {
-                      transform: 'translateX(0.25rem)',
-                    },
-                  },
+                  justifyContent: 'flex-start',
+                  color: 'text.primary',
+                  py: 1,
+                  px: 2,
+                  borderRadius: 2,
+                  '&:hover': { bgcolor: 'action.hover' },
                 }}
               >
-                {t('topbar:register')}
+                {lang.label}
               </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                color="error"
-                onClick={() => {
-                  setShowDrawer(false);
-                  logout();
-                }}
-                sx={{
-                  display: 'flex',
-                }}
-                startIcon={<Logout />}
-                variant="outlined"
-              >
-                {t('topbar:logged.logout')}
-              </Button>
-            </>
-          )}
-        </List>
+            ))}
+
+            {/* Theme Toggle */}
+            <Button
+              fullWidth
+              startIcon={mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              onClick={toggleMode}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+            </Button>
+
+            <Divider sx={{ my: 1 }} />
+
+            {/* Profile Items */}
+            <Button
+              fullWidth
+              onClick={() => {
+                router.push('/events/history');
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              History
+            </Button>
+
+            <Button
+              fullWidth
+              onClick={() => {
+                router.push('/events/upcoming');
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              Upcoming Events
+            </Button>
+
+            <Button
+              fullWidth
+              onClick={() => {
+                router.push('/settings');
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              Settings
+            </Button>
+
+            <Divider sx={{ my: 1 }} />
+
+            <Button
+              fullWidth
+              onClick={() => {
+                logout();
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'error.main',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              Logout
+            </Button>
+          </Stack>
+        </Box>
       </Drawer>
     </AppBar>
   );
 };
 const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
-  color: theme.palette.grey[700],
+  color: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.grey[700],
   borderRadius: theme.shape.borderRadius + 'px',
   '&:hover': {
     backgroundColor: 'transparent',
@@ -618,4 +496,3 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
     backgroundColor: theme.palette.primary.main,
   },
 }));
-export default Topbar;

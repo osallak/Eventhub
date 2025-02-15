@@ -3,8 +3,7 @@ import { alpha } from '@mui/material/styles';
 
 const GREY = {
   0: '#FFFFFF',
-  50: '#F9FAFB',
-  100: '#F2F2F2',
+  100: '#F9FAFB',
   200: '#F4F6F8',
   300: '#DFE3E8',
   400: '#C4CDD5',
@@ -13,19 +12,15 @@ const GREY = {
   700: '#454F5B',
   800: '#212B36',
   900: '#161C24',
-  A100: '#D0D7DC',
-  A200: '#A1AEBD',
-  A400: '#657487',
-  A700: '#455463',
 };
 
 const PRIMARY = {
-  lighter: '#D1E9FC',
-  light: '#76B0F1',
-  main: '#2065D1',
-  dark: '#103996',
-  darker: '#061B64',
-  contrastText: '#fff',
+  lighter: '#E3F2FD',
+  light: '#90CAF9',
+  main: '#2196F3',
+  dark: '#1976D2',
+  darker: '#0D47A1',
+  contrastText: '#FFFFFF',
 };
 
 const SECONDARY = {
@@ -74,6 +69,7 @@ const ERROR = {
 };
 
 const palette: CustomPalette = {
+  mode: 'light',
   common: { black: '#000', white: '#fff' },
   primary: PRIMARY,
   secondary: SECONDARY,
@@ -89,7 +85,7 @@ const palette: CustomPalette = {
     disabled: GREY[500],
   },
   background: {
-    paper: '#fff',
+    paper: '#FFFFFF',
     default: GREY[100],
     neutral: GREY[200],
   },
@@ -102,6 +98,26 @@ const palette: CustomPalette = {
     focus: alpha(GREY[500], 0.24),
     hoverOpacity: 0.08,
     disabledOpacity: 0.48,
+  },
+  dark: {
+    background: {
+      paper: GREY[800],
+      default: GREY[900],
+      neutral: alpha(GREY[500], 0.16),
+    },
+    text: {
+      primary: '#FFFFFF',
+      secondary: GREY[400],
+      disabled: GREY[600],
+    },
+    action: {
+      active: GREY[400],
+      hover: alpha(GREY[400], 0.08),
+      selected: alpha(GREY[400], 0.16),
+      disabled: alpha(GREY[400], 0.8),
+      disabledBackground: alpha(GREY[400], 0.24),
+      focus: alpha(GREY[400], 0.24),
+    },
   },
 };
 
