@@ -30,4 +30,7 @@ export interface EventFormData {
   equipmentDetails?: string;
   rules?: string[];
   notes?: string;
+
+  // Map
+  coordinates?: [number, number];
 } 

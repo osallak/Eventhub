@@ -1,13 +1,12 @@
 import {
   Box,
-  Grid,
-  TextField,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormHelperText,
-  Typography,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
@@ -137,4 +136,4 @@ export const DateTimeStep = ({ formData, onFormChange }: DateTimeStepProps) => {
       </Grid>
     </Box>
   );
-}; 
+};

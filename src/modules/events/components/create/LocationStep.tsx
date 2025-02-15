@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { EventFormData } from '../../types/form';
+import { LocationMap } from './LocationMap';
+import { useEffect, useState } from 'react';
 
 interface LocationStepProps {
   formData: EventFormData;
@@ -20,6 +22,60 @@ interface LocationStepProps {
 
 export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
   const { t } = useTranslation();
+
+  const handleLocationSelect = (location: {
+    address: string;
+    city: string;
+    postalCode: string;
+    coordinates: [number, number];
+  }) => {
+    console.group('LocationStep: Location Update');
+    console.log('Received location from MapComponent:', location);
+
+    // Update all fields at once
+    const updates = {
+      address: location.address,
+      city: location.city,
+      postalCode: location.postalCode,
+      coordinates: location.coordinates,
+      // Keep existing event type
+      eventType: formData.eventType || 'physical',
+    };
+
+    console.log('Current form data:', formData);
+    console.log('Preparing updates:', updates);
+
+    // Update each field individually to ensure state updates
+    Object.entries(updates).forEach(([field, value]) => {
+      console.log(`Updating field "${field}":`, value);
+      onFormChange(field as keyof EventFormData, value);
+    });
+    console.groupEnd();
+  };
+
+  // Track form data changes
+  useEffect(() => {
+    const locationFields = {
+      address: formData.address,
+      city: formData.city,
+      postalCode: formData.postalCode,
+      coordinates: formData.coordinates,
+    };
+
+    const isValid = Boolean(
+      locationFields.coordinates && locationFields.address && locationFields.city
+    );
+
+    console.group('LocationStep: Validation');
+    console.log('Current fields:', locationFields);
+    console.log('Validation:', {
+      hasAddress: Boolean(locationFields.address),
+      hasCity: Boolean(locationFields.city),
+      hasCoordinates: Boolean(locationFields.coordinates),
+      isValid,
+    });
+    console.groupEnd();
+  }, [formData]);
 
   return (
     <Box>
@@ -77,20 +133,7 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
             </Grid>
             {/* Map Component Placeholder */}
             <Grid item xs={12}>
-              <Paper
-                sx={{
-                  height: 200,
-                  bgcolor: 'background.neutral',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'text.secondary',
-                  border: '1px dashed',
-                  borderColor: 'divider',
-                }}
-              >
-                {t('Map Component Will Be Added Here')}
-              </Paper>
+              <LocationMap onLocationSelect={handleLocationSelect} />
             </Grid>
           </>
         )}

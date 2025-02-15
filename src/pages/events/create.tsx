@@ -15,11 +15,40 @@ const CreateEvent = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<EventFormData>({});
 
-  const handleFormChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleFormChange = (field: keyof EventFormData, value: any) => {
+    console.group('CreateEvent: Form Update');
+
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      return newData;
+    });
+    console.groupEnd();
   };
 
   const handleNext = () => {
+    const locationData = {
+      address: formData.address,
+      city: formData.city,
+      postalCode: formData.postalCode,
+      coordinates: formData.coordinates,
+    };
+
+    const hasValidLocation = Boolean(
+      locationData.coordinates && locationData.address && locationData.city
+    );
+
+    console.log('Location validation:', {
+      step: steps[activeStep],
+      hasValidLocation,
+      locationData,
+      currentFormData: formData,
+      isLocationStep: activeStep === 2,
+    });
+
+    if (!hasValidLocation && activeStep === 2) {
+      console.warn('Proceeding without valid location data:', locationData);
+    }
+
     setActiveStep((prev) => prev + 1);
   };
 
@@ -28,15 +57,20 @@ const CreateEvent = () => {
   };
 
   const renderStepContent = () => {
+    const commonProps = {
+      formData,
+      onFormChange: handleFormChange as (field: string, value: any) => void,
+    };
+
     switch (activeStep) {
       case 0:
-        return <BasicInfoStep formData={formData} onFormChange={handleFormChange} />;
+        return <BasicInfoStep {...commonProps} />;
       case 1:
-        return <DateTimeStep formData={formData} onFormChange={handleFormChange} />;
+        return <DateTimeStep {...commonProps} />;
       case 2:
-        return <LocationStep formData={formData} onFormChange={handleFormChange} />;
+        return <LocationStep {...commonProps} />;
       case 3:
-        return <DetailsStep formData={formData} onFormChange={handleFormChange} />;
+        return <DetailsStep {...commonProps} />;
       default:
         return null;
     }

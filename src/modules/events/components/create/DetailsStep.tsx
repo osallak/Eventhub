@@ -1,25 +1,34 @@
+import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
-  Grid,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Switch,
   Chip,
-  Stack,
+  FormControl,
+  FormControlLabel,
+  Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Switch,
+  TextField,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface DetailsStepProps {
-  formData: any;
-  onFormChange: (field: string, value: any) => void;
+  formData: {
+    rules?: string[];
+    maxParticipants?: number;
+    experienceLevel?: string;
+    minAge?: number;
+    price?: number;
+    equipmentRequired?: boolean;
+    equipmentDetails?: string;
+    notes?: string;
+  };
+  onFormChange: (field: string, value: string | number | boolean | string[]) => void;
 }
 
 export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
@@ -35,7 +44,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
   };
 
   const handleRemoveRule = (indexToRemove: number) => {
-    const updatedRules = (formData.rules || []).filter((_: any, index: number) => index !== indexToRemove);
+    const updatedRules = (formData.rules || []).filter((_, index) => index !== indexToRemove);
     onFormChange('rules', updatedRules);
   };
 
@@ -90,7 +99,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
             label={t('Price')}
             value={formData.price || ''}
             onChange={(e) => onFormChange('price', e.target.value)}
-            InputProps={{ 
+            InputProps={{
               inputProps: { min: 0, step: 0.01 },
               startAdornment: '€',
             }}
@@ -138,9 +147,9 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
                 onChange={(e) => setNewRule(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddRule()}
               />
-              <IconButton 
+              <IconButton
                 onClick={handleAddRule}
-                sx={{ 
+                sx={{
                   bgcolor: 'primary.main',
                   color: 'primary.contrastText',
                   '&:hover': { bgcolor: 'primary.dark' },
@@ -149,7 +158,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
                 <AddIcon />
               </IconButton>
             </Box>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
               {(formData.rules || []).map((rule: string, index: number) => (
                 <Chip
                   key={index}
@@ -177,4 +186,4 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
       </Grid>
     </Box>
   );
-}; 
+};
