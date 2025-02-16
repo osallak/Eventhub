@@ -20,6 +20,7 @@ import {
   Toolbar,
   Typography,
   styled,
+  Avatar,
 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import { useRouter } from 'next/router';
@@ -79,12 +80,17 @@ export const Topbar = ({
     }
   };
 
-  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    router.push('/profile');
+    handleMenuClose();
   };
 
   const handleLanguageClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -214,9 +220,9 @@ export const Topbar = ({
               {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
             </IconButton>
 
-            {/* Profile Menu */}
+            {/* User Menu */}
             <IconButton
-              onClick={handleProfileClick}
+              onClick={handleMenuOpen}
               sx={{
                 ml: 1,
                 border: '1px solid',
@@ -228,7 +234,7 @@ export const Topbar = ({
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
-              onClose={handleClose}
+              onClose={handleMenuClose}
               PaperProps={{
                 elevation: 3,
                 sx: {
@@ -239,38 +245,31 @@ export const Topbar = ({
                 },
               }}
             >
+              <MenuItem onClick={handleProfileClick}>{t('Profile')}</MenuItem>
               <MenuItem
                 onClick={() => {
                   router.push('/events/history');
-                  handleClose();
+                  handleMenuClose();
                 }}
               >
-                History
+                {t('History')}
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   router.push('/events/upcoming');
-                  handleClose();
+                  handleMenuClose();
                 }}
               >
-                Upcoming Events
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  router.push('/settings');
-                  handleClose();
-                }}
-              >
-                Settings
+                {t('Upcoming Events')}
               </MenuItem>
               <Divider />
               <MenuItem
                 onClick={() => {
                   logout();
-                  handleClose();
+                  handleMenuClose();
                 }}
               >
-                Logout
+                {t('Logout')}
               </MenuItem>
             </Menu>
           </Box>
@@ -320,6 +319,24 @@ export const Topbar = ({
             <Button
               fullWidth
               onClick={() => {
+                router.push('/profile');
+                setMobileMenuOpen(false);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                color: 'text.primary',
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              Profile
+            </Button>
+
+            <Button
+              fullWidth
+              onClick={() => {
                 router.push('/events');
                 setMobileMenuOpen(false);
               }}
@@ -353,60 +370,6 @@ export const Topbar = ({
               Create Event
             </Button>
 
-            {/* Language Options */}
-            <Typography
-              variant="subtitle2"
-              sx={{
-                color: 'text.secondary',
-                px: 2,
-                pt: 2,
-                pb: 1,
-                fontWeight: 500,
-              }}
-            >
-              Language
-            </Typography>
-            {LANGUAGES.map((lang) => (
-              <Button
-                key={lang.code}
-                fullWidth
-                onClick={() => {
-                  // Language change logic will go here
-                  setMobileMenuOpen(false);
-                }}
-                sx={{
-                  justifyContent: 'flex-start',
-                  color: 'text.primary',
-                  py: 1,
-                  px: 2,
-                  borderRadius: 2,
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-              >
-                {lang.label}
-              </Button>
-            ))}
-
-            {/* Theme Toggle */}
-            <Button
-              fullWidth
-              startIcon={mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-              onClick={toggleMode}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
-            </Button>
-
-            <Divider sx={{ my: 1 }} />
-
-            {/* Profile Items */}
             <Button
               fullWidth
               onClick={() => {
@@ -441,24 +404,6 @@ export const Topbar = ({
               }}
             >
               Upcoming Events
-            </Button>
-
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/settings');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Settings
             </Button>
 
             <Divider sx={{ my: 1 }} />

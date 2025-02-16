@@ -28,6 +28,7 @@ import { useRouter } from 'next/router';
 import { ThemeProvider } from '@common/contexts/ThemeContext';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Box } from '@mui/material';
 
 // declare module '@mui/material/Button' { // If we add a color, then we need to add the color in each component
 //    interface ButtonPropsColorOverrides {
@@ -46,7 +47,18 @@ const App = ({ Component, pageProps }: AppProps) => {
   }
   return (
     <Layout isLandingPage={(Component as PageComponent).isLandingPage}>
-      <Component {...pageProps} />
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'background.default',
+          m: 0,
+          p: 0,
+        }}
+      >
+        <Component {...pageProps} />
+      </Box>
     </Layout>
   );
 };

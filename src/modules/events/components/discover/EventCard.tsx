@@ -4,6 +4,7 @@ import { formatPrice } from '../../utils/formatters';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
+import dayjs from 'dayjs';
 
 interface EventCardProps {
   event: {
@@ -42,6 +43,9 @@ export const EventCard = ({ event }: EventCardProps) => {
   const spotsLeft = hasLimitedSpots
     ? event.maxParticipants! - (event.currentParticipants || 0)
     : undefined;
+
+  // Check if event is in the past
+  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
   return (
     <Card
@@ -199,7 +203,7 @@ export const EventCard = ({ event }: EventCardProps) => {
       <Button
         variant="contained"
         fullWidth
-        disabled={hasLimitedSpots && spotsLeft === 0}
+        disabled={isPastEvent || (hasLimitedSpots && spotsLeft === 0)}
         sx={{
           mt: 'auto',
           borderRadius: '20px',
@@ -211,9 +215,11 @@ export const EventCard = ({ event }: EventCardProps) => {
           },
         }}
       >
-        {hasLimitedSpots && spotsLeft === 0
-          ? t('Event Full')
-          : t('Join Event')}
+        {isPastEvent
+          ? t('Event Ended')
+          : hasLimitedSpots && spotsLeft === 0
+            ? t('Event Full')
+            : t('Join Event')}
       </Button>
     </Card>
   );
