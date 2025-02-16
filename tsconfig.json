@@ -22,7 +22,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["node", "react", "@mui/icons-material", "@mui/material"]
+    "types": ["node", "react", "@mui/icons-material", "@mui/material", "@mui/x-date-pickers"]
   },
   "include": [
     "./.eslintrc.json",

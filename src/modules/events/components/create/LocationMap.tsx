@@ -31,4 +31,4 @@ interface LocationMapProps {
 
 export const LocationMap = ({ onLocationSelect }: LocationMapProps) => {
   return <MapComponent onLocationSelect={onLocationSelect} />;
-}; 
+};

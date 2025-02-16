@@ -26,6 +26,8 @@ import { frFR, enUS, esES } from '@mui/material/locale';
 import { getUserLanguage } from '@common/components/lib/utils/language';
 import { useRouter } from 'next/router';
 import { ThemeProvider } from '@common/contexts/ThemeContext';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 // declare module '@mui/material/Button' { // If we add a color, then we need to add the color in each component
 //    interface ButtonPropsColorOverrides {
@@ -66,7 +68,9 @@ const AppWrapper = (props: AppProps) => {
               <SnackbarProvider>
                 <DialogProvider>
                   <ProgressBar />
-                  <App {...props} />
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <App {...props} />
+                  </LocalizationProvider>
                 </DialogProvider>
               </SnackbarProvider>
             </RoutingHistoryProvider>

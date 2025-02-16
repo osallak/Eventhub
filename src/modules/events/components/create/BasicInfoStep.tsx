@@ -1,14 +1,105 @@
-import { Box, TextField, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import {
+  Box,
+  TextField,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+} from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { EventFormData } from '../../types/form';
+import { categories } from '../../../../constants/categories';
+import { useState, useEffect } from 'react';
 
 interface BasicInfoStepProps {
   formData: EventFormData;
   onFormChange: (field: keyof EventFormData, value: any) => void;
+  onValidationChange: (isValid: boolean) => void;
 }
 
-export const BasicInfoStep = ({ formData, onFormChange }: BasicInfoStepProps) => {
+interface ValidationErrors {
+  title?: string;
+  category?: string;
+}
+
+export const BasicInfoStep = ({
+  formData,
+  onFormChange,
+  onValidationChange,
+}: BasicInfoStepProps) => {
   const { t } = useTranslation();
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const validateField = (field: keyof EventFormData, value: any) => {
+    switch (field) {
+      case 'title':
+        if (!value?.trim()) {
+          return t('Title is required');
+        }
+        if (value.trim().length < 3) {
+          return t('Title must be at least 3 characters');
+        }
+        break;
+      case 'category':
+        if (!value) {
+          return t('Please select a category');
+        }
+        break;
+      default:
+        return '';
+    }
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors: ValidationErrors = {};
+    let isValid = true;
+
+    // Validate title
+    const titleError = validateField('title', formData.title);
+    if (titleError) {
+      newErrors.title = titleError;
+      isValid = false;
+    }
+
+    // Validate category
+    const categoryError = validateField('category', formData.category);
+    if (categoryError) {
+      newErrors.category = categoryError;
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    setTouched({
+      title: true,
+      category: true,
+    });
+
+    return isValid;
+  };
+
+  const handleBlur = (field: keyof EventFormData) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const error = validateField(field, formData[field]);
+    setErrors((prev) => ({ ...prev, [field]: error }));
+  };
+
+  const handleChange = (field: keyof EventFormData, value: any) => {
+    onFormChange(field, value);
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setErrors((prev) => ({ ...prev, [field]: error }));
+    }
+  };
+
+  // Validate form when mounted and when form data changes
+  useEffect(() => {
+    const isValid = validateForm();
+    onValidationChange(isValid);
+  }, [formData.title, formData.category]);
 
   return (
     <Box>
@@ -18,7 +109,11 @@ export const BasicInfoStep = ({ formData, onFormChange }: BasicInfoStepProps) =>
             fullWidth
             label={t('Event Title')}
             value={formData.title || ''}
-            onChange={(e) => onFormChange('title', e.target.value)}
+            onChange={(e) => handleChange('title', e.target.value)}
+            onBlur={() => handleBlur('title')}
+            error={!!errors.title}
+            helperText={errors.title}
+            required
             sx={{
               '& .MuiInputLabel-root': {
                 color: 'text.secondary',
@@ -33,18 +128,21 @@ export const BasicInfoStep = ({ formData, onFormChange }: BasicInfoStepProps) =>
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>{t('Category')}</InputLabel>
+          <FormControl fullWidth error={!!errors.category}>
+            <InputLabel required>{t('Category')}</InputLabel>
             <Select
               value={formData.category || ''}
               label={t('Category')}
-              onChange={(e) => onFormChange('category', e.target.value)}
+              onChange={(e) => handleChange('category', e.target.value)}
+              onBlur={() => handleBlur('category')}
             >
-              <MenuItem value="sports">{t('Sports & Fitness')}</MenuItem>
-              <MenuItem value="music">{t('Music & Concerts')}</MenuItem>
-              <MenuItem value="education">{t('Education')}</MenuItem>
-              <MenuItem value="business">{t('Business')}</MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category.toLowerCase()} value={category.toLowerCase()}>
+                  {t(category)}
+                </MenuItem>
+              ))}
             </Select>
+            {errors.category && <FormHelperText>{errors.category}</FormHelperText>}
           </FormControl>
         </Grid>
 
@@ -55,7 +153,7 @@ export const BasicInfoStep = ({ formData, onFormChange }: BasicInfoStepProps) =>
             rows={4}
             label={t('Description')}
             value={formData.description || ''}
-            onChange={(e) => onFormChange('description', e.target.value)}
+            onChange={(e) => handleChange('description', e.target.value)}
             sx={{
               '& .MuiInputLabel-root': {
                 color: 'text.secondary',
@@ -71,4 +169,4 @@ export const BasicInfoStep = ({ formData, onFormChange }: BasicInfoStepProps) =>
       </Grid>
     </Box>
   );
-}; 
+};

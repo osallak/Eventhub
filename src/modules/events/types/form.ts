@@ -1,3 +1,5 @@
+import { Dayjs } from 'dayjs';
+
 export interface EventFormData {
   // Basic Info
   title?: string;
@@ -5,11 +7,9 @@ export interface EventFormData {
   description?: string;
 
   // Date & Time
-  date?: string;
-  startTime?: string;
-  endTime?: string;
-  duration?: string;
-  recurring?: string;
+  startDate?: Date | null;
+  startTime?: Date | null;
+  endTime?: Date | null;
   timezone?: string;
 
   // Location
@@ -33,4 +33,4 @@ export interface EventFormData {
 
   // Map
   coordinates?: [number, number];
-} 
+}

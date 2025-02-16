@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { categories } from '../../../../constants/categories';
 
 interface DetailsStepProps {
   formData: {
