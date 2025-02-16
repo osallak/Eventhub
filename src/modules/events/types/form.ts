@@ -33,4 +33,9 @@ export interface EventFormData {
 
   // Map
   coordinates?: [number, number];
+
+  // New fields
+  isPaid?: boolean;
+  currency?: string;
+  invitedEmails?: string[];
 }

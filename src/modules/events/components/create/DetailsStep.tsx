@@ -2,22 +2,19 @@ import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
   Chip,
-  FormControl,
   FormControlLabel,
   Grid,
   IconButton,
-  InputLabel,
   MenuItem,
-  Select,
   Stack,
   Switch,
   TextField,
-  Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { categories } from '../../../../constants/categories';
 import { EventFormData } from '../../types/form';
+import { getInputStyles } from './styles/inputStyles';
 
 interface DetailsStepProps {
   formData: EventFormData;
@@ -25,8 +22,10 @@ interface DetailsStepProps {
   onValidationChange: (isValid: boolean) => void;
 }
 
-export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
+export const DetailsStep = ({ formData, onFormChange, onValidationChange }: DetailsStepProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const inputStyles = getInputStyles(theme);
   const [newRule, setNewRule] = useState('');
 
   const handleAddRule = () => {
@@ -42,6 +41,22 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
     onFormChange('rules', updatedRules);
   };
 
+  // Add this style object
+  const disabledInputStyles = {
+    ...inputStyles,
+    '& .MuiOutlinedInput-root': {
+      ...inputStyles['& .MuiOutlinedInput-root'],
+      '&.Mui-disabled': {
+        '& fieldset': {
+          borderColor: 'divider',
+        },
+        '&:hover fieldset': {
+          borderColor: 'divider',
+        },
+      },
+    },
+  };
+
   return (
     <Box>
       <Grid container spacing={3}>
@@ -54,23 +69,8 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
             value={formData.maxParticipants || ''}
             onChange={(e) => onFormChange('maxParticipants', e.target.value)}
             InputProps={{ inputProps: { min: 1 } }}
+            sx={inputStyles}
           />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>{t('Experience Level')}</InputLabel>
-            <Select
-              value={formData.experienceLevel || ''}
-              label={t('Experience Level')}
-              onChange={(e) => onFormChange('experienceLevel', e.target.value)}
-            >
-              <MenuItem value="beginner">{t('Beginner')}</MenuItem>
-              <MenuItem value="intermediate">{t('Intermediate')}</MenuItem>
-              <MenuItem value="advanced">{t('Advanced')}</MenuItem>
-              <MenuItem value="all">{t('All Levels')}</MenuItem>
-            </Select>
-          </FormControl>
         </Grid>
 
         {/* Age Restrictions */}
@@ -82,86 +82,114 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
             value={formData.minAge || ''}
             onChange={(e) => onFormChange('minAge', e.target.value)}
             InputProps={{ inputProps: { min: 0 } }}
+            sx={inputStyles}
           />
         </Grid>
 
         {/* Price Settings */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            type="number"
-            label={t('Price')}
-            value={formData.price || ''}
-            onChange={(e) => onFormChange('price', e.target.value)}
-            InputProps={{
-              inputProps: { min: 0, step: 0.01 },
-              startAdornment: '€',
-            }}
-          />
-        </Grid>
-
-        {/* Equipment Required */}
         <Grid item xs={12}>
           <FormControlLabel
             control={
               <Switch
-                checked={formData.equipmentRequired || false}
-                onChange={(e) => onFormChange('equipmentRequired', e.target.checked)}
+                checked={formData.isPaid || false}
+                onChange={(e) => onFormChange('isPaid', e.target.checked)}
+                color="primary"
               />
             }
-            label={t('Equipment Required')}
+            label={t('This is a paid event')}
+            sx={{
+              color: 'text.secondary',
+              mb: 2,
+            }}
           />
-        </Grid>
-
-        {formData.equipmentRequired && (
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label={t('Equipment Details')}
-              value={formData.equipmentDetails || ''}
-              onChange={(e) => onFormChange('equipmentDetails', e.target.value)}
-              placeholder={t('List required equipment...')}
-            />
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('Price')}
+                value={formData.price || ''}
+                onChange={(e) => onFormChange('price', e.target.value)}
+                disabled={!formData.isPaid}
+                InputProps={{
+                  inputProps: { min: 0, step: 0.01 },
+                }}
+                sx={disabledInputStyles}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                label={t('Currency')}
+                value={formData.currency || ''}
+                onChange={(e) => onFormChange('currency', e.target.value)}
+                disabled={!formData.isPaid}
+                sx={disabledInputStyles}
+              >
+                {/* Use common currencies based on user's locale */}
+                {[
+                  { code: 'USD', symbol: '$' },
+                  { code: 'EUR', symbol: '€' },
+                  { code: 'GBP', symbol: '£' },
+                ].map((currency) => (
+                  <MenuItem key={currency.code} value={currency.code}>
+                    {`${currency.code} (${currency.symbol})`}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
           </Grid>
-        )}
+        </Grid>
 
         {/* Rules and Guidelines */}
         <Grid item xs={12}>
-          <Typography variant="subtitle1" sx={{ mb: 2, color: 'text.primary' }}>
-            {t('Rules and Guidelines')}
-          </Typography>
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                fullWidth
-                label={t('Add Rule')}
-                value={newRule}
-                onChange={(e) => setNewRule(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddRule()}
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              fullWidth
+              label={t('Add Rule')}
+              value={newRule}
+              onChange={(e) => setNewRule(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddRule()}
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    onClick={handleAddRule}
+                    sx={{
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: 'primary.dark',
+                      },
+                      mr: -1,
+                    }}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                ),
+              }}
+              sx={inputStyles}
+            />
+          </Box>
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            sx={{
+              gap: 1,
+              '& > *': {
+                margin: '4px !important',
+              },
+            }}
+          >
+            {(formData.rules || []).map((rule, index) => (
+              <Chip
+                key={index}
+                label={rule}
+                onDelete={() => handleRemoveRule(index)}
+                sx={{ bgcolor: 'background.paper' }}
               />
-              <IconButton
-                onClick={handleAddRule}
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText',
-                  '&:hover': { bgcolor: 'primary.dark' },
-                }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Box>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {(formData.rules || []).map((rule: string, index: number) => (
-                <Chip
-                  key={index}
-                  label={rule}
-                  onDelete={() => handleRemoveRule(index)}
-                  sx={{ m: 0.5 }}
-                />
-              ))}
-            </Stack>
+            ))}
           </Stack>
         </Grid>
 

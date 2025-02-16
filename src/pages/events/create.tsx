@@ -4,30 +4,36 @@ import { DetailsStep } from '@modules/events/components/create/DetailsStep';
 import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { StepWrapper } from '@modules/events/components/create/StepWrapper';
 import { EventFormData } from '@modules/events/types/form';
-import { Box, Button, Container, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Box, Button, Container, Step, StepLabel, Stepper, Typography, Stack } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/router';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { InviteStep } from '@modules/events/components/create/InviteStep';
 
-const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Review'];
+const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
 
 const CreateEvent = () => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<EventFormData>({});
   const [stepsValidation, setStepsValidation] = useState<Record<number, boolean>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const router = useRouter();
 
-  const handleFormChange = (field: keyof EventFormData, value: any) => {
+  const handleFormChange = <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
     console.group('CreateEvent: Form Update');
-
-    setFormData((prev) => {
-      const newData = { ...prev, [field]: value };
-      return newData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
     console.groupEnd();
   };
 
   const handleNext = () => {
-    if (stepsValidation[activeStep]) {
+    if (activeStep === 4) {
+      setIsSubmitted(true);
+    } else if (stepsValidation[activeStep] || activeStep === 3) {
       setActiveStep((prevStep) => prevStep + 1);
     }
   };
@@ -59,10 +65,54 @@ const CreateEvent = () => {
         return <LocationStep {...commonProps} />;
       case 3:
         return <DetailsStep {...commonProps} />;
+      case 4:
+        return <InviteStep {...commonProps} />;
       default:
         return 'Unknown step';
     }
   };
+
+  const getSuccessContent = () => (
+    <Box
+      sx={{
+        textAlign: 'center',
+        py: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3,
+      }}
+    >
+      <Box
+        sx={{
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          bgcolor: 'success.light',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 2,
+        }}
+      >
+        <CheckCircleIcon sx={{ fontSize: 40, color: 'white' }} />
+      </Box>
+      <Typography variant="h5" color="text.primary" gutterBottom>
+        {t('Event Created Successfully!')}
+      </Typography>
+      <Typography color="text.secondary" sx={{ mb: 3 }}>
+        {t('You will receive a notification 30 minutes before the event starts.')}
+      </Typography>
+      <Stack direction="row" spacing={2}>
+        <Button variant="outlined" onClick={() => router.push('/events')}>
+          {t('View All Events')}
+        </Button>
+        <Button variant="contained" onClick={() => router.push('/events/created')}>
+          {t('View Event')}
+        </Button>
+      </Stack>
+    </Box>
+  );
 
   const navigationButtons = (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -70,8 +120,8 @@ const CreateEvent = () => {
         {t('Back')}
       </Button>
       <Box sx={{ flex: '1 1 auto' }} />
-      <Button onClick={handleNext} disabled={!stepsValidation[activeStep]}>
-        {activeStep === steps.length - 1 ? t('Finish') : t('Next')}
+      <Button onClick={handleNext} disabled={!stepsValidation[activeStep] && activeStep < 3}>
+        {activeStep === 4 ? t('Finish') : t('Next')}
       </Button>
     </Box>
   );
@@ -147,7 +197,9 @@ const CreateEvent = () => {
               </Step>
             ))}
           </Stepper>
-          <StepWrapper actions={navigationButtons}>{getStepContent(activeStep)}</StepWrapper>
+          <StepWrapper actions={!isSubmitted ? navigationButtons : null}>
+            {isSubmitted ? getSuccessContent() : getStepContent(activeStep)}
+          </StepWrapper>
         </Box>
       </Box>
     </Container>

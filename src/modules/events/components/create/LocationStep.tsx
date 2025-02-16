@@ -36,7 +36,16 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
     }
   }, []);
 
-  // Validation function
+  // Add URL validation helper
+  const isValidUrl = (url: string) => {
+    try {
+      return Boolean(new URL(url));
+    } catch {
+      return false;
+    }
+  };
+
+  // Update validation function
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
@@ -59,6 +68,9 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
     if (formData.eventType === 'virtual' || formData.eventType === 'hybrid') {
       if (!formData.meetingLink?.trim()) {
         newErrors.meetingLink = t('Meeting link is required');
+        isValid = false;
+      } else if (!isValidUrl(formData.meetingLink)) {
+        newErrors.meetingLink = t('Please enter a valid URL');
         isValid = false;
       }
     }
