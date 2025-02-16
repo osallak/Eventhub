@@ -2,6 +2,7 @@ import { Button, Chip, FormControl, MenuItem, Select, Stack, TextField } from '@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { categories } from '../../../../constants/categories';
+import { DateSelector } from '../create/DateSelector';
 
 interface EventFiltersProps {
   filters: {
@@ -10,6 +11,7 @@ interface EventFiltersProps {
     isPaid?: boolean;
     minAge?: number;
     city?: string;
+    date: Date | null;
   };
   onFilterChange: (filters: any) => void;
 }
@@ -128,6 +130,13 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
         }
         InputProps={{ inputProps: { min: 0 } }}
         sx={textFieldStyles}
+      />
+
+      {/* Date Filter */}
+      <DateSelector
+        selectedDate={localFilters.date}
+        onDateChange={(newDate) => handleLocalChange({ date: newDate })}
+        label={t('Event Date')}
       />
 
       {/* Apply Button */}

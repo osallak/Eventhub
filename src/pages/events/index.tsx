@@ -1,4 +1,5 @@
 import { Topbar } from '@common/layout/Topbar';
+import { EventCard } from '@modules/events/components/discover/EventCard';
 import { EventFilters } from '@modules/events/components/discover/EventFilters';
 import {
   Close as CloseIcon,
@@ -9,15 +10,10 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
   Drawer,
   Grid,
   IconButton,
   InputAdornment,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
@@ -72,6 +68,7 @@ const FiltersContent = ({
           isPaid: undefined,
           minAge: undefined,
           city: '',
+          date: null,
         })
       }
     >
@@ -79,6 +76,31 @@ const FiltersContent = ({
     </Button>
   </>
 );
+
+const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
+  if (index % 3 === 0) {
+    return 'physical';
+  }
+  if (index % 3 === 1) {
+    return 'virtual';
+  }
+  return 'hybrid';
+};
+
+const mockEvents = [...Array(12)].map((_, index) => ({
+  title: `Event Title ${index + 1}`,
+  category: 'Sports & Fitness',
+  eventType: getEventType(index),
+  isPaid: index % 2 === 0,
+  price: index % 2 === 0 ? 10 + index : undefined,
+  currency: 'USD',
+  startDate: new Date(2024, 2, 1 + index).toISOString(),
+  startTime: '19:00',
+  city: `City ${(index % 3) + 1}`,
+  maxParticipants: index % 3 === 0 ? undefined : 20,
+  currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
+  imageUrl: undefined,
+}));
 
 const DiscoverEvents = () => {
   const [showCustomDate, setShowCustomDate] = useState(false);
@@ -91,6 +113,7 @@ const DiscoverEvents = () => {
     isPaid: undefined,
     minAge: undefined,
     city: '',
+    date: null,
   });
   const { t } = useTranslation();
 
@@ -226,60 +249,9 @@ const DiscoverEvents = () => {
 
           {/* Events Grid */}
           <Grid container spacing={3}>
-            {[...Array(12)].map((_, index) => (
+            {mockEvents.map((event, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    bgcolor: 'background.paper',
-                    transition: 'transform 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="div"
-                    sx={{
-                      height: 200,
-                      bgcolor: 'background.neutral',
-                      position: 'relative',
-                    }}
-                  >
-                    <Chip
-                      label="ANYONE"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: 'success.main',
-                        color: 'success.contrastText',
-                      }}
-                    />
-                  </CardMedia>
-                  <CardContent>
-                    <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
-                      Event Title {index + 1}
-                    </Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {12 + index} Spots left
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Date: Mar {1 + index}, 2024 • 19:00-21:00
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Venue: Event Center {(index % 3) + 1}, City
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
+                <EventCard event={event} />
               </Grid>
             ))}
           </Grid>
