@@ -16,6 +16,7 @@ import { EventFormData } from '../../types/form';
 import { useState, useEffect } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { getInputStyles } from './styles/inputStyles';
 
 interface DateTimeStepProps {
   formData: EventFormData;
@@ -35,6 +36,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
   const theme = useTheme();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const inputStyles = getInputStyles(theme);
 
   // Convert Date to Dayjs for the pickers
   const convertToDateValue = (date: Date | null | undefined) => {
@@ -142,48 +144,14 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
     return '--:--';
   };
 
-  const pickerStyles = {
-    '& .MuiInputLabel-root': {
-      color: 'text.secondary',
-    },
-    '& .MuiOutlinedInput-root': {
-      '& fieldset': {
-        borderColor: 'divider',
-      },
-      '&:hover fieldset': {
-        borderColor: 'primary.main',
-      },
-    },
-    '& .MuiIconButton-root': {
-      color: 'text.secondary',
-    },
-    '& .MuiPickersDay-root': {
-      color: 'text.primary',
-      '&.Mui-selected': {
-        backgroundColor: 'primary.main',
-        color: 'primary.contrastText',
-        '&:hover': {
-          backgroundColor: 'primary.dark',
-        },
-      },
-    },
-    '& .MuiClock-pin': {
-      backgroundColor: 'primary.main',
-    },
-    '& .MuiClockPointer-root': {
-      backgroundColor: 'primary.main',
-    },
-    '& .MuiClockPointer-thumb': {
-      backgroundColor: 'primary.main',
-      borderColor: 'primary.main',
-    },
-  };
-
   const timezoneSelectStyles = {
     control: (base: any) => ({
       ...base,
-      backgroundColor: theme.palette.background.paper,
+      height: '56px',
+      minHeight: '56px',
+      backgroundColor: 'transparent',
       borderColor: theme.palette.divider,
+      borderRadius: theme.shape.borderRadius,
       '&:hover': {
         borderColor: theme.palette.primary.main,
       },
@@ -193,6 +161,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
       ...base,
       backgroundColor: theme.palette.background.paper,
       border: `1px solid ${theme.palette.divider}`,
+      borderRadius: theme.shape.borderRadius,
       boxShadow: theme.shadows[3],
       zIndex: theme.zIndex.modal,
     }),
@@ -207,6 +176,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
     input: (base: any) => ({
       ...base,
       color: theme.palette.text.primary,
+      height: '24px',
     }),
     singleValue: (base: any) => ({
       ...base,
@@ -215,6 +185,10 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
     placeholder: (base: any) => ({
       ...base,
       color: theme.palette.text.secondary,
+    }),
+    valueContainer: (base: any) => ({
+      ...base,
+      padding: '8px 14px',
     }),
   };
 
@@ -251,7 +225,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
                     handleBlur('startDate');
                   }
                 },
-                sx: pickerStyles,
+                sx: inputStyles,
               },
             }}
           />
@@ -260,20 +234,13 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth>
             <TimezoneSelect
-              value={formData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
+              value={formData.timezone || ''}
               onChange={(timezone) => onFormChange('timezone', timezone.value)}
-              timezones={{
-                ...allTimezones,
-                'America/New_York': 'Eastern Time',
-                'America/Chicago': 'Central Time',
-                'America/Denver': 'Mountain Time',
-                'America/Los_Angeles': 'Pacific Time',
-              }}
+              timezones={allTimezones}
               labelStyle="altName"
               styles={timezoneSelectStyles}
-              placeholder={t('Select Time Zone')}
+              placeholder={t('Select event time zone')}
             />
-            <FormHelperText>{t('Select event time zone')}</FormHelperText>
           </FormControl>
         </Grid>
 
@@ -301,7 +268,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
                       handleBlur('startTime');
                     }
                   },
-                  sx: pickerStyles,
+                  sx: inputStyles,
                 },
               }}
             />
@@ -328,47 +295,44 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
                       handleBlur('endTime');
                     }
                   },
-                  sx: pickerStyles,
+                  sx: inputStyles,
                 },
               }}
             />
           </Grid>
 
-          {/* Duration Display - Always visible and centered */}
-          <Grid
-            item
-            xs={12}
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mt: 2,
-            }}
-          >
+          {/* Duration Display */}
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
             <Box sx={{ width: { xs: '100%', sm: '50%', md: '40%' } }}>
               <TextField
                 fullWidth
                 label={t('Duration')}
                 value={calculateDuration()}
-                InputProps={{
-                  readOnly: true,
-                }}
+                InputProps={{ readOnly: true }}
                 variant="outlined"
                 size="small"
                 sx={{
+                  '& .MuiInputLabel-root': {
+                    color: 'text.secondary',
+                  },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'divider',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: theme.palette.primary.main,
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: theme.palette.primary.main,
+                    },
+                  },
                   '& .MuiInputBase-input': {
                     textAlign: 'center',
                     color: theme.palette.text.secondary,
                     fontFamily: 'monospace',
                   },
-                  '& .MuiInputBase-input.Mui-disabled': {
-                    WebkitTextFillColor: theme.palette.text.secondary,
-                  },
                   '& .MuiInputBase-input.Mui-readOnly': {
                     cursor: 'default',
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderStyle: 'dashed',
-                    borderColor: theme.palette.divider,
                   },
                 }}
               />

@@ -12,6 +12,8 @@ import { useTranslation } from 'react-i18next';
 import { EventFormData } from '../../types/form';
 import { categories } from '../../../../constants/categories';
 import { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
+import { getInputStyles } from './styles/inputStyles';
 
 interface BasicInfoStepProps {
   formData: EventFormData;
@@ -32,6 +34,8 @@ export const BasicInfoStep = ({
   const { t } = useTranslation();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const theme = useTheme();
+  const inputStyles = getInputStyles(theme);
 
   const validateField = (field: keyof EventFormData, value: any) => {
     switch (field) {
@@ -155,12 +159,17 @@ export const BasicInfoStep = ({
             value={formData.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
             sx={{
-              '& .MuiInputLabel-root': {
-                color: 'text.secondary',
-              },
+              ...inputStyles,
               '& .MuiOutlinedInput-root': {
+                height: 'auto',
                 '& fieldset': {
                   borderColor: 'divider',
+                },
+                '&:hover fieldset': {
+                  borderColor: theme.palette.primary.main,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme.palette.primary.main,
                 },
               },
             }}

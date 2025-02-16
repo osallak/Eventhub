@@ -15,6 +15,7 @@ import { EventFormData } from '../../types/form';
 import { LocationMap } from './LocationMap';
 import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
+import { getInputStyles } from './styles/inputStyles';
 
 interface LocationStepProps {
   formData: EventFormData;
@@ -26,6 +27,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
   const { t } = useTranslation();
   const theme = useTheme();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const inputStyles = getInputStyles(theme);
 
   // Initialize event type to physical if not set
   useEffect(() => {
@@ -107,26 +109,6 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
     });
     console.groupEnd();
   }, [formData]);
-
-  const inputStyles = {
-    '& .MuiInputLabel-root': {
-      color: 'text.secondary',
-    },
-    '& .MuiOutlinedInput-root': {
-      height: '56px',
-      '& fieldset': {
-        borderColor: 'divider',
-      },
-      '&:hover fieldset': {
-        borderColor: 'primary.main',
-      },
-    },
-    '& .MuiSelect-select': {
-      height: '56px !important',
-      lineHeight: '56px',
-      padding: '0 14px',
-    },
-  };
 
   return (
     <Box>
@@ -238,6 +220,10 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
                   border: 1,
                   borderColor: 'divider',
                   borderRadius: 1,
+                  overflow: 'hidden',
+                  '& > div': {
+                    maxWidth: '100%',
+                  },
                 }}
               >
                 <LocationMap

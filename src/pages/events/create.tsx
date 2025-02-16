@@ -80,18 +80,22 @@ const CreateEvent = () => {
     <Container
       maxWidth="md"
       sx={{
-        py: 8,
-        mt: 4,
+        py: { xs: 4, md: 6 },
+        mt: { xs: 2, md: 4 },
         minHeight: 'calc(100vh - 64px)',
         display: 'flex',
         flexDirection: 'column',
+        maxWidth: {
+          sm: '600px',
+          md: '800px',
+        },
       }}
     >
       {/* Page Title */}
       <Typography
         variant="h4"
         sx={{
-          mb: 6,
+          mb: { xs: 4, md: 5 },
           mt: 2,
           fontWeight: 700,
           color: 'text.primary',
@@ -110,16 +114,41 @@ const CreateEvent = () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
         }}
       >
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{t(label)}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        <StepWrapper actions={navigationButtons}>{getStepContent(activeStep)}</StepWrapper>
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: { sm: '600px', md: '800px' },
+          }}
+        >
+          <Stepper
+            activeStep={activeStep}
+            sx={{
+              mb: 4,
+              width: '100%',
+            }}
+            orientation="horizontal"
+            alternativeLabel
+          >
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel
+                  sx={{
+                    '& .MuiStepLabel-label': {
+                      mt: 1,
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    },
+                  }}
+                >
+                  {t(label)}
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          <StepWrapper actions={navigationButtons}>{getStepContent(activeStep)}</StepWrapper>
+        </Box>
       </Box>
     </Container>
   );

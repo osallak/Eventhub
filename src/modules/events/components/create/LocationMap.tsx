@@ -7,7 +7,7 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
   loading: () => (
     <Paper
       sx={{
-        height: 400,
+        height: { xs: 300, sm: 400 }, // Smaller height on mobile
         width: '100%',
         bgcolor: 'background.neutral',
         display: 'flex',
@@ -32,5 +32,22 @@ interface LocationMapProps {
 }
 
 export const LocationMap = ({ address, city, onLocationSelect }: LocationMapProps) => {
-  return <MapComponent onLocationSelect={onLocationSelect} />;
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        overflow: 'hidden',
+        '& > div': {
+          width: '100% !important',
+          maxWidth: '100%',
+          '& .mapboxgl-map': {
+            maxWidth: '100%',
+            overflow: 'hidden',
+          },
+        },
+      }}
+    >
+      <MapComponent onLocationSelect={onLocationSelect} />
+    </Box>
+  );
 };
