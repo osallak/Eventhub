@@ -14,14 +14,62 @@ import { useTranslation } from 'react-i18next';
 import { EventFormData } from '../../types/form';
 import { LocationMap } from './LocationMap';
 import { useEffect, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 
 interface LocationStepProps {
   formData: EventFormData;
   onFormChange: (field: keyof EventFormData, value: any) => void;
+  onValidationChange: (isValid: boolean) => void;
 }
 
-export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
+export const LocationStep = ({ formData, onFormChange, onValidationChange }: LocationStepProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Initialize event type to physical if not set
+  useEffect(() => {
+    if (!formData.eventType) {
+      onFormChange('eventType', 'physical');
+    }
+  }, []);
+
+  // Validation function
+  const validateFields = () => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (formData.eventType === 'physical' || formData.eventType === 'hybrid') {
+      if (!formData.venueName?.trim()) {
+        newErrors.venueName = t('Venue name is required');
+        isValid = false;
+      }
+      if (!formData.address?.trim()) {
+        newErrors.address = t('Address is required');
+        isValid = false;
+      }
+      if (!formData.city?.trim()) {
+        newErrors.city = t('City is required');
+        isValid = false;
+      }
+    }
+
+    if (formData.eventType === 'virtual' || formData.eventType === 'hybrid') {
+      if (!formData.meetingLink?.trim()) {
+        newErrors.meetingLink = t('Meeting link is required');
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    onValidationChange(isValid);
+    return isValid;
+  };
+
+  // Validate on form changes
+  useEffect(() => {
+    validateFields();
+  }, [formData]);
 
   const handleLocationSelect = (location: {
     address: string;
@@ -29,28 +77,11 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
     postalCode: string;
     coordinates: [number, number];
   }) => {
-    console.group('LocationStep: Location Update');
-    console.log('Received location from MapComponent:', location);
-
-    // Update all fields at once
-    const updates = {
-      address: location.address,
-      city: location.city,
-      postalCode: location.postalCode,
-      coordinates: location.coordinates,
-      // Keep existing event type
-      eventType: formData.eventType || 'physical',
-    };
-
-    console.log('Current form data:', formData);
-    console.log('Preparing updates:', updates);
-
-    // Update each field individually to ensure state updates
-    Object.entries(updates).forEach(([field, value]) => {
-      console.log(`Updating field "${field}":`, value);
-      onFormChange(field as keyof EventFormData, value);
-    });
-    console.groupEnd();
+    // Update all location fields when map selection changes
+    onFormChange('address', location.address);
+    onFormChange('city', location.city);
+    onFormChange('postalCode', location.postalCode);
+    onFormChange('coordinates', location.coordinates);
   };
 
   // Track form data changes
@@ -77,6 +108,26 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
     console.groupEnd();
   }, [formData]);
 
+  const inputStyles = {
+    '& .MuiInputLabel-root': {
+      color: 'text.secondary',
+    },
+    '& .MuiOutlinedInput-root': {
+      height: '56px',
+      '& fieldset': {
+        borderColor: 'divider',
+      },
+      '&:hover fieldset': {
+        borderColor: 'primary.main',
+      },
+    },
+    '& .MuiSelect-select': {
+      height: '56px !important',
+      lineHeight: '56px',
+      padding: '0 14px',
+    },
+  };
+
   return (
     <Box>
       <Grid container spacing={3}>
@@ -88,13 +139,30 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
               value={formData.eventType || 'physical'}
               label={t('Event Type')}
               onChange={(e) => onFormChange('eventType', e.target.value)}
+              sx={inputStyles}
             >
-              <MenuItem value="physical">{t('In-Person Event')}</MenuItem>
-              <MenuItem value="virtual">{t('Virtual Event')}</MenuItem>
-              <MenuItem value="hybrid">{t('Hybrid Event')}</MenuItem>
+              <MenuItem value="physical">{t('In Person')}</MenuItem>
+              <MenuItem value="virtual">{t('Virtual')}</MenuItem>
+              <MenuItem value="hybrid">{t('Hybrid')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
+
+        {/* Virtual Meeting Link */}
+        {(formData.eventType === 'virtual' || formData.eventType === 'hybrid') && (
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label={t('Meeting Link')}
+              value={formData.meetingLink || ''}
+              onChange={(e) => onFormChange('meetingLink', e.target.value)}
+              error={!!errors.meetingLink}
+              helperText={errors.meetingLink}
+              required
+              sx={inputStyles}
+            />
+          </Grid>
+        )}
 
         {/* Physical Location Fields */}
         {(formData.eventType === 'physical' || formData.eventType === 'hybrid') && (
@@ -105,14 +173,22 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
                 label={t('Venue Name')}
                 value={formData.venueName || ''}
                 onChange={(e) => onFormChange('venueName', e.target.value)}
+                error={!!errors.venueName}
+                helperText={errors.venueName}
+                required
+                sx={inputStyles}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label={t('Street Address')}
+                label={t('Address')}
                 value={formData.address || ''}
                 onChange={(e) => onFormChange('address', e.target.value)}
+                error={!!errors.address}
+                helperText={errors.address}
+                required
+                sx={inputStyles}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -121,6 +197,10 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
                 label={t('City')}
                 value={formData.city || ''}
                 onChange={(e) => onFormChange('city', e.target.value)}
+                error={!!errors.city}
+                helperText={errors.city}
+                required
+                sx={inputStyles}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -129,40 +209,46 @@ export const LocationStep = ({ formData, onFormChange }: LocationStepProps) => {
                 label={t('Postal Code')}
                 value={formData.postalCode || ''}
                 onChange={(e) => onFormChange('postalCode', e.target.value)}
+                sx={inputStyles}
               />
             </Grid>
-            {/* Map Component Placeholder */}
             <Grid item xs={12}>
-              <LocationMap onLocationSelect={handleLocationSelect} />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.hideAddress || false}
+                    onChange={(e) => onFormChange('hideAddress', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={t('Hide exact address from public view')}
+                sx={{
+                  color: 'text.secondary',
+                  '& .MuiSwitch-root': {
+                    mr: 1,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 2,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <LocationMap
+                  address={formData.address}
+                  city={formData.city}
+                  onLocationSelect={handleLocationSelect}
+                />
+              </Paper>
             </Grid>
           </>
         )}
-
-        {/* Virtual Location Fields */}
-        {(formData.eventType === 'virtual' || formData.eventType === 'hybrid') && (
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label={t('Meeting Link')}
-              value={formData.meetingLink || ''}
-              onChange={(e) => onFormChange('meetingLink', e.target.value)}
-              helperText={t('Add your virtual meeting link (Zoom, Google Meet, etc.)')}
-            />
-          </Grid>
-        )}
-
-        {/* Additional Options */}
-        <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.hideAddress || false}
-                onChange={(e) => onFormChange('hideAddress', e.target.checked)}
-              />
-            }
-            label={t('Hide exact address until registration')}
-          />
-        </Grid>
       </Grid>
     </Box>
   );

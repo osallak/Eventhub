@@ -17,19 +17,12 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { categories } from '../../../../constants/categories';
+import { EventFormData } from '../../types/form';
 
 interface DetailsStepProps {
-  formData: {
-    rules?: string[];
-    maxParticipants?: number;
-    experienceLevel?: string;
-    minAge?: number;
-    price?: number;
-    equipmentRequired?: boolean;
-    equipmentDetails?: string;
-    notes?: string;
-  };
-  onFormChange: (field: string, value: string | number | boolean | string[]) => void;
+  formData: EventFormData;
+  onFormChange: (field: keyof EventFormData, value: any) => void;
+  onValidationChange: (isValid: boolean) => void;
 }
 
 export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {

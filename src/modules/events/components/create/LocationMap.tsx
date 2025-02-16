@@ -21,6 +21,8 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
 });
 
 interface LocationMapProps {
+  address?: string;
+  city?: string;
   onLocationSelect: (location: {
     address: string;
     city: string;
@@ -29,6 +31,6 @@ interface LocationMapProps {
   }) => void;
 }
 
-export const LocationMap = ({ onLocationSelect }: LocationMapProps) => {
+export const LocationMap = ({ address, city, onLocationSelect }: LocationMapProps) => {
   return <MapComponent onLocationSelect={onLocationSelect} />;
 };

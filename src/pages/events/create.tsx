@@ -1,14 +1,13 @@
-import { Box, Container, Paper, Stepper, Step, StepLabel, Typography, Button } from '@mui/material';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
-import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';
-import { EventFormData } from '@modules/events/types/form';
+import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { StepWrapper } from '@modules/events/components/create/StepWrapper';
+import { EventFormData } from '@modules/events/types/form';
+import { Box, Button, Container, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-// Step components will be created separately
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Review'];
 
 const CreateEvent = () => {
@@ -53,21 +52,13 @@ const CreateEvent = () => {
 
     switch (step) {
       case 0:
-        return (
-          <BasicInfoStep {...commonProps} />
-        );
+        return <BasicInfoStep {...commonProps} />;
       case 1:
-        return (
-          <DateTimeStep {...commonProps} />
-        );
+        return <DateTimeStep {...commonProps} />;
       case 2:
-        return (
-          <LocationStep {...commonProps} />
-        );
+        return <LocationStep {...commonProps} />;
       case 3:
-        return (
-          <DetailsStep {...commonProps} />
-        );
+        return <DetailsStep {...commonProps} />;
       default:
         return 'Unknown step';
     }
@@ -75,37 +66,60 @@ const CreateEvent = () => {
 
   const navigationButtons = (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-      <Button
-        color="inherit"
-        disabled={activeStep === 0}
-        onClick={handleBack}
-        sx={{ mr: 1 }}
-      >
+      <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
         {t('Back')}
       </Button>
       <Box sx={{ flex: '1 1 auto' }} />
-      <Button
-        onClick={handleNext}
-        disabled={!stepsValidation[activeStep]}
-      >
+      <Button onClick={handleNext} disabled={!stepsValidation[activeStep]}>
         {activeStep === steps.length - 1 ? t('Finish') : t('Next')}
       </Button>
     </Box>
   );
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ width: '100%', mt: 3 }}>
-        <Stepper activeStep={activeStep}>
+    <Container
+      maxWidth="md"
+      sx={{
+        py: 8,
+        mt: 4,
+        minHeight: 'calc(100vh - 64px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Page Title */}
+      <Typography
+        variant="h4"
+        sx={{
+          mb: 6,
+          mt: 2,
+          fontWeight: 700,
+          color: 'text.primary',
+          fontSize: {
+            xs: '1.75rem',
+            sm: '2rem',
+          },
+        }}
+      >
+        {t('Create New Event')}
+      </Typography>
+
+      <Box
+        sx={{
+          width: '100%',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{t(label)}</StepLabel>
             </Step>
           ))}
         </Stepper>
-        <StepWrapper actions={navigationButtons}>
-          {getStepContent(activeStep)}
-        </StepWrapper>
+        <StepWrapper actions={navigationButtons}>{getStepContent(activeStep)}</StepWrapper>
       </Box>
     </Container>
   );
