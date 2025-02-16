@@ -1,4 +1,5 @@
 import { Topbar } from '@common/layout/Topbar';
+import { EventFilters } from '@modules/events/components/discover/EventFilters';
 import {
   Close as CloseIcon,
   FilterList as FilterIcon,
@@ -16,26 +17,42 @@ import {
   Grid,
   IconButton,
   InputAdornment,
-  MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-// Move FiltersContent outside
+const searchFieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '16px',
+    backgroundColor: 'background.paper',
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'divider',
+    },
+    '&:hover': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: 'success.main',
+      },
+    },
+    '&.Mui-focused': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: 'success.main',
+        borderWidth: '1px',
+      },
+    },
+  },
+};
+
 const FiltersContent = ({
-  selectedDateOption,
-  setSelectedDateOption,
-  showCustomDate,
-  setShowCustomDate,
   showTitle,
+  filters,
+  setFilters,
 }: {
-  selectedDateOption: string;
-  setSelectedDateOption: (value: string) => void;
-  showCustomDate: boolean;
-  setShowCustomDate: (value: boolean) => void;
-  showTitle: boolean;
+  showTitle?: boolean;
+  filters: any;
+  setFilters: (filters: any) => void;
 }) => (
   <>
     {showTitle && (
@@ -43,155 +60,21 @@ const FiltersContent = ({
         Filters
       </Typography>
     )}
-
-    {/* Category Filter */}
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-        Category
-      </Typography>
-      <Stack spacing={1}>
-        {[
-          'All categories',
-          'Music & Concerts',
-          'Sports & Fitness',
-          'Business & Professional',
-          'Food & Drink',
-          'Arts & Culture',
-          'Community & Charity',
-          'Technology',
-          'Education',
-        ].map((type) => (
-          <Box
-            key={type}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              py: 0.5,
-              color: 'text.secondary',
-              transition: 'all 0.2s',
-              '&:hover': {
-                color: 'primary.main',
-                transform: 'translateX(4px)',
-              },
-            }}
-          >
-            <Typography variant="body2">{type}</Typography>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-
-    {/* Date & Time */}
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-        When
-      </Typography>
-      <Stack spacing={2}>
-        <TextField
-          select
-          size="small"
-          fullWidth
-          value={selectedDateOption}
-          onChange={(e) => {
-            setSelectedDateOption(e.target.value);
-            setShowCustomDate(e.target.value === 'custom');
-          }}
-        >
-          {[
-            { value: 'anytime', label: 'Anytime' },
-            { value: 'today', label: 'Today' },
-            { value: 'tomorrow', label: 'Tomorrow' },
-            { value: 'this-week', label: 'This week' },
-            { value: 'this-weekend', label: 'This weekend' },
-            { value: 'next-week', label: 'Next week' },
-            { value: 'next-month', label: 'Next month' },
-            { value: 'custom', label: 'Custom date' },
-          ].map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        {/* Custom Date Picker */}
-        {showCustomDate && (
-          <TextField
-            type="date"
-            size="small"
-            fullWidth
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        )}
-      </Stack>
-    </Box>
-
-    {/* Event Type */}
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-        Event type
-      </Typography>
-      <Stack spacing={1}>
-        {['All types', 'In-person', 'Virtual', 'Hybrid'].map((type) => (
-          <Box
-            key={type}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              py: 0.5,
-              color: 'text.secondary',
-              transition: 'all 0.2s',
-              '&:hover': {
-                color: 'primary.main',
-                transform: 'translateX(4px)',
-              },
-            }}
-          >
-            <Typography variant="body2">{type}</Typography>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-
-    {/* Additional Filters */}
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-        Additional filters
-      </Typography>
-      <Stack spacing={1}>
-        {[
-          'Available spots only',
-          'Wheelchair accessible',
-          'Family friendly',
-          'Age restricted',
-          'Parking available',
-        ].map((filter) => (
-          <Box
-            key={filter}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              py: 0.5,
-              color: 'text.secondary',
-              transition: 'all 0.2s',
-              '&:hover': {
-                color: 'primary.main',
-                transform: 'translateX(4px)',
-              },
-            }}
-          >
-            <Typography variant="body2">{filter}</Typography>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-
-    {/* Reset Filters */}
-    <Button startIcon={<RefreshIcon />} sx={{ textTransform: 'none' }} onClick={() => {}}>
+    <EventFilters filters={filters} onFilterChange={setFilters} />
+    <Button
+      startIcon={<RefreshIcon />}
+      sx={{ textTransform: 'none' }}
+      onClick={() =>
+        setFilters({
+          search: '',
+          category: '',
+          eventType: '',
+          isPaid: undefined,
+          minAge: undefined,
+          city: '',
+        })
+      }
+    >
       Reset filters
     </Button>
   </>
@@ -201,6 +84,15 @@ const DiscoverEvents = () => {
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [selectedDateOption, setSelectedDateOption] = useState('anytime');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    eventType: '',
+    isPaid: undefined,
+    minAge: undefined,
+    city: '',
+  });
+  const { t } = useTranslation();
 
   return (
     <Box>
@@ -215,10 +107,10 @@ const DiscoverEvents = () => {
         {/* Desktop Filters - Hidden on mobile */}
         <Box
           sx={{
-            display: { xs: 'none', md: 'block' },
+            display: { xs: 'none', lg: 'block' },
             width: 280,
             flexShrink: 0,
-            ml: { md: 8 },
+            ml: { lg: 8 },
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: (theme) => theme.shadows[1],
@@ -250,13 +142,7 @@ const DiscoverEvents = () => {
               },
             }}
           >
-            <FiltersContent
-              selectedDateOption={selectedDateOption}
-              setSelectedDateOption={setSelectedDateOption}
-              showCustomDate={showCustomDate}
-              setShowCustomDate={setShowCustomDate}
-              showTitle
-            />
+            <FiltersContent showTitle filters={filters} setFilters={setFilters} />
           </Box>
         </Box>
 
@@ -267,12 +153,12 @@ const DiscoverEvents = () => {
             p: {
               xs: 2,
               sm: 4,
-              md: 8,
+              lg: 8,
             },
             mt: {
               xs: '48px',
               sm: '72px',
-              md: '12px',
+              lg: '12px',
             },
           }}
         >
@@ -302,7 +188,9 @@ const DiscoverEvents = () => {
           >
             <TextField
               fullWidth
-              placeholder="Search events..."
+              placeholder={t('Search events...')}
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -312,6 +200,7 @@ const DiscoverEvents = () => {
               }}
               sx={{
                 flex: 1,
+                ...searchFieldStyles,
                 '& .MuiInputBase-root': {
                   color: 'text.primary',
                 },
@@ -326,12 +215,12 @@ const DiscoverEvents = () => {
               startIcon={<FilterIcon />}
               onClick={() => setMobileFiltersOpen(true)}
               sx={{
-                display: { md: 'none' },
+                display: { xs: 'none', md: 'flex', lg: 'none' },
                 color: 'text.primary',
                 borderColor: 'divider',
               }}
             >
-              Filters
+              {t('Filters')}
             </Button>
           </Box>
 
@@ -397,10 +286,10 @@ const DiscoverEvents = () => {
         </Box>
       </Box>
 
-      {/* Mobile Filter Button - Fixed at bottom */}
+      {/* Mobile Filter Button - Only show on smaller devices */}
       <Box
         sx={{
-          display: { xs: 'block', md: 'none' },
+          display: { xs: 'block', lg: 'none' },
           position: 'fixed',
           bottom: 0,
           left: 0,
@@ -422,7 +311,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          Filters
+          {t('Filters')}
         </Button>
       </Box>
 
@@ -452,13 +341,7 @@ const DiscoverEvents = () => {
               <CloseIcon />
             </IconButton>
           </Box>
-          <FiltersContent
-            selectedDateOption={selectedDateOption}
-            setSelectedDateOption={setSelectedDateOption}
-            showCustomDate={showCustomDate}
-            setShowCustomDate={setShowCustomDate}
-            showTitle
-          />
+          <FiltersContent showTitle filters={filters} setFilters={setFilters} />
         </Box>
       </Drawer>
     </Box>
