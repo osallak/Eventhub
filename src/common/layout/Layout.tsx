@@ -4,16 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import {
-  Button,
-  Divider,
-  Drawer,
-  Grid,
-  IconButton,
-  Typography,
-  useScrollTrigger,
-  useTheme,
-} from '@mui/material';
+import { Button, Divider, Drawer, Grid, IconButton, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -29,22 +20,13 @@ interface ILayoutProps {
 
 const Layout = (props: ILayoutProps) => {
   const { children, isLandingPage = false } = props;
-  const theme = useTheme();
-  const [openLeftbar, setOpenLeftbar] = useState(true);
   const [display, setDisplay] = useState(true);
   const underMaintenance = process.env.NEXT_PUBLIC_UNDER_MAINTENANCE === 'true';
   const { t } = useTranslation('common');
   const router = useRouter();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { mode, toggleMode } = useAppTheme();
-
-  // Handle scroll transparency
-  const trigger = useScrollTrigger({
-    disableHysteresis: true,
-    threshold: 0,
-  });
 
   useEffect(() => {
     if (!isLandingPage) {
@@ -66,13 +48,8 @@ const Layout = (props: ILayoutProps) => {
     setDisplay(!underMaintenance);
   }, [underMaintenance]);
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
   const handleMenuItemClick = (url: string) => {
     router.push(url);
-    handleClose();
   };
 
   if (!display) {
