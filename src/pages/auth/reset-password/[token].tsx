@@ -22,6 +22,13 @@ export const getStaticProps = async ({ locale }: { locale: string }) => ({
   },
 });
 
+export const getStaticPaths = () => {
+  return {
+    paths: [],
+    fallback: 'blocking'
+  };
+};
+
 export default withAuth(ResetPasswordPage, {
   mode: AUTH_MODE.LOGGED_OUT,
   redirectUrl: Routes.Common.Home,

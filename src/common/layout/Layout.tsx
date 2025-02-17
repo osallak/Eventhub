@@ -119,11 +119,7 @@ const Layout = (props: ILayoutProps) => {
           bgcolor: 'transparent',
         }}
       >
-        <Topbar
-          isLandingPage={isLandingPage}
-          scrollProgress={scrollProgress}
-          onMobileMenuOpen={() => setMobileMenuOpen(true)}
-        />
+        <Topbar isLandingPage={isLandingPage} scrollProgress={scrollProgress} />
 
         {/* Mobile Menu Drawer */}
         <Drawer

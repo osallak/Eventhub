@@ -21,10 +21,10 @@ interface EditProfileDialogProps {
     username: string;
     avatarUrl: string | null;
   };
-  onSave: (data: any) => void;
+  _onSave: (data: any) => void;
 }
 
-export const EditProfileDialog = ({ open, onClose, user, onSave }: EditProfileDialogProps) => {
+export const EditProfileDialog = ({ open, onClose, user, _onSave }: EditProfileDialogProps) => {
   const { t } = useTranslation();
 
   return (
@@ -59,21 +59,9 @@ export const EditProfileDialog = ({ open, onClose, user, onSave }: EditProfileDi
             </IconButton>
           </Stack>
 
-          <TextField
-            label={t('First Name')}
-            defaultValue={user.firstName}
-            fullWidth
-          />
-          <TextField
-            label={t('Last Name')}
-            defaultValue={user.lastName}
-            fullWidth
-          />
-          <TextField
-            label={t('Username')}
-            defaultValue={user.username}
-            fullWidth
-          />
+          <TextField label={t('First Name')} defaultValue={user.firstName} fullWidth />
+          <TextField label={t('Last Name')} defaultValue={user.lastName} fullWidth />
+          <TextField label={t('Username')} defaultValue={user.username} fullWidth />
         </Stack>
       </DialogContent>
       <DialogActions>

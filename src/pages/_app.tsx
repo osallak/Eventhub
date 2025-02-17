@@ -1,34 +1,24 @@
-import { Theme } from '@mui/material';
+import LoadingScreen from '@common/components/lib/feedbacks/LoadingScreen';
+import ProgressBar from '@common/components/lib/feedbacks/ProgressBar';
+import { DataProvider } from '@common/contexts/DataContext';
+import { DialogProvider } from '@common/contexts/DialogContext';
+import { RoutingHistoryProvider } from '@common/contexts/RoutingHistoryContext';
+import SnackbarProvider from '@common/contexts/SnackbarProvider';
+import { ThemeProvider } from '@common/contexts/ThemeContext';
+import Layout from '@common/layout/Layout';
+import GlobalStyles from '@common/theme/GlobalStyles';
+import useAuth from '@modules/auth/hooks/api/useAuth';
+import type {} from '@mui/lab/themeAugmentation';
+import { Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { StyledEngineProvider } from '@mui/material/styles';
-import Layout from '@common/layout/Layout';
-import type { AppProps } from 'next/app';
-import { useEffect, useState } from 'react';
-import type {} from '@mui/lab/themeAugmentation';
-import useAuth from '@modules/auth/hooks/api/useAuth';
-import { DataProvider } from '@common/contexts/DataContext';
-import palette from '@common/theme/palette';
-import typography from '@common/theme/typography';
-import shadows from '@common/theme/shadows';
-import ProgressBar from '@common/components/lib/feedbacks/ProgressBar';
-import LoadingScreen from '@common/components/lib/feedbacks/LoadingScreen';
-import customShadows from '@common/theme/customShadows';
-import SnackbarProvider from '@common/contexts/SnackbarProvider';
-import GlobalStyles from '@common/theme/GlobalStyles';
-import ComponentsOverrides from '@common/theme/ComponentsOverrides';
-import type {} from '@mui/x-data-grid/themeAugmentation';
-import type {} from '@mui/x-data-grid-pro/themeAugmentation';
 import type {} from '@mui/x-data-grid-premium/themeAugmentation';
-import { RoutingHistoryProvider } from '@common/contexts/RoutingHistoryContext';
-import { DialogProvider } from '@common/contexts/DialogContext';
-import { appWithTranslation } from 'next-i18next';
-import { frFR, enUS, esES } from '@mui/material/locale';
-import { getUserLanguage } from '@common/components/lib/utils/language';
-import { useRouter } from 'next/router';
-import { ThemeProvider } from '@common/contexts/ThemeContext';
+import type {} from '@mui/x-data-grid-pro/themeAugmentation';
+import type {} from '@mui/x-data-grid/themeAugmentation';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Box } from '@mui/material';
+import { appWithTranslation } from 'next-i18next';
+import type { AppProps } from 'next/app';
 
 // declare module '@mui/material/Button' { // If we add a color, then we need to add the color in each component
 //    interface ButtonPropsColorOverrides {
@@ -52,7 +42,7 @@ const App = ({ Component, pageProps }: AppProps) => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'background.default',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.default'),
           m: 0,
           p: 0,
         }}
@@ -63,12 +53,6 @@ const App = ({ Component, pageProps }: AppProps) => {
   );
 };
 const AppWrapper = (props: AppProps) => {
-  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setRootElement(() => document.querySelector('#__next'));
-  }, []);
-
   return (
     <>
       <CssBaseline />

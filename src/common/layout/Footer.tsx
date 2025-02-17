@@ -202,7 +202,7 @@ const Footer = () => {
                       }}
                       onClick={() => router.push('/')}
                     >
-                      Event<span style={{ color: 'primary.main' }}>Manager</span>
+                      Event<span style={{ color: 'primary.main' }}>Hub</span>
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300 }}>
@@ -261,8 +261,8 @@ const Footer = () => {
                           { text: 'Contact Us', link: '/contact' },
                           { text: 'Feedback', link: '/feedback' },
                           {
-                            text: 'Email: support@eventmanager.com',
-                            link: 'mailto:support@eventmanager.com',
+                            text: 'Email: support@eventhub.com',
+                            link: 'mailto:support@eventhub.com',
                           },
                           { text: 'Phone: +1 234 567 890', link: 'tel:+1234567890' },
                         ]}
@@ -285,7 +285,7 @@ const Footer = () => {
                     color: 'text.primary',
                   }}
                 >
-                  Event<span style={{ color: 'primary.main' }}>Manager</span>
+                  Event<span style={{ color: 'primary.main' }}>Hub</span>
                 </Typography>
               </Box>
               <MobileSection
@@ -314,8 +314,8 @@ const Footer = () => {
                   { text: 'Contact Us', link: '/contact' },
                   { text: 'Feedback', link: '/feedback' },
                   {
-                    text: 'Email: support@eventmanager.com',
-                    link: 'mailto:support@eventmanager.com',
+                    text: 'Email: support@eventhub.com',
+                    link: 'mailto:support@eventhub.com',
                   },
                   { text: 'Phone: +1 234 567 890', link: 'tel:+1234567890' },
                 ]}
@@ -348,7 +348,7 @@ const Footer = () => {
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              © 2024 EventManager. All rights reserved.
+              © 2024 EventHub. All rights reserved.
             </Typography>
             <Stack
               direction="row"

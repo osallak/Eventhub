@@ -103,8 +103,8 @@ const mockEvents = [...Array(12)].map((_, index) => ({
 }));
 
 const DiscoverEvents = () => {
-  const [showCustomDate, setShowCustomDate] = useState(false);
-  const [selectedDateOption, setSelectedDateOption] = useState('anytime');
+  const [_showCustomDate, _setShowCustomDate] = useState(false);
+  const [_selectedDateOption, _setSelectedDateOption] = useState('upcoming');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     search: '',

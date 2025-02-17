@@ -19,9 +19,7 @@ export const StepWrapper = ({ children, actions }: StepWrapperProps) => {
         }}
       >
         {/* Content Area */}
-        <Box sx={{ p: 3, flex: 1 }}>
-          {children}
-        </Box>
+        <Box sx={{ p: 3, flex: 1 }}>{children}</Box>
 
         {/* Actions Area */}
         <Box

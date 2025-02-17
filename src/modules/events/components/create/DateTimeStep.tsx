@@ -1,21 +1,11 @@
-import {
-  Box,
-  FormControl,
-  FormHelperText,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  useTheme,
-  TextField,
-} from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { Box, FormControl, Grid, TextField, useTheme } from '@mui/material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import TimezoneSelect, { allTimezones } from 'react-timezone-select';
-import { EventFormData } from '../../types/form';
-import { useState, useEffect } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import TimezoneSelect, { allTimezones } from 'react-timezone-select';
+import { EventFormData } from '../../types/form';
 import { getInputStyles } from './styles/inputStyles';
 
 interface DateTimeStepProps {
@@ -33,9 +23,9 @@ interface ValidationErrors {
 
 export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: DateTimeStepProps) => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const theme = useTheme();
   const inputStyles = getInputStyles(theme);
 
   // Convert Date to Dayjs for the pickers

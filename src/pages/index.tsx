@@ -15,6 +15,7 @@ import { menuItems } from '../common/defs/menu-items';
 import type { PageComponent } from './_app';
 import { Topbar } from '@common/layout/Topbar';
 import { useState, useEffect } from 'react';
+import { EventCard } from '@modules/events/components/discover/EventCard';
 
 const Home: PageComponent = () => {
   const router = useRouter();
@@ -154,6 +155,21 @@ const Home: PageComponent = () => {
       </Box>
     );
   };
+
+  // Add sample event data
+  const sampleEvents = [...Array(5)].map((_, index) => ({
+    title: `Event Title ${index + 1}`,
+    category: index % 2 === 0 ? 'Sports' : 'Music',
+    eventType: (index % 3 === 0 ? 'physical' : index % 3 === 1 ? 'virtual' : 'hybrid') as 'physical' | 'virtual' | 'hybrid',
+    isPaid: index % 2 === 0,
+    price: index % 2 === 0 ? 25 + index * 5 : undefined,
+    currency: 'USD',
+    startDate: `2025-${String(2 + Math.floor(index / 2)).padStart(2, '0')}-${String(20 + (index % 10)).padStart(2, '0')}`,
+    startTime: '18:00',
+    city: `City ${index + 1}`,
+    maxParticipants: 20,
+    currentParticipants: 8 + index,
+  }));
 
   return (
     <Box>
@@ -305,7 +321,7 @@ const Home: PageComponent = () => {
                   animation: 'scroll 40s linear infinite',
                   '@keyframes scroll': {
                     '0%': { transform: 'translateX(0)' },
-                    '100%': { transform: 'translateX(calc(-280px * 5 - 1.5rem * 5))' },
+                    '100%': { transform: 'translateX(calc(-320px * 5 - 1.5rem * 5))' },
                   },
                   '&:hover': {
                     animationPlayState: 'paused',
@@ -315,65 +331,16 @@ const Home: PageComponent = () => {
                 {/* Card template - will be repeated for all sets */}
                 {[...Array(4)].map((_, setIndex) => (
                   <Box key={`set-${setIndex}`} sx={{ display: 'flex', gap: 3 }}>
-                    {[...Array(5)].map((_, index) => (
-                      <Card
+                    {sampleEvents.map((event, index) => (
+                      <Box
                         key={`${setIndex}-${index}`}
                         sx={{
-                          width: 280,
+                          width: 320,
                           flex: 'none',
-                          cursor: 'pointer',
-                          bgcolor: 'background.paper',
-                          transition: (theme) =>
-                            theme.transitions.create(['transform', 'box-shadow'], {
-                              duration: theme.transitions.duration.standard,
-                            }),
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: (theme) => (theme.palette.mode === 'dark' ? 1 : 3),
-                          },
                         }}
                       >
-                        <CardMedia
-                          component="div"
-                          sx={{
-                            height: 140,
-                            bgcolor: (theme) =>
-                              theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300',
-                            position: 'relative',
-                          }}
-                        >
-                          <Chip
-                            label="ANYONE"
-                            size="small"
-                            sx={{
-                              position: 'absolute',
-                              top: 12,
-                              left: 12,
-                              bgcolor: 'success.main',
-                              color: '#fff',
-                            }}
-                          />
-                        </CardMedia>
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom sx={{ color: 'text.primary' }}>
-                            Event Title {(index % 5) + 1}
-                          </Typography>
-                          <Stack spacing={1}>
-                            <Typography variant="body2" color="text.secondary">
-                              {12 + index} Spots left
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Level: {index % 2 === 0 ? 'Beginner' : 'Advanced'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Date: Feb {20 + (index % 10)}, 2024 • 18:00-20:00
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Venue: Event Center {(index % 3) + 1}, City
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                        <EventCard event={event} />
+                      </Box>
                     ))}
                   </Box>
                 ))}

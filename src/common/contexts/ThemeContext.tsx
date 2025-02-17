@@ -1,13 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Theme, useMediaQuery } from '@mui/material';
-import { createTheme, ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
-import palette from '@common/theme/palette';
-import typography from '@common/theme/typography';
-import shadows from '@common/theme/shadows';
-import customShadows from '@common/theme/customShadows';
 import ComponentsOverrides from '@common/theme/ComponentsOverrides';
-import { CacheProvider } from '@emotion/react';
+import customShadows from '@common/theme/customShadows';
+import palette from '@common/theme/palette';
+import shadows from '@common/theme/shadows';
+import typography from '@common/theme/typography';
 import createEmotionCache from '@common/utils/createEmotionCache';
+import { CacheProvider } from '@emotion/react';
+import { useMediaQuery } from '@mui/material';
+import { createTheme, ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 type ThemeContextType = {
   mode: 'light' | 'dark';
@@ -18,13 +18,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const clientSideEmotionCache = createEmotionCache();
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize with light theme for SSR
   const [mounted, setMounted] = useState(false);
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)', {
     // This ensures the hook doesn't run during SSR
     noSsr: true,
-    defaultMatches: false
+    defaultMatches: false,
   });
 
   const [mode, setMode] = useState<'light' | 'dark'>('light');
@@ -95,18 +95,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <CacheProvider value={clientSideEmotionCache}>
       <ThemeContext.Provider value={contextValue}>
-        <MUIThemeProvider theme={theme}>
-          {children}
-        </MUIThemeProvider>
+        <MUIThemeProvider theme={theme}>{children}</MUIThemeProvider>
       </ThemeContext.Provider>
     </CacheProvider>
   );
-}
+};
 
-export function useTheme() {
+export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-}
+};
