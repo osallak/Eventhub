@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';
@@ -5,9 +7,7 @@ import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { StepWrapper } from '@modules/events/components/create/StepWrapper';
 import { EventFormData } from '@modules/events/types/form';
 import { Box, Button, Container, Step, StepLabel, Stepper, Typography, Stack } from '@mui/material';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/router';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { InviteStep } from '@modules/events/components/create/InviteStep';
 import { withAuth } from '@modules/auth/hocs/withAuth';
@@ -16,13 +16,25 @@ import { AUTH_MODE } from '@modules/auth/types/auth.types';
 
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
 
-const CreateEvent = () => {
+interface CreateEventProps {
+  mode?: 'create' | 'edit';
+}
+
+const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { id } = router.query;
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<EventFormData>({});
   const [stepsValidation, setStepsValidation] = useState<Record<number, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const router = useRouter();
+
+  useEffect(() => {
+    if (mode === 'edit' && id) {
+      // TODO: Fetch event data and populate formData
+      console.log('Fetching event:', id);
+    }
+  }, [mode, id]);
 
   const handleFormChange = <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
     console.group('CreateEvent: Form Update');
@@ -158,7 +170,7 @@ const CreateEvent = () => {
           },
         }}
       >
-        {t('Create New Event')}
+        {mode === 'edit' ? 'Edit Event' : 'Create Event'}
       </Typography>
 
       <Box

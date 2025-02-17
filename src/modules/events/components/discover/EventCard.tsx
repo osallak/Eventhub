@@ -1,4 +1,4 @@
-import { Card, Chip, Stack, Typography, Button } from '@mui/material';
+import { Card, Chip, Stack, Typography, Button, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { formatPrice } from '../../utils/formatters';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -8,9 +8,11 @@ import dayjs from 'dayjs';
 import { useAuth } from '@modules/auth/contexts/AuthContext';
 import { Routes } from '@common/constants/routes';
 import { useRouter } from 'next/router';
+import { EventActions } from './EventActions';
 
 interface EventCardProps {
   event: {
+    id: string;
     title: string;
     category: string;
     eventType: 'physical' | 'virtual' | 'hybrid';
@@ -24,6 +26,8 @@ interface EventCardProps {
     currentParticipants?: number;
     imageUrl?: string;
     isFull: boolean;
+    isOwner?: boolean;
+    isParticipant?: boolean;
   };
 }
 
@@ -73,6 +77,20 @@ export const EventCard = ({ event }: EventCardProps) => {
       return 'Event Full';
     }
     return 'Join Event';
+  };
+
+  const handleEditEvent = () => {
+    router.push(`/events/edit/${event.id}`);
+  };
+
+  const handleDeleteEvent = () => {
+    // TODO: Add confirmation dialog
+    console.log('Delete event:', event.id);
+  };
+
+  const handleLeaveEvent = () => {
+    // TODO: Add confirmation dialog
+    console.log('Leave event:', event.id);
   };
 
   return (
@@ -238,6 +256,20 @@ export const EventCard = ({ event }: EventCardProps) => {
       >
         {getButtonText()}
       </Button>
+
+      {/* Add actions menu if user is owner or participant */}
+      {(event.isOwner || event.isParticipant) && (
+        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+          <EventActions
+            eventId={event.id}
+            isOwner={event.isOwner || false}
+            isParticipant={event.isParticipant || false}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteEvent}
+            onLeave={handleLeaveEvent}
+          />
+        </Box>
+      )}
     </Card>
   );
 };

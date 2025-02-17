@@ -88,6 +88,7 @@ const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
 };
 
 const mockEvents = [...Array(12)].map((_, index) => ({
+  id: index.toString(),
   title: `Event Title ${index + 1}`,
   category: 'Sports & Fitness',
   eventType: getEventType(index),

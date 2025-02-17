@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { menuItems } from '../common/defs/menu-items';
 import type { PageComponent } from './_app';
+import { DiscoverEventsSection } from '@modules/events/components/discover/DiscoverEventsSection';
 
 const Home: PageComponent = () => {
   const router = useRouter();
@@ -163,6 +164,7 @@ const Home: PageComponent = () => {
 
   // Update sample events data
   const sampleEvents = [...Array(5)].map((_, index) => ({
+    id: index.toString(),
     title: `Event Title ${index + 1}`,
     category: index % 2 === 0 ? 'Sports' : 'Music',
     eventType: getEventType(index),
@@ -176,26 +178,6 @@ const Home: PageComponent = () => {
     currentParticipants: 8 + index,
     isFull: index === 4, // Last event is full
   }));
-
-  // Create the DiscoverEventsSection component
-  const DiscoverEventsSection = () => {
-    return (
-      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
-            Discover Events
-          </Typography>
-          <Grid container spacing={3}>
-            {sampleEvents.map((event, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <EventCard event={event} />
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-    );
-  };
 
   return (
     <Box>
@@ -473,7 +455,11 @@ const Home: PageComponent = () => {
           </Container>
         </Box>
 
-        {isAuthenticated ? renderYourEventsSection() : <DiscoverEventsSection />}
+        {isAuthenticated ? (
+          renderYourEventsSection()
+        ) : (
+          <DiscoverEventsSection events={sampleEvents} />
+        )}
 
         {/* How It Works Section */}
         <Box
