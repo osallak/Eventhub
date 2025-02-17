@@ -5,6 +5,9 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import dayjs from 'dayjs';
+import { useAuth } from '@modules/auth/contexts/AuthContext';
+import { Routes } from '@common/constants/routes';
+import { useRouter } from 'next/router';
 
 interface EventCardProps {
   event: {
@@ -20,11 +23,14 @@ interface EventCardProps {
     maxParticipants?: number;
     currentParticipants?: number;
     imageUrl?: string;
+    isFull: boolean;
   };
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   // Helper to get event type icon and text
   const getEventTypeInfo = (type: 'physical' | 'virtual' | 'hybrid') => {
@@ -47,14 +53,26 @@ export const EventCard = ({ event }: EventCardProps) => {
   // Check if event is in the past
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
+  const handleJoinClick = () => {
+    if (!isAuthenticated) {
+      router.push(`${Routes.Auth.Login}?returnUrl=${encodeURIComponent(router.asPath)}`);
+    } else {
+      // Existing join logic
+      console.log('Joining event...');
+    }
+  };
+
   const getButtonText = () => {
+    if (!isAuthenticated) {
+      return 'Login to Join';
+    }
     if (isPastEvent) {
-      return t('Event Ended');
+      return 'Event Ended';
     }
-    if (hasLimitedSpots && spotsLeft === 0) {
-      return t('Event Full');
+    if (event.isFull) {
+      return 'Event Full';
     }
-    return t('Join Event');
+    return 'Join Event';
   };
 
   return (
@@ -207,18 +225,15 @@ export const EventCard = ({ event }: EventCardProps) => {
 
       {/* Join Button */}
       <Button
+        onClick={handleJoinClick}
         variant="contained"
+        disabled={event.isFull || isPastEvent}
         fullWidth
-        disabled={isPastEvent || (hasLimitedSpots && spotsLeft === 0)}
         sx={{
           mt: 'auto',
           borderRadius: '20px',
           textTransform: 'none',
           py: 1,
-          bgcolor: 'success.main',
-          '&:hover': {
-            bgcolor: 'success.dark',
-          },
         }}
       >
         {getButtonText()}

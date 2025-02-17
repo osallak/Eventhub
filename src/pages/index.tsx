@@ -1,25 +1,16 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  Container,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Topbar } from '@common/layout/Topbar';
+import { useAuth } from '@modules/auth/contexts/AuthContext';
+import { EventCard } from '@modules/events/components/discover/EventCard';
+import { Box, Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import { menuItems } from '../common/defs/menu-items';
 import type { PageComponent } from './_app';
-import { Topbar } from '@common/layout/Topbar';
-import { useState, useEffect } from 'react';
-import { EventCard } from '@modules/events/components/discover/EventCard';
 
 const Home: PageComponent = () => {
   const router = useRouter();
   const [scrollProgress, setScrollProgress] = useState(0);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,8 +23,6 @@ const Home: PageComponent = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const isAuthenticated = false; // We'll replace this with real auth later
 
   const renderYourEventsSection = () => {
     if (!isAuthenticated) {
@@ -156,20 +145,57 @@ const Home: PageComponent = () => {
     );
   };
 
-  // Add sample event data
+  const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
+    if (index % 3 === 0) {
+      return 'physical';
+    }
+    if (index % 3 === 1) {
+      return 'virtual';
+    }
+    return 'hybrid';
+  };
+
+  const formatDate = (index: number): string => {
+    const month = String(2 + Math.floor(index / 2)).padStart(2, '0');
+    const day = String(20 + (index % 10)).padStart(2, '0');
+    return `2025-${month}-${day}`;
+  };
+
+  // Update sample events data
   const sampleEvents = [...Array(5)].map((_, index) => ({
     title: `Event Title ${index + 1}`,
     category: index % 2 === 0 ? 'Sports' : 'Music',
-    eventType: (index % 3 === 0 ? 'physical' : index % 3 === 1 ? 'virtual' : 'hybrid') as 'physical' | 'virtual' | 'hybrid',
+    eventType: getEventType(index),
     isPaid: index % 2 === 0,
     price: index % 2 === 0 ? 25 + index * 5 : undefined,
     currency: 'USD',
-    startDate: `2025-${String(2 + Math.floor(index / 2)).padStart(2, '0')}-${String(20 + (index % 10)).padStart(2, '0')}`,
+    startDate: formatDate(index),
     startTime: '18:00',
     city: `City ${index + 1}`,
     maxParticipants: 20,
     currentParticipants: 8 + index,
+    isFull: index === 4, // Last event is full
   }));
+
+  // Create the DiscoverEventsSection component
+  const DiscoverEventsSection = () => {
+    return (
+      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+        <Container maxWidth="lg">
+          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+            Discover Events
+          </Typography>
+          <Grid container spacing={3}>
+            {sampleEvents.map((event, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <EventCard event={event} />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+    );
+  };
 
   return (
     <Box>
@@ -447,7 +473,7 @@ const Home: PageComponent = () => {
           </Container>
         </Box>
 
-        {renderYourEventsSection()}
+        {isAuthenticated ? renderYourEventsSection() : <DiscoverEventsSection />}
 
         {/* How It Works Section */}
         <Box

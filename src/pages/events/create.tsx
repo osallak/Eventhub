@@ -10,6 +10,9 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { InviteStep } from '@modules/events/components/create/InviteStep';
+import { withAuth } from '@modules/auth/hocs/withAuth';
+import { Routes } from '@common/constants/routes';
+import { AUTH_MODE } from '@modules/auth/types/auth.types';
 
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
 
@@ -206,4 +209,7 @@ const CreateEvent = () => {
   );
 };
 
-export default CreateEvent;
+export default withAuth(CreateEvent, {
+  mode: AUTH_MODE.LOGGED_IN,
+  redirectUrl: Routes.Auth.Login,
+});

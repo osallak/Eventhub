@@ -100,6 +100,7 @@ const mockEvents = [...Array(12)].map((_, index) => ({
   maxParticipants: index % 3 === 0 ? undefined : 20,
   currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
   imageUrl: undefined,
+  isFull: index % 3 === 0,
 }));
 
 const DiscoverEvents = () => {

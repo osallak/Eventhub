@@ -19,10 +19,9 @@ import { getInputStyles } from './styles/inputStyles';
 interface DetailsStepProps {
   formData: EventFormData;
   onFormChange: (field: keyof EventFormData, value: any) => void;
-  _onValidationChange: (isValid: boolean) => void;
 }
 
-export const DetailsStep = ({ formData, onFormChange, _onValidationChange }: DetailsStepProps) => {
+export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const inputStyles = getInputStyles(theme);
