@@ -1,4 +1,4 @@
-import { Box, TextField, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the map component with no SSR
@@ -21,8 +21,6 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
 });
 
 interface LocationMapProps {
-  address?: string;
-  city?: string;
   onLocationSelect: (location: {
     address: string;
     city: string;
@@ -31,7 +29,7 @@ interface LocationMapProps {
   }) => void;
 }
 
-export const LocationMap = ({ address, city, onLocationSelect }: LocationMapProps) => {
+export const LocationMap = ({ onLocationSelect }: LocationMapProps) => {
   return (
     <Box
       sx={{

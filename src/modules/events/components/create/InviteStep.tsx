@@ -1,17 +1,13 @@
-import { Box, Grid, TextField, Typography, Button, Chip, Stack, Divider } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { Box, Button, Chip, Divider, Grid, Stack, TextField, Typography } from '@mui/material';
+import { Theme, useTheme } from '@mui/material/styles';
 import { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
-import { getInputStyles } from './styles/inputStyles';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { Theme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { EventFormData } from '../../types/form';
+import { getInputStyles } from './styles/inputStyles';
 
 interface InviteStepProps {
   formData: EventFormData;
   onFormChange: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
-  onValidationChange: (isValid: boolean) => void;
 }
 
 const buttonStyles = {
@@ -36,7 +32,7 @@ const inputStyles = (theme: Theme) => ({
   },
 });
 
-export const InviteStep = ({ formData, onFormChange, onValidationChange }: InviteStepProps) => {
+export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -52,12 +48,15 @@ export const InviteStep = ({ formData, onFormChange, onValidationChange }: Invit
   };
 
   const handleRemoveEmail = (indexToRemove: number) => {
-    const updatedEmails = (formData.invitedEmails || []).filter((_, index) => index !== indexToRemove);
+    const updatedEmails = (formData.invitedEmails || []).filter(
+      (_, index) => index !== indexToRemove
+    );
     onFormChange('invitedEmails', updatedEmails);
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/events/invite/${formData.id}`);
+    const eventId = formData.id || 'preview';
+    navigator.clipboard.writeText(`${window.location.origin}/events/invite/${eventId}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -73,15 +72,11 @@ export const InviteStep = ({ formData, onFormChange, onValidationChange }: Invit
           <TextField
             fullWidth
             size="small"
-            value={`${window.location.origin}/events/invite/${formData.id}`}
+            value={`${window.location.origin}/events/invite/${formData.id || 'preview'}`}
             InputProps={{
               readOnly: true,
               endAdornment: (
-                <Button
-                  variant="contained"
-                  onClick={handleCopyLink}
-                  sx={buttonStyles}
-                >
+                <Button variant="contained" onClick={handleCopyLink} sx={buttonStyles}>
                   {copied ? t('Copied!') : t('Copy')}
                 </Button>
               ),

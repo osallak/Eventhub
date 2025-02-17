@@ -2,7 +2,7 @@ import CustomPalette from '@common/theme/palette/type';
 import { alpha } from '@mui/material/styles';
 
 const GREY = {
-  0: '#FFFFFF',
+  50: '#FAFAFA',
   100: '#F9FAFB',
   200: '#F4F6F8',
   300: '#DFE3E8',
@@ -12,6 +12,10 @@ const GREY = {
   700: '#454F5B',
   800: '#212B36',
   900: '#161C24',
+  A100: '#F5F5F5',
+  A200: '#EEEEEE',
+  A400: '#BDBDBD',
+  A700: '#616161',
 };
 
 const PRIMARY = {
@@ -116,7 +120,6 @@ const palette: CustomPalette = {
       selected: alpha(GREY[400], 0.16),
       disabled: alpha(GREY[400], 0.8),
       disabledBackground: alpha(GREY[400], 0.24),
-      focus: alpha(GREY[400], 0.24),
     },
   },
 };

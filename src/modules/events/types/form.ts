@@ -1,6 +1,5 @@
-import { Dayjs } from 'dayjs';
-
 export interface EventFormData {
+  id?: string;
   // Basic Info
   title?: string;
   category?: string;

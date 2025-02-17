@@ -17,7 +17,7 @@ import { getInputStyles } from './styles/inputStyles';
 
 interface BasicInfoStepProps {
   formData: EventFormData;
-  onFormChange: (field: keyof EventFormData, value: any) => void;
+  onFormChange: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
   onValidationChange: (isValid: boolean) => void;
 }
 
@@ -37,7 +37,7 @@ export const BasicInfoStep = ({
   const theme = useTheme();
   const inputStyles = getInputStyles(theme);
 
-  const validateField = (field: keyof EventFormData, value: any) => {
+  const validateField = (field: keyof ValidationErrors, value: string | undefined) => {
     switch (field) {
       case 'title':
         if (!value?.trim()) {
@@ -87,14 +87,14 @@ export const BasicInfoStep = ({
 
   const handleBlur = (field: keyof EventFormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    const error = validateField(field, formData[field]);
+    const error = validateField(field as keyof ValidationErrors, formData[field] as string);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
-  const handleChange = (field: keyof EventFormData, value: any) => {
+  const handleChange = <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
     onFormChange(field, value);
     if (touched[field]) {
-      const error = validateField(field, value);
+      const error = validateField(field as keyof ValidationErrors, value as string);
       setErrors((prev) => ({ ...prev, [field]: error }));
     }
   };

@@ -4,6 +4,7 @@ import { formatPrice } from '../../utils/formatters';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
+import dayjs from 'dayjs';
 
 interface EventCardProps {
   event: {
@@ -32,7 +33,7 @@ export const EventCard = ({ event }: EventCardProps) => {
         return { icon: '🏠', text: t('In Person') };
       case 'virtual':
         return { icon: '💻', text: t('Online') };
-      case 'hybrid':
+      default:
         return { icon: '🌐', text: t('Hybrid') };
     }
   };
@@ -42,6 +43,19 @@ export const EventCard = ({ event }: EventCardProps) => {
   const spotsLeft = hasLimitedSpots
     ? event.maxParticipants! - (event.currentParticipants || 0)
     : undefined;
+
+  // Check if event is in the past
+  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
+
+  const getButtonText = () => {
+    if (isPastEvent) {
+      return t('Event Ended');
+    }
+    if (hasLimitedSpots && spotsLeft === 0) {
+      return t('Event Full');
+    }
+    return t('Join Event');
+  };
 
   return (
     <Card
@@ -65,9 +79,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           label={
             <Stack direction="row" spacing={0.5} alignItems="center">
               <Typography sx={{ fontSize: '1rem' }}>{typeInfo.icon}</Typography>
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                {typeInfo.text}
-              </Typography>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{typeInfo.text}</Typography>
             </Stack>
           }
           size="small"
@@ -188,9 +200,7 @@ export const EventCard = ({ event }: EventCardProps) => {
               lineHeight: 1.5,
             }}
           >
-            {hasLimitedSpots
-              ? `${spotsLeft} ${t('spots left')}`
-              : t('Unlimited spots')}
+            {hasLimitedSpots ? `${spotsLeft} ${t('spots left')}` : t('Unlimited spots')}
           </Typography>
         </Stack>
       </Stack>
@@ -199,7 +209,7 @@ export const EventCard = ({ event }: EventCardProps) => {
       <Button
         variant="contained"
         fullWidth
-        disabled={hasLimitedSpots && spotsLeft === 0}
+        disabled={isPastEvent || (hasLimitedSpots && spotsLeft === 0)}
         sx={{
           mt: 'auto',
           borderRadius: '20px',
@@ -211,9 +221,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           },
         }}
       >
-        {hasLimitedSpots && spotsLeft === 0
-          ? t('Event Full')
-          : t('Join Event')}
+        {getButtonText()}
       </Button>
     </Card>
   );
