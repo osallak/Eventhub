@@ -1,4 +1,6 @@
-import { useTheme } from '@common/contexts/ThemeContext';
+import { Routes } from '@common/constants/routes';
+import { useTheme as useCustomTheme } from '@common/contexts/ThemeContext';
+import { useAuth as useAuthContext } from '@modules/auth/contexts/AuthContext';
 import useAuth from '@modules/auth/hooks/api/useAuth';
 import { AccountCircle, Language as LanguageIcon } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,10 +22,10 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Theme } from '@mui/material/styles';
 
 interface TopbarProps {
   isLandingPage?: boolean;
@@ -36,47 +38,97 @@ const LANGUAGES = [
   { code: 'es', label: 'Español' },
 ];
 
+type NavItem = {
+  label: string;
+  href: string;
+  requiresAuth: boolean;
+};
+
+const navItems: NavItem[] = [
+  { label: 'Home', href: '/', requiresAuth: false },
+  { label: 'Events', href: '/events', requiresAuth: false },
+  { label: 'Create Event', href: '/events/create', requiresAuth: true },
+  { label: 'Profile', href: '/profile', requiresAuth: true },
+];
+
 export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { mode, toggleMode } = useTheme();
+  const customTheme = useCustomTheme();
+  // const theme = useMuiTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { mode, toggleMode } = customTheme;
   const { logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [languageMenu, setLanguageMenu] = useState<null | HTMLElement>(null);
-  const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
+  const { isAuthenticated } = useAuthContext();
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // Consolidate menu state
+  const [menuState, setMenuState] = useState({
+    mobileMenu: false,
+    profile: null as HTMLElement | null,
+    language: null as HTMLElement | null,
+    notifications: null as HTMLElement | null,
+  });
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuState((prev) => ({
+      ...prev,
+      mobileMenu: false,
+      profile: null,
+      language: null,
+      notifications: null,
+    }));
   };
 
-  const handleProfileClick = () => {
-    router.push('/profile');
+  const handleMenuOpen =
+    (type: keyof typeof menuState) => (event: React.MouseEvent<HTMLElement>) => {
+      setMenuState((prev) => ({
+        ...prev,
+        [type]: event.currentTarget,
+      }));
+    };
+
+  // Remove unused variables and functions
+  const handleNavigation = (href: string) => {
+    router.push(href);
     handleMenuClose();
   };
 
-  const handleLanguageClick = (event: React.MouseEvent<HTMLElement>) => {
-    setLanguageMenu(event.currentTarget);
-  };
+  const filteredNavItems = navItems.filter(
+    (item) => !item.requiresAuth || (item.requiresAuth && isAuthenticated)
+  );
 
-  const handleLanguageClose = () => {
-    setLanguageMenu(null);
-  };
-
-  const handleNotificationClick = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationAnchorEl(event.currentTarget);
-  };
-
-  const handleNotificationClose = () => {
-    setNotificationAnchorEl(null);
-  };
+  const renderAuthButtons = () => (
+    <Stack direction="row" spacing={2}>
+      {isAuthenticated ? (
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => {
+            logout();
+            router.push('/');
+          }}
+        >
+          Logout
+        </Button>
+      ) : (
+        <>
+          <Button variant="outlined" color="primary" onClick={() => router.push(Routes.Auth.Login)}>
+            Login
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => router.push(Routes.Auth.Register)}
+          >
+            Sign Up
+          </Button>
+        </>
+      )}
+    </Stack>
+  );
 
   // Add this helper function
-  const getBackgroundColor = (theme: any) => {
+  const getBackgroundColor = (theme: Theme) => {
     if (isLandingPage) {
       const color = theme.palette.mode === 'dark' ? '33, 33, 33' : '255, 255, 255';
       return `rgba(${color}, ${scrollProgress})`;
@@ -206,46 +258,29 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
 
               {/* Main Navigation */}
               <Stack direction="row" spacing={1}>
-                <Button
-                  color="inherit"
-                  onClick={() => router.push('/events')}
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: '0.95rem',
-                    fontWeight: 500,
-                    px: 2,
-                    py: 1,
-                    borderRadius: '6px',
-                    '&:hover': {
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255, 255, 255, 0.05)'
-                          : 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  {t('Discover Events')}
-                </Button>
-                <Button
-                  color="inherit"
-                  onClick={() => router.push('/events/create')}
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: '0.95rem',
-                    fontWeight: 500,
-                    px: 2,
-                    py: 1,
-                    borderRadius: '6px',
-                    '&:hover': {
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255, 255, 255, 0.05)'
-                          : 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  {t('Create Event')}
-                </Button>
+                {filteredNavItems.map((item) => (
+                  <Button
+                    key={item.href}
+                    color="inherit"
+                    onClick={() => handleNavigation(item.href)}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.95rem',
+                      fontWeight: 500,
+                      px: 2,
+                      py: 1,
+                      borderRadius: '6px',
+                      '&:hover': {
+                        backgroundColor: (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                      },
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
               </Stack>
             </Stack>
 
@@ -266,7 +301,7 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             >
               {/* 1. Notifications */}
               <IconButton
-                onClick={handleNotificationClick}
+                onClick={handleMenuOpen('notifications')}
                 size="small"
                 sx={commonIconButtonStyles.sx}
               >
@@ -274,7 +309,11 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
               </IconButton>
 
               {/* 2. Language */}
-              <IconButton onClick={handleLanguageClick} size="small" sx={commonIconButtonStyles.sx}>
+              <IconButton
+                onClick={handleMenuOpen('language')}
+                size="small"
+                sx={commonIconButtonStyles.sx}
+              >
                 <LanguageIcon fontSize="small" />
               </IconButton>
 
@@ -288,7 +327,11 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
               </IconButton>
 
               {/* 4. Profile */}
-              <IconButton onClick={handleMenuOpen} size="small" sx={commonIconButtonStyles.sx}>
+              <IconButton
+                onClick={handleMenuOpen('profile')}
+                size="small"
+                sx={commonIconButtonStyles.sx}
+              >
                 <AccountCircle fontSize="small" />
               </IconButton>
             </Stack>
@@ -309,7 +352,10 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             >
               Event<span style={{ color: '#2196F3' }}>Hub</span>
             </Typography>
-            <IconButton sx={{ ml: 'auto' }} onClick={() => setMobileMenuOpen(true)}>
+            <IconButton
+              sx={{ ml: 'auto' }}
+              onClick={() => setMenuState((prev) => ({ ...prev, mobileMenu: true }))}
+            >
               <MenuIcon />
             </IconButton>
           </Box>
@@ -319,8 +365,8 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
       {/* Mobile Menu Drawer */}
       <Drawer
         anchor="top"
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+        open={menuState.mobileMenu}
+        onClose={handleMenuClose}
         PaperProps={{
           sx: {
             width: '100%',
@@ -344,131 +390,40 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Menu
             </Typography>
-            <IconButton onClick={() => setMobileMenuOpen(false)}>
+            <IconButton onClick={handleMenuClose}>
               <CloseIcon />
             </IconButton>
           </Box>
 
           {/* Main Menu Items */}
           <Stack spacing={1}>
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/profile');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Profile
-            </Button>
-
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/events');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Discover Events
-            </Button>
-
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/events/create');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Create Event
-            </Button>
-
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/events/history');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              History
-            </Button>
-
-            <Button
-              fullWidth
-              onClick={() => {
-                router.push('/events/upcoming');
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'text.primary',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Upcoming Events
-            </Button>
-
-            <Divider sx={{ my: 1 }} />
-
-            <Button
-              fullWidth
-              onClick={() => {
-                logout();
-                setMobileMenuOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                color: 'error.main',
-                py: 1,
-                px: 2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              Logout
-            </Button>
+            {filteredNavItems.map((item) => (
+              <Button
+                key={item.href}
+                fullWidth
+                onClick={() => handleNavigation(item.href)}
+                sx={{
+                  justifyContent: 'flex-start',
+                  color: 'text.primary',
+                  py: 1,
+                  px: 2,
+                  borderRadius: 2,
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
+            <Box sx={{ px: 2, py: 1 }}>{renderAuthButtons()}</Box>
           </Stack>
         </Box>
       </Drawer>
 
       {/* Language Menu */}
       <Menu
-        anchorEl={languageMenu}
-        open={Boolean(languageMenu)}
-        onClose={handleLanguageClose}
+        anchorEl={menuState.language}
+        open={Boolean(menuState.language)}
+        onClose={handleMenuClose}
         PaperProps={{
           elevation: 3,
           sx: {
@@ -484,7 +439,7 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             key={lang.code}
             onClick={() => {
               // Language change logic will go here
-              handleLanguageClose();
+              handleMenuClose();
             }}
             sx={{
               py: 1,
@@ -500,8 +455,8 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
 
       {/* Profile Menu */}
       <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
+        anchorEl={menuState.profile}
+        open={Boolean(menuState.profile)}
         onClose={handleMenuClose}
         PaperProps={{
           elevation: 3,
@@ -513,7 +468,13 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
           },
         }}
       >
-        <MenuItem onClick={handleProfileClick} sx={{ py: 1.5 }}>
+        <MenuItem
+          onClick={() => {
+            router.push('/profile');
+            handleMenuClose();
+          }}
+          sx={{ py: 1.5 }}
+        >
           <Stack spacing={0.5}>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
               {t('Profile')}
@@ -552,9 +513,9 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
 
       {/* Notifications Menu */}
       <Menu
-        anchorEl={notificationAnchorEl}
-        open={Boolean(notificationAnchorEl)}
-        onClose={handleNotificationClose}
+        anchorEl={menuState.notifications}
+        open={Boolean(menuState.notifications)}
+        onClose={handleMenuClose}
         PaperProps={{
           elevation: 3,
           sx: {

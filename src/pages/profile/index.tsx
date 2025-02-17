@@ -18,6 +18,9 @@ import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
+import { withAuth } from '@modules/auth/hocs/withAuth';
+import { AUTH_MODE } from '@modules/auth/types/auth.types';
+import { Routes } from '@common/constants/routes';
 
 type EventType = 'physical' | 'virtual' | 'hybrid';
 
@@ -47,6 +50,7 @@ const mockEvents = [...Array(6)].map((_, index) => {
     city: `City ${(index % 3) + 1}`,
     maxParticipants: 20,
     currentParticipants: 8 + (index % 5),
+    isFull: 8 + (index % 5) >= 20,
   };
 });
 
@@ -350,4 +354,7 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default withAuth(Profile, {
+  mode: AUTH_MODE.LOGGED_IN,
+  redirectUrl: Routes.Auth.Login,
+});
