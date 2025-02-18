@@ -1,4 +1,3 @@
-import { useTheme } from '@mui/material/styles';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import {
@@ -18,10 +17,11 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { LoginFormData } from '../types/auth.types';
 import { Routes } from '@common/constants/routes';
+import useAuth from '../hooks/api/useAuth';
+import { useSnackbar } from 'notistack';
 
-export const LoginForm = () => {
+export const LoginForm: React.FC = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +31,33 @@ export const LoginForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>();
 
+  const auth = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError(null);
-      // TODO: Implement login logic
-      console.log(data);
-    } catch (err) {
+      const response = await auth.login(data, {
+        displayProgress: true,
+        displaySuccess: true,
+      });
+
+      if (response.success && response.data?.status === 'success') {
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        // Show success message
+        enqueueSnackbar(response.data.message, {
+          variant: 'success',
+        });
+
+        // Redirect to home
+        window.location.href = '/';
+      } else if (response.errors?.length) {
+        setError(response.errors[0]);
+      }
+    } catch (err: unknown) {
+      console.error('Login error:', err);
       setError(t('auth.errors.login_failed'));
     }
   };
@@ -79,10 +100,7 @@ export const LoginForm = () => {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -94,14 +112,7 @@ export const LoginForm = () => {
           />
 
           <FormControlLabel
-            control={
-              <Checkbox
-                {...register('remember')}
-                sx={{
-                  color: theme.palette.mode === 'dark' ? 'grey.600' : 'grey.400',
-                }}
-              />
-            }
+            control={<Checkbox {...register('remember')} />}
             label={t('auth.login.remember_me')}
           />
 
@@ -115,12 +126,7 @@ export const LoginForm = () => {
             {t('auth.login.submit')}
           </Button>
 
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<GoogleIcon />}
-            sx={{ py: 1.2 }}
-          >
+          <Button variant="outlined" size="large" startIcon={<GoogleIcon />} sx={{ py: 1.2 }}>
             {t('auth.login.google')}
           </Button>
         </Stack>

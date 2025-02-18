@@ -1,4 +1,3 @@
-import { useTheme } from '@common/contexts/ThemeContext';
 import { Routes } from '@common/constants/routes';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -16,13 +15,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { RegisterCredentials } from '../types/auth.types';
+import useAuth from '../hooks/api/useAuth';
+import { useSnackbar } from 'notistack';
 
-export const RegisterForm = () => {
+export const RegisterForm: React.FC = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const auth = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const {
     register,
@@ -36,9 +38,27 @@ export const RegisterForm = () => {
   const onSubmit = async (data: RegisterCredentials) => {
     try {
       setError(null);
-      // TODO: Implement register logic
-      console.log(data);
-    } catch (err) {
+      const response = await auth.register(data, {
+        displayProgress: true,
+        displaySuccess: true,
+      });
+
+      if (response.success && response.data?.status === 'success') {
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        // Show success message
+        enqueueSnackbar(response.data.message, {
+          variant: 'success',
+        });
+
+        // Redirect to home
+        window.location.href = '/';
+      } else if (response.errors?.length) {
+        setError(response.errors[0]);
+      }
+    } catch (err: unknown) {
+      console.error('Registration error:', err);
       setError(t('auth.errors.register_failed'));
     }
   };
@@ -95,10 +115,7 @@ export const RegisterForm = () => {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -109,10 +126,6 @@ export const RegisterForm = () => {
               minLength: {
                 value: 8,
                 message: t('auth.validation.password_min_length'),
-              },
-              pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-                message: t('auth.validation.password_pattern'),
               },
             })}
           />
@@ -137,8 +150,7 @@ export const RegisterForm = () => {
             }}
             {...register('password_confirmation', {
               required: t('auth.validation.confirm_password_required'),
-              validate: (value) =>
-                value === password || t('auth.validation.passwords_must_match'),
+              validate: (value) => value === password || t('auth.validation.passwords_must_match'),
             })}
           />
 
@@ -152,12 +164,7 @@ export const RegisterForm = () => {
             {t('auth.register.submit')}
           </Button>
 
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<GoogleIcon />}
-            sx={{ py: 1.2 }}
-          >
+          <Button variant="outlined" size="large" startIcon={<GoogleIcon />} sx={{ py: 1.2 }}>
             {t('auth.register.google')}
           </Button>
         </Stack>

@@ -7,12 +7,12 @@ import { CircularProgress, Box } from '@mui/material';
 
 // Loading component
 const LoadingScreen = () => (
-  <Box 
-    sx={{ 
-      height: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
+  <Box
+    sx={{
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
     }}
   >
     <CircularProgress />
@@ -22,8 +22,8 @@ const LoadingScreen = () => (
 export const withAuth = <P extends object>(
   Component: React.ComponentType<P>,
   options: WithAuthOptions
-) => {
-  return function WithAuthComponent(props: P) {
+): React.FC<P> => {
+  const WithAuthComponent: React.FC<P> = (props) => {
     const router = useRouter();
     const { isAuthenticated, isLoading } = useAuth();
     const { mode, redirectUrl } = options;
@@ -53,4 +53,6 @@ export const withAuth = <P extends object>(
 
     return <Component {...props} />;
   };
+
+  return WithAuthComponent;
 };

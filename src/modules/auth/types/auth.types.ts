@@ -1,6 +1,7 @@
 export enum AUTH_MODE {
   LOGGED_IN = 'LOGGED_IN',
   LOGGED_OUT = 'LOGGED_OUT',
+  PUBLIC = 'PUBLIC',
 }
 
 export interface User {
@@ -30,6 +31,9 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   password_confirmation: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface PasswordResetRequest {
@@ -44,8 +48,21 @@ export interface PasswordReset {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  status: string;
+  message?: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    created_at: string;
+  };
+  authorization: {
+    token: string;
+    type: string;
+  };
 }
 
 export interface GoogleAuthResponse {
@@ -57,4 +74,10 @@ export interface WithAuthOptions {
   mode: AUTH_MODE;
   redirectUrl: string;
   adminOnly?: boolean;
+}
+
+export interface LoginFormData {
+  email: string;
+  password: string;
+  remember?: boolean;
 }

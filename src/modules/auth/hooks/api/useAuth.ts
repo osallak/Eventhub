@@ -1,7 +1,8 @@
 import ApiRoutes from '@common/defs/api-routes';
-import useApi, { ApiOptions, ApiResponse, FetchApiOptions } from '@common/hooks/useApi';
+import useApi, { FetchApiOptions, NormalizedResponse } from '@common/hooks/useApi';
 import { User } from '@modules/users/defs/types';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 
 export interface LoginInput {
@@ -26,25 +27,64 @@ export interface ResetPasswordInput {
   token: string;
 }
 
+interface AuthResponse {
+  status: 'success' | 'error';
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    username?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  authorization: {
+    token: string;
+    type: string;
+  };
+}
+
+interface MeResponse {
+  status: 'success' | 'error';
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    username: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 interface AuthData {
   user: User | null;
   login: (
     _input: LoginInput,
     _options?: FetchApiOptions
-  ) => Promise<ApiResponse<{ token: string }>>;
+  ) => Promise<NormalizedResponse<AuthResponse>>;
   register: (
-    _input: RegisterInput,
+    _input: RegisterInput & {
+      name: string;
+      password_confirmation: string;
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+    },
     _options?: FetchApiOptions
-  ) => Promise<ApiResponse<{ token: string }>>;
-  logout: (_options?: FetchApiOptions) => Promise<ApiResponse<null>>;
+  ) => Promise<NormalizedResponse<AuthResponse>>;
+  logout: (_options?: FetchApiOptions) => Promise<NormalizedResponse<null>>;
   requestPasswordReset: (
     _input: RequestPasswordResetInput,
     _options?: FetchApiOptions
-  ) => Promise<ApiResponse<null>>;
+  ) => Promise<NormalizedResponse<null>>;
   resetPassword: (
     _input: ResetPasswordInput,
     _options?: FetchApiOptions
-  ) => Promise<ApiResponse<{ token: string }>>;
+  ) => Promise<NormalizedResponse<{ token: string }>>;
   initialized: boolean; // This is used to prevent the app from rendering before the useAuth initial fetch is complete
 }
 
@@ -71,48 +111,104 @@ const useAuth = (): AuthData => {
       setInitialized(true);
       return null;
     }
-    const options: ApiOptions = {
-      method: 'POST',
-    };
-    const response = await fetchApi<{ user: User }>(url, options);
-    const { success, data } = response;
-    let returnedUser = null;
-    if (!success) {
+
+    try {
+      const response = await fetchApi<MeResponse>(url, {
+        method: 'GET',
+      });
+
+      setInitialized(true);
+
+      if (response.success && response.data?.status === 'success') {
+        return {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          username: response.data.user.username,
+          firstName: response.data.user.first_name,
+          lastName: response.data.user.last_name,
+          createdAt: response.data.user.created_at,
+          updatedAt: response.data.user.updated_at,
+          rolesNames: [],
+          permissionsNames: [],
+        };
+      }
+
       localStorage.removeItem('authToken');
-    } else {
-      returnedUser = data?.user ?? null;
+      return null;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      localStorage.removeItem('authToken');
+      setInitialized(true);
+      return null;
     }
-    setInitialized(true);
-    return returnedUser;
   });
 
-  const login = async (input: LoginInput, options?: FetchApiOptions) => {
-    const response = await fetchApi<{ token: string }>(ApiRoutes.Auth.Login, {
-      data: input,
-      ...options,
-    });
+  const { t } = useTranslation();
 
-    if (response.success && response.data?.token) {
-      localStorage.setItem('authToken', response.data.token);
-      mutate();
-    }
+  const login = useCallback(
+    async (input: LoginInput, options?: FetchApiOptions) => {
+      try {
+        const response = await fetchApi<AuthResponse>(ApiRoutes.Auth.Login, {
+          method: 'POST',
+          data: {
+            email: input.email,
+            password: input.password,
+          },
+          ...options,
+        });
 
-    return response;
-  };
+        if (response.success && response.data?.status === 'success') {
+          localStorage.setItem('authToken', response.data.authorization.token);
+          mutate();
+        }
 
-  const register = async (input: RegisterInput, options?: FetchApiOptions) => {
-    const response = await fetchApi<{ token: string }>(ApiRoutes.Auth.Register, {
-      data: input,
-      ...options,
-    });
+        return response;
+      } catch (error) {
+        console.error('Login error:', error);
+        return {
+          success: false,
+          errors: [t('auth.errors.login_failed')],
+        };
+      }
+    },
+    [fetchApi, mutate, t]
+  );
 
-    if (response.success && response.data?.token) {
-      localStorage.setItem('authToken', response.data.token);
-      mutate();
-    }
+  const register = useCallback(
+    async (
+      input: RegisterInput & {
+        name: string;
+        password_confirmation: string;
+        username?: string;
+        first_name?: string;
+        last_name?: string;
+      },
+      options?: FetchApiOptions
+    ) => {
+      try {
+        const response = await fetchApi<AuthResponse>(ApiRoutes.Auth.Register, {
+          method: 'POST',
+          data: input,
+          ...options,
+        });
 
-    return response;
-  };
+        if (response.success && response.data?.status === 'success') {
+          localStorage.setItem('authToken', response.data.authorization.token);
+          mutate();
+        }
+
+        return response;
+      } catch (error) {
+        console.error('Registration error:', error);
+        return {
+          success: false,
+          errors: [t('auth.errors.register_failed')],
+        };
+      }
+    },
+    [fetchApi, mutate, t]
+  );
 
   const logout = async (options?: FetchApiOptions) => {
     const response = await fetchApi<null>(ApiRoutes.Auth.Logout, { method: 'POST', ...options });

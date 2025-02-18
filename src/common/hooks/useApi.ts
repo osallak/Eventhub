@@ -4,12 +4,23 @@ import { useCallback } from 'react';
 import useFetch from '@common/hooks/useFetch';
 import { useTranslation } from 'react-i18next';
 
-export interface ApiResponse<T> {
+// Generic REST API response format
+interface ApiResponseData<T = unknown> {
+  status: 'success' | 'error';
+  message?: string;
+  errors?: Record<string, string[]> | string[];
+  data?: T;
+  [key: string]: unknown; // Allow for additional properties
+}
+
+// Our internal normalized response format
+export interface NormalizedResponse<T> {
   success: boolean;
   message?: string;
   errors?: string[];
   data?: T;
 }
+
 export interface FetchApiOptions {
   verbose?: boolean;
   displaySuccess?: boolean;
@@ -22,11 +33,11 @@ export interface ApiOptions extends FetchApiOptions {
 }
 const useApi = () => {
   const { enqueueSnackbar } = useSnackbar();
-  const { makeFetch } = useFetch<ApiResponse<Any>>();
+  const { makeFetch } = useFetch<ApiResponseData<Any>>();
   const { t, i18n } = useTranslation(['common']);
 
   const fetchApi = useCallback(
-    async <T>(endpoint: string, options?: ApiOptions): Promise<ApiResponse<T>> => {
+    async <T>(endpoint: string, options?: ApiOptions): Promise<NormalizedResponse<T>> => {
       const authToken = localStorage.getItem('authToken');
       const headers: Headers = new Headers();
       headers.set('Accept', 'application/json');
@@ -61,31 +72,47 @@ const useApi = () => {
         request: requestOptions,
       });
 
+      console.log('response', response);
+
       if (verbose) {
         console.log(`useApi: response`, response);
       }
-      if (!response) {
-        const errorMessage = t('common:error_occurred');
-        enqueueSnackbar(errorMessage, { variant: 'error' });
-        return { success: false, errors: [errorMessage] };
-      }
-      if (!response.success && !response.errors) {
-        response.success = false;
-        response.errors = [t('common:error_occurred')];
-      }
-      const displaySuccess = options?.displaySuccess ?? false;
-      if (!response.success) {
-        if (response.errors) {
-          for (let i = 0; i < response.errors.length; i++) {
-            enqueueSnackbar(response.errors[i], { variant: 'error' });
+
+      // Handle API response
+      if (response) {
+        // If it's a success response
+        if (response.status === 'success') {
+          const displaySuccess = options?.displaySuccess ?? false;
+          if (displaySuccess && response.message) {
+            enqueueSnackbar(response.message, { variant: 'success' });
           }
-        } else {
-          enqueueSnackbar(t('common:error_occurred'), { variant: 'error' });
+          return {
+            success: true,
+            data: response as unknown as T,
+            message: response.message,
+          };
         }
-      } else if (displaySuccess && response.message) {
-        enqueueSnackbar(response.message, { variant: 'success' });
+
+        // If it's a error response
+        if (response.errors) {
+          const errors = Array.isArray(response.errors)
+            ? response.errors
+            : (Object.values(response.errors).flat() as string[]);
+
+          errors.forEach((error: string) => {
+            enqueueSnackbar(error, { variant: 'error' });
+          });
+          return {
+            success: false,
+            errors,
+          };
+        }
       }
-      return response;
+
+      // Handle non-API responses or other errors
+      const errorMessage = t('common:error_occurred');
+      enqueueSnackbar(errorMessage, { variant: 'error' });
+      return { success: false, errors: [errorMessage] };
     },
     [enqueueSnackbar, makeFetch, t, i18n.language]
   );
