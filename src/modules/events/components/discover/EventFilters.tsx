@@ -1,6 +1,15 @@
-import { Button, Chip, FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
+import {
+  Button,
+  Chip,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+} from '@mui/material';
+import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { categories } from '../../../../constants/categories';
 import { DateSelector } from '../create/DateSelector';
 
@@ -41,8 +50,20 @@ const textFieldStyles = {
 };
 
 export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('events', {
+    useSuspense: false,
+  });
   const [localFilters, setLocalFilters] = useState(filters);
+
+  // Debug translations
+  console.log('Filter translations:', {
+    locationLabel: t('filters.location.label'),
+    locationPlaceholder: t('filters.location.placeholder'),
+    ageLabel: t('filters.age.label'),
+    agePlaceholder: t('filters.age.placeholder'),
+    dateLabel: t('filters.date.label'),
+    datePlaceholder: t('filters.date.placeholder'),
+  });
 
   const handleLocalChange = (newFilters: Partial<typeof filters>) => {
     setLocalFilters({ ...localFilters, ...newFilters });
@@ -56,16 +77,17 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
     <Stack spacing={3}>
       {/* Category */}
       <FormControl fullWidth>
+        <InputLabel>{t('filters.category.label')}</InputLabel>
         <Select
           value={localFilters.category || ''}
           displayEmpty
           onChange={(e) => handleLocalChange({ category: e.target.value })}
           sx={inputStyles}
         >
-          <MenuItem value="">{t('Category')}</MenuItem>
+          <MenuItem value="">{t('filters.category.all')}</MenuItem>
           {categories.map((category) => (
             <MenuItem key={category} value={category}>
-              {t(category)}
+              {t(`categories.${category.toLowerCase()}`)}
             </MenuItem>
           ))}
         </Select>
@@ -73,23 +95,25 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
 
       {/* Event Type */}
       <FormControl fullWidth>
+        <InputLabel>{t('filters.type.label')}</InputLabel>
         <Select
           value={localFilters.eventType || ''}
           displayEmpty
           onChange={(e) => handleLocalChange({ eventType: e.target.value })}
           sx={inputStyles}
         >
-          <MenuItem value="">{t('Event Type')}</MenuItem>
-          <MenuItem value="physical">{t('In Person')}</MenuItem>
-          <MenuItem value="virtual">{t('Virtual')}</MenuItem>
-          <MenuItem value="hybrid">{t('Hybrid')}</MenuItem>
+          <MenuItem value="">{t('filters.type.all')}</MenuItem>
+          <MenuItem value="physical">{t('filters.type.physical')}</MenuItem>
+          <MenuItem value="virtual">{t('filters.type.virtual')}</MenuItem>
+          <MenuItem value="hybrid">{t('filters.type.hybrid')}</MenuItem>
         </Select>
       </FormControl>
 
       {/* City */}
       <TextField
         fullWidth
-        placeholder={t('City')}
+        label={t('filters.location.label')}
+        placeholder={t('filters.location.placeholder')}
         value={localFilters.city || ''}
         onChange={(e) => handleLocalChange({ city: e.target.value })}
         sx={textFieldStyles}
@@ -98,7 +122,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       {/* Price Filter */}
       <Stack direction="row" spacing={1}>
         <Chip
-          label={t('Free')}
+          label={t('filters.price.free')}
           clickable
           variant={localFilters.isPaid === false ? 'filled' : 'outlined'}
           color={localFilters.isPaid === false ? 'success' : 'default'}
@@ -108,7 +132,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
           sx={{ flex: 1, height: 40, borderRadius: '20px' }}
         />
         <Chip
-          label={t('Paid')}
+          label={t('filters.price.paid')}
           clickable
           variant={localFilters.isPaid === true ? 'filled' : 'outlined'}
           color={localFilters.isPaid === true ? 'success' : 'default'}
@@ -123,7 +147,8 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       <TextField
         fullWidth
         type="number"
-        placeholder={t('Minimum Age')}
+        label={t('filters.age.label')}
+        placeholder={t('filters.age.placeholder')}
         value={localFilters.minAge || ''}
         onChange={(e) =>
           handleLocalChange({ minAge: e.target.value ? Number(e.target.value) : undefined })
@@ -136,7 +161,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       <DateSelector
         selectedDate={localFilters.date}
         onDateChange={(newDate) => handleLocalChange({ date: newDate })}
-        label={t('Event Date')}
+        label={t('filters.date.label')}
       />
 
       {/* Apply Button */}
@@ -150,7 +175,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
           mt: 2,
         }}
       >
-        {t('Apply Filters')}
+        {t('filters.apply')}
       </Button>
     </Stack>
   );

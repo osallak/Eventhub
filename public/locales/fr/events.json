@@ -1,0 +1,90 @@
+{
+  "type": {
+    "physical": "En personne",
+    "virtual": "En ligne",
+    "hybrid": "Hybride"
+  },
+  "actions": {
+    "login_to_join": "Se connecter pour rejoindre",
+    "already_joined": "Déjà inscrit",
+    "ended": "Événement terminé",
+    "full": "Complet",
+    "you_are_owner": "Vous êtes l'organisateur",
+    "join": "Rejoindre",
+    "spots_left": "{{count}} places restantes",
+    "unlimited_spots": "Places illimitées"
+  },
+  "discover": {
+    "title": "Découvrir les événements",
+    "page_title": "Découvrir les événements",
+    "search": {
+      "placeholder": "Rechercher des événements..."
+    }
+  },
+  "categories": {
+    "sports": "Sports et Fitness",
+    "music": "Musique",
+    "tech": "Technologie",
+    "business": "Business",
+    "art": "Art et Culture",
+    "food": "Gastronomie",
+    "other": "Autre",
+    "title": "Catégories",
+    "all": "Toutes les catégories"
+  },
+  "price": {
+    "free": "GRATUIT",
+    "paid": "PAYANT",
+    "title": "Prix",
+    "all": "Tous les prix"
+  },
+  "filters": {
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "category": {
+      "label": "Catégorie",
+      "all": "Toutes les catégories"
+    },
+    "type": {
+      "label": "Type d'événement",
+      "all": "Tous les types"
+    },
+    "price": {
+      "label": "Prix",
+      "all": "Tous les prix",
+      "free": "Gratuit",
+      "paid": "Payant"
+    },
+    "location": {
+      "label": "Lieu",
+      "placeholder": "Entrer une ville..."
+    },
+    "date": {
+      "label": "Date",
+      "placeholder": "Sélectionner une date..."
+    },
+    "age": {
+      "label": "Âge requis",
+      "placeholder": "Âge minimum..."
+    }
+  },
+  "mobile": {
+    "filters_button": "Afficher les filtres",
+    "close": "Fermer"
+  },
+  "mock": {
+    "event_title": "Événement {{number}}",
+    "city": "Ville {{number}}"
+  },
+  "date": {
+    "format": "DD/MM/YYYY",
+    "separator": " • ",
+    "time_format": "HH:mm"
+  },
+  "currency": {
+    "usd": "${amount}",
+    "eur": "€{amount}",
+    "format": "${amount}"
+  }
+}

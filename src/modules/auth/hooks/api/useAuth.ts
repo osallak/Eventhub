@@ -62,6 +62,8 @@ interface MeResponse {
 
 interface AuthData {
   user: User | null;
+  initialized: boolean;
+  isAuthenticated: boolean;
   login: (
     _input: LoginInput,
     _options?: FetchApiOptions
@@ -85,7 +87,6 @@ interface AuthData {
     _input: ResetPasswordInput,
     _options?: FetchApiOptions
   ) => Promise<NormalizedResponse<{ token: string }>>;
-  initialized: boolean; // This is used to prevent the app from rendering before the useAuth initial fetch is complete
 }
 
 const useAuth = (): AuthData => {
@@ -94,6 +95,7 @@ const useAuth = (): AuthData => {
     return {
       initialized: true,
       user: null,
+      isAuthenticated: false,
       login: async () => ({ success: false, errors: ['Auth is disabled'] }),
       register: async () => ({ success: false, errors: ['Auth is disabled'] }),
       logout: async () => ({ success: false, errors: ['Auth is disabled'] }),
@@ -103,10 +105,13 @@ const useAuth = (): AuthData => {
   }
 
   const [initialized, setInitialized] = useState<boolean>(false);
-
   const fetchApi = useApi();
 
   const { data: user, mutate } = useSWR<User | null>(ApiRoutes.Auth.Me, async (url) => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
     if (!localStorage.getItem('authToken')) {
       setInitialized(true);
       return null;
@@ -134,11 +139,14 @@ const useAuth = (): AuthData => {
         };
       }
 
-      localStorage.removeItem('authToken');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+      }
       return null;
     } catch (error) {
-      console.error('Error fetching user:', error);
-      localStorage.removeItem('authToken');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+      }
       setInitialized(true);
       return null;
     }
@@ -238,12 +246,13 @@ const useAuth = (): AuthData => {
 
   return {
     user: user ?? null,
+    initialized,
+    isAuthenticated: !!user,
     login,
     register,
     logout,
     requestPasswordReset,
     resetPassword,
-    initialized,
   };
 };
 

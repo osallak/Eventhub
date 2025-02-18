@@ -1,20 +1,21 @@
-import { Card, Chip, Stack, Typography, Button, Box } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { formatPrice } from '../../utils/formatters';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Routes } from '@common/constants/routes';
+import useAuth from '@modules/auth/hooks/api/useAuth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Box, Button, Card, Chip, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useAuth } from '@modules/auth/contexts/AuthContext';
-import { Routes } from '@common/constants/routes';
+import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
+import { type EventCategory } from '../../types/categories';
+import { formatPrice } from '../../utils/formatters';
 import { EventActions } from './EventActions';
 
 interface EventCardProps {
   event: {
     id: string;
     title: string;
-    category: string;
+    category: EventCategory;
     eventType: 'physical' | 'virtual' | 'hybrid';
     isPaid: boolean;
     price?: number;
@@ -32,19 +33,32 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation('events', {
+    useSuspense: false,
+  });
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // Simplified debug log with available methods
+  console.log('Translation debug:', {
+    currentLocale: i18n.language,
+    currentNamespace: i18n.options?.defaultNS,
+    joinTranslation: t('actions.join'),
+    allTranslations: i18n.store?.data,
+  });
+
+  // Check if event is in the past
+  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
   // Helper to get event type icon and text
   const getEventTypeInfo = (type: 'physical' | 'virtual' | 'hybrid') => {
     switch (type) {
       case 'physical':
-        return { icon: '🏠', text: t('In Person') };
+        return { icon: '🏠', text: t('type.physical') };
       case 'virtual':
-        return { icon: '💻', text: t('Online') };
+        return { icon: '💻', text: t('type.virtual') };
       default:
-        return { icon: '🌐', text: t('Hybrid') };
+        return { icon: '🌐', text: t('type.hybrid') };
     }
   };
 
@@ -53,9 +67,6 @@ export const EventCard = ({ event }: EventCardProps) => {
   const spotsLeft = hasLimitedSpots
     ? event.maxParticipants! - (event.currentParticipants || 0)
     : undefined;
-
-  // Check if event is in the past
-  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
   const handleJoinClick = () => {
     if (!isAuthenticated) {
@@ -68,15 +79,48 @@ export const EventCard = ({ event }: EventCardProps) => {
 
   const getButtonText = () => {
     if (!isAuthenticated) {
-      return 'Login to Join';
+      return t('actions.login_to_join');
+    }
+    if (event.isParticipant) {
+      return t('actions.already_joined');
     }
     if (isPastEvent) {
-      return 'Event Ended';
+      return t('actions.ended');
     }
     if (event.isFull) {
-      return 'Event Full';
+      return t('actions.full');
     }
-    return 'Join Event';
+    if (event.isOwner) {
+      return t('actions.you_are_owner');
+    }
+    return t('actions.join');
+  };
+
+  const getButtonProps = () => {
+    const baseProps = {
+      variant: 'contained' as const,
+      fullWidth: true,
+      sx: {
+        mt: 'auto',
+        borderRadius: '20px',
+        textTransform: 'none',
+        py: 1,
+      },
+    };
+
+    if (!isAuthenticated) {
+      return {
+        ...baseProps,
+        onClick: () =>
+          router.push(`${Routes.Auth.Login}?returnUrl=${encodeURIComponent(router.asPath)}`),
+      };
+    }
+
+    return {
+      ...baseProps,
+      onClick: handleJoinClick,
+      disabled: event.isFull || isPastEvent || event.isParticipant || event.isOwner,
+    };
   };
 
   const handleEditEvent = () => {
@@ -91,6 +135,14 @@ export const EventCard = ({ event }: EventCardProps) => {
   const handleLeaveEvent = () => {
     // TODO: Add confirmation dialog
     console.log('Leave event:', event.id);
+  };
+
+  // Fix the spots translation
+  const getSpotsText = () => {
+    if (hasLimitedSpots) {
+      return t('actions.spots_left', { count: spotsLeft });
+    }
+    return t('actions.unlimited_spots');
   };
 
   return (
@@ -141,7 +193,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           />
         ) : (
           <Chip
-            label={t('FREE')}
+            label={t('price.free')}
             size="small"
             sx={{
               height: 28,
@@ -180,7 +232,7 @@ export const EventCard = ({ event }: EventCardProps) => {
 
       {/* Category */}
       <Chip
-        label={t(event.category)}
+        label={t(`categories.${event.category}`)}
         size="small"
         sx={{
           mb: 2,
@@ -236,29 +288,16 @@ export const EventCard = ({ event }: EventCardProps) => {
               lineHeight: 1.5,
             }}
           >
-            {hasLimitedSpots ? `${spotsLeft} ${t('spots left')}` : t('Unlimited spots')}
+            {getSpotsText()}
           </Typography>
         </Stack>
       </Stack>
 
-      {/* Join Button */}
-      <Button
-        onClick={handleJoinClick}
-        variant="contained"
-        disabled={event.isFull || isPastEvent}
-        fullWidth
-        sx={{
-          mt: 'auto',
-          borderRadius: '20px',
-          textTransform: 'none',
-          py: 1,
-        }}
-      >
-        {getButtonText()}
-      </Button>
+      {/* Join Button with updated props */}
+      <Button {...getButtonProps()}>{getButtonText()}</Button>
 
-      {/* Add actions menu if user is owner or participant */}
-      {(event.isOwner || event.isParticipant) && (
+      {/* Show actions menu only if authenticated and is owner/participant */}
+      {isAuthenticated && (event.isOwner || event.isParticipant) && (
         <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
           <EventActions
             eventId={event.id}

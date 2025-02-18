@@ -17,8 +17,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'next-i18next';
+import { GetStaticProps } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {
@@ -49,34 +52,41 @@ const FiltersContent = ({
   showTitle?: boolean;
   filters: any;
   setFilters: (filters: any) => void;
-}) => (
-  <>
-    {showTitle && (
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
-        Filters
-      </Typography>
-    )}
-    <EventFilters filters={filters} onFilterChange={setFilters} />
-    <Button
-      startIcon={<RefreshIcon />}
-      sx={{ textTransform: 'none' }}
-      onClick={() =>
-        setFilters({
-          search: '',
-          category: '',
-          eventType: '',
-          isPaid: undefined,
-          minAge: undefined,
-          city: '',
-          date: null,
-        })
-      }
-    >
-      Reset filters
-    </Button>
-  </>
-);
+}) => {
+  const { t } = useTranslation('events', {
+    useSuspense: false,
+  });
 
+  return (
+    <>
+      {showTitle && (
+        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+          {t('filters.title')}
+        </Typography>
+      )}
+      <EventFilters filters={filters} onFilterChange={setFilters} />
+      <Button
+        startIcon={<RefreshIcon />}
+        sx={{ textTransform: 'none' }}
+        onClick={() =>
+          setFilters({
+            search: '',
+            category: '',
+            eventType: '',
+            isPaid: undefined,
+            minAge: undefined,
+            city: '',
+            date: null,
+          })
+        }
+      >
+        {t('reset')}
+      </Button>
+    </>
+  );
+};
+
+// Helper function can stay outside since it doesn't use translations
 const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
   if (index % 3 === 0) {
     return 'physical';
@@ -87,24 +97,11 @@ const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
   return 'hybrid';
 };
 
-const mockEvents = [...Array(12)].map((_, index) => ({
-  id: index.toString(),
-  title: `Event Title ${index + 1}`,
-  category: 'Sports & Fitness',
-  eventType: getEventType(index),
-  isPaid: index % 2 === 0,
-  price: index % 2 === 0 ? 10 + index : undefined,
-  currency: 'USD',
-  startDate: new Date(2024, 2, 1 + index).toISOString(),
-  startTime: '19:00',
-  city: `City ${(index % 3) + 1}`,
-  maxParticipants: index % 3 === 0 ? undefined : 20,
-  currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
-  imageUrl: undefined,
-  isFull: index % 3 === 0,
-}));
-
 const DiscoverEvents = () => {
+  const { t, i18n } = useTranslation('events', {
+    useSuspense: false,
+    keyPrefix: 'discover',
+  });
   const [_showCustomDate, _setShowCustomDate] = useState(false);
   const [_selectedDateOption, _setSelectedDateOption] = useState('upcoming');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -117,7 +114,47 @@ const DiscoverEvents = () => {
     city: '',
     date: null,
   });
-  const { t } = useTranslation();
+
+  useEffect(() => {
+    // Debug after mount
+    console.log('DiscoverEvents Mount:', {
+      language: i18n.language,
+      isInitialized: i18n.isInitialized,
+      hasLoadedNamespace: i18n.hasLoadedNamespace('events'),
+      translations: i18n.store?.data?.[i18n.language]?.events,
+    });
+  }, [i18n]);
+
+  // Move mock data generation inside component after useTranslation
+  const mockEvents = useMemo(
+    () =>
+      [...Array(12)].map((_, index) => ({
+        id: index.toString(),
+        title: `Event Title ${index + 1}`,
+        category: index % 2 === 0 ? EVENT_CATEGORIES.SPORTS : EVENT_CATEGORIES.MUSIC,
+        eventType: getEventType(index),
+        isPaid: index % 2 === 0,
+        price: index % 2 === 0 ? 10 + index : undefined,
+        currency: 'USD',
+        startDate: new Date(2024, 2, 1 + index).toISOString(),
+        startTime: '19:00',
+        city: `City ${(index % 3) + 1}`,
+        maxParticipants: index % 3 === 0 ? undefined : 20,
+        currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
+        imageUrl: undefined,
+        isFull: index % 3 === 0,
+      })),
+    []
+  ); // Using useMemo to avoid recreating on every render
+
+  // Debug translations
+  console.log('Translation debug:', {
+    currentLocale: i18n.language,
+    currentNamespace: i18n.options?.defaultNS,
+    pageTitle: t('page_title'),
+    searchPlaceholder: t('search.placeholder'),
+    allTranslations: i18n.store?.data,
+  });
 
   return (
     <Box>
@@ -199,7 +236,7 @@ const DiscoverEvents = () => {
               color: 'text.primary',
             }}
           >
-            Discover events
+            {t('page_title')}
           </Typography>
 
           {/* Search and Filter Bar */}
@@ -213,7 +250,7 @@ const DiscoverEvents = () => {
           >
             <TextField
               fullWidth
-              placeholder={t('Search events...')}
+              placeholder={t('search.placeholder')}
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               InputProps={{
@@ -245,7 +282,7 @@ const DiscoverEvents = () => {
                 borderColor: 'divider',
               }}
             >
-              {t('Filters')}
+              {t('title')}
             </Button>
           </Box>
 
@@ -285,7 +322,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          {t('Filters')}
+          {t('mobile.filters_button')}
         </Button>
       </Box>
 
@@ -309,7 +346,7 @@ const DiscoverEvents = () => {
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Filters
+              {t('title')}
             </Typography>
             <IconButton onClick={() => setMobileFiltersOpen(false)}>
               <CloseIcon />
@@ -320,6 +357,14 @@ const DiscoverEvents = () => {
       </Drawer>
     </Box>
   );
+};
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale ?? 'fr', ['events', 'common'])),
+    },
+  };
 };
 
 export default DiscoverEvents;

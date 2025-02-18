@@ -1,0 +1,94 @@
+{
+  "type": {
+    "physical": "In Person",
+    "virtual": "Online",
+    "hybrid": "Hybrid"
+  },
+  "actions": {
+    "login_to_join": "Login to Join",
+    "already_joined": "Already Joined",
+    "ended": "Event Ended",
+    "full": "Event Full",
+    "you_are_owner": "You are the Owner",
+    "join": "Join Event",
+    "spots_left": "{{count}} spots left",
+    "unlimited_spots": "Unlimited spots"
+  },
+  "discover": {
+    "title": "Discover Events",
+    "page_title": "Discover Events",
+    "search": {
+      "placeholder": "Search events..."
+    }
+  },
+  "categories": {
+    "sports": "Sports & Fitness",
+    "music": "Music",
+    "tech": "Technology",
+    "business": "Business",
+    "art": "Art & Culture",
+    "food": "Food & Drink",
+    "other": "Other",
+    "title": "Categories",
+    "all": "All Categories"
+  },
+  "price": {
+    "free": "FREE",
+    "paid": "PAID",
+    "title": "Price",
+    "all": "All Prices"
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset Filters",
+    "apply": "Apply Filters",
+    "category": {
+      "label": "Category",
+      "all": "All Categories"
+    },
+    "type": {
+      "label": "Event Type",
+      "all": "All Types"
+    },
+    "price": {
+      "label": "Price",
+      "all": "All Prices",
+      "free": "Free",
+      "paid": "Paid"
+    },
+    "location": {
+      "label": "Location",
+      "placeholder": "Enter location..."
+    },
+    "date": {
+      "label": "Date",
+      "placeholder": "Select date..."
+    },
+    "age": {
+      "label": "Age Requirement",
+      "placeholder": "Minimum age..."
+    }
+  },
+  "search": {
+    "placeholder": "Search events...",
+    "no_results": "No events found"
+  },
+  "mobile": {
+    "filters_button": "Show Filters",
+    "close": "Close"
+  },
+  "mock": {
+    "event_title": "Event Title {{number}}",
+    "city": "City {{number}}"
+  },
+  "date": {
+    "format": "MM/DD/YYYY",
+    "separator": " • ",
+    "time_format": "HH:mm"
+  },
+  "currency": {
+    "usd": "${amount}",
+    "eur": "€{amount}",
+    "format": "${amount}"
+  }
+}

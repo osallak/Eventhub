@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import { menuItems } from '../common/defs/menu-items';
 import type { PageComponent } from './_app';
 import { DiscoverEventsSection } from '@modules/events/components/discover/DiscoverEventsSection';
+import { GetStaticProps } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 
 const Home: PageComponent = () => {
   const router = useRouter();
@@ -166,7 +169,7 @@ const Home: PageComponent = () => {
   const sampleEvents = [...Array(5)].map((_, index) => ({
     id: index.toString(),
     title: `Event Title ${index + 1}`,
-    category: index % 2 === 0 ? 'Sports' : 'Music',
+    category: index % 2 === 0 ? EVENT_CATEGORIES.SPORTS : EVENT_CATEGORIES.MUSIC,
     eventType: getEventType(index),
     isPaid: index % 2 === 0,
     price: index % 2 === 0 ? 25 + index * 5 : undefined,
@@ -524,5 +527,13 @@ const Home: PageComponent = () => {
 
 // Add this to tell the Layout if it's a landing page
 Home.isLandingPage = true;
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale ?? 'fr', ['events', 'common'])),
+    },
+  };
+};
 
 export default Home;

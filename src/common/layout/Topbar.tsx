@@ -25,7 +25,7 @@ import {
 import { Theme } from '@mui/material/styles';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface TopbarProps {
   isLandingPage?: boolean;
@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
 ];
 
 export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const customTheme = useCustomTheme();
   // const theme = useMuiTheme();
@@ -438,16 +438,22 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
           <MenuItem
             key={lang.code}
             onClick={() => {
-              // Language change logic will go here
+              router.push(router.pathname, router.asPath, { locale: lang.code });
               handleMenuClose();
             }}
             sx={{
               py: 1,
               px: 2,
+              bgcolor: router.locale === lang.code ? 'action.selected' : 'transparent',
             }}
           >
             <Stack direction="row" alignItems="center" spacing={2}>
               <Typography variant="body2">{lang.label}</Typography>
+              {router.locale === lang.code && (
+                <Typography variant="body2" color="primary">
+                  ✓
+                </Typography>
+              )}
             </Stack>
           </MenuItem>
         ))}

@@ -1,5 +1,6 @@
 import { Box, Container, Grid, Typography } from '@mui/material';
 import { EventCard } from './EventCard';
+import { useTranslation } from 'next-i18next';
 
 interface DiscoverEventsSectionProps {
   events: Array<{
@@ -21,19 +22,23 @@ interface DiscoverEventsSectionProps {
   }>;
 }
 
-export const DiscoverEventsSection = ({ events }: DiscoverEventsSectionProps) => (
-  <Box sx={{ py: 8, bgcolor: 'background.default' }}>
-    <Container maxWidth="lg">
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
-        Discover Events
-      </Typography>
-      <Grid container spacing={3}>
-        {events.map((event, index) => (
-          <Grid item xs={12} sm={6} md={4} key={event.id || index}>
-            <EventCard event={event} />
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
-  </Box>
-); 
+export const DiscoverEventsSection = ({ events }: DiscoverEventsSectionProps) => {
+  const { t } = useTranslation('events');
+  
+  return (
+    <Box sx={{ py: 8, bgcolor: 'background.default' }}>
+      <Container maxWidth="lg">
+        <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+          {t('discover.title')}
+        </Typography>
+        <Grid container spacing={3}>
+          {events.map((event, index) => (
+            <Grid item xs={12} sm={6} md={4} key={event.id || index}>
+              <EventCard event={event} />
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    </Box>
+  );
+}; 
