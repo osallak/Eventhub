@@ -22,7 +22,7 @@ const LoadingScreen = () => (
 export const withAuth = <P extends object>(
   Component: React.ComponentType<P>,
   options: WithAuthOptions
-): React.FC<P> => {
+) => {
   const WithAuthComponent: React.FC<P> = (props) => {
     const router = useRouter();
     const { isAuthenticated, isLoading } = useAuth();

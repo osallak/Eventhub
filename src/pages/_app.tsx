@@ -14,7 +14,6 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { StyledEngineProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
 import { useEffect } from 'react';
 import { Routes } from '@common/constants/routes';
@@ -94,4 +93,4 @@ const AppWrapper = (props: AppProps) => {
   );
 };
 
-export default appWithTranslation(AppWrapper);
+export default AppWrapper;

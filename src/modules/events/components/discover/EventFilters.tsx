@@ -8,21 +8,24 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { categories } from '../../../../constants/categories';
 import { DateSelector } from '../create/DateSelector';
+import RefreshIcon from '@mui/icons-material/Refresh';
+
+export interface EventFiltersData {
+  search: string;
+  category?: string;
+  eventType?: string;
+  isPaid?: boolean;
+  minAge?: number;
+  city?: string;
+  date: Date | null;
+}
 
 interface EventFiltersProps {
-  filters: {
-    category?: string;
-    eventType?: string;
-    isPaid?: boolean;
-    minAge?: number;
-    city?: string;
-    date: Date | null;
-  };
-  onFilterChange: (filters: any) => void;
+  filters: EventFiltersData;
+  onFilterChange: (filters: EventFiltersData) => void;
 }
 
 const inputStyles = {
@@ -50,23 +53,24 @@ const textFieldStyles = {
 };
 
 export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => {
-  const { t } = useTranslation('events', {
-    useSuspense: false,
-  });
   const [localFilters, setLocalFilters] = useState(filters);
-
-  // Debug translations
-  console.log('Filter translations:', {
-    locationLabel: t('filters.location.label'),
-    locationPlaceholder: t('filters.location.placeholder'),
-    ageLabel: t('filters.age.label'),
-    agePlaceholder: t('filters.age.placeholder'),
-    dateLabel: t('filters.date.label'),
-    datePlaceholder: t('filters.date.placeholder'),
-  });
 
   const handleLocalChange = (newFilters: Partial<typeof filters>) => {
     setLocalFilters({ ...localFilters, ...newFilters });
+  };
+
+  const handleReset = () => {
+    const resetFilters: EventFiltersData = {
+      search: '',
+      category: undefined,
+      eventType: undefined,
+      isPaid: undefined,
+      minAge: undefined,
+      city: undefined,
+      date: null,
+    };
+    setLocalFilters(resetFilters);
+    onFilterChange(resetFilters);
   };
 
   const handleApply = () => {
@@ -77,17 +81,18 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
     <Stack spacing={3}>
       {/* Category */}
       <FormControl fullWidth>
-        <InputLabel>{t('filters.category.label')}</InputLabel>
+        <InputLabel id="category-label">Category</InputLabel>
         <Select
+          labelId="category-label"
           value={localFilters.category || ''}
-          displayEmpty
+          label="Category"
           onChange={(e) => handleLocalChange({ category: e.target.value })}
           sx={inputStyles}
         >
-          <MenuItem value="">{t('filters.category.all')}</MenuItem>
+          <MenuItem value="">All Categories</MenuItem>
           {categories.map((category) => (
             <MenuItem key={category} value={category}>
-              {t(`categories.${category.toLowerCase()}`)}
+              {category}
             </MenuItem>
           ))}
         </Select>
@@ -95,25 +100,26 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
 
       {/* Event Type */}
       <FormControl fullWidth>
-        <InputLabel>{t('filters.type.label')}</InputLabel>
+        <InputLabel id="event-type-label">Event Type</InputLabel>
         <Select
+          labelId="event-type-label"
           value={localFilters.eventType || ''}
-          displayEmpty
+          label="Event Type"
           onChange={(e) => handleLocalChange({ eventType: e.target.value })}
           sx={inputStyles}
         >
-          <MenuItem value="">{t('filters.type.all')}</MenuItem>
-          <MenuItem value="physical">{t('filters.type.physical')}</MenuItem>
-          <MenuItem value="virtual">{t('filters.type.virtual')}</MenuItem>
-          <MenuItem value="hybrid">{t('filters.type.hybrid')}</MenuItem>
+          <MenuItem value="">All Types</MenuItem>
+          <MenuItem value="physical">In Person</MenuItem>
+          <MenuItem value="virtual">Online</MenuItem>
+          <MenuItem value="hybrid">Hybrid</MenuItem>
         </Select>
       </FormControl>
 
       {/* City */}
       <TextField
         fullWidth
-        label={t('filters.location.label')}
-        placeholder={t('filters.location.placeholder')}
+        label="Location"
+        placeholder="Enter location..."
         value={localFilters.city || ''}
         onChange={(e) => handleLocalChange({ city: e.target.value })}
         sx={textFieldStyles}
@@ -122,7 +128,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       {/* Price Filter */}
       <Stack direction="row" spacing={1}>
         <Chip
-          label={t('filters.price.free')}
+          label="Free"
           clickable
           variant={localFilters.isPaid === false ? 'filled' : 'outlined'}
           color={localFilters.isPaid === false ? 'success' : 'default'}
@@ -132,7 +138,7 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
           sx={{ flex: 1, height: 40, borderRadius: '20px' }}
         />
         <Chip
-          label={t('filters.price.paid')}
+          label="Paid"
           clickable
           variant={localFilters.isPaid === true ? 'filled' : 'outlined'}
           color={localFilters.isPaid === true ? 'success' : 'default'}
@@ -147,8 +153,8 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       <TextField
         fullWidth
         type="number"
-        label={t('filters.age.label')}
-        placeholder={t('filters.age.placeholder')}
+        label="Age Requirement"
+        placeholder="Minimum age..."
         value={localFilters.minAge || ''}
         onChange={(e) =>
           handleLocalChange({ minAge: e.target.value ? Number(e.target.value) : undefined })
@@ -161,22 +167,27 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       <DateSelector
         selectedDate={localFilters.date}
         onDateChange={(newDate) => handleLocalChange({ date: newDate })}
-        label={t('filters.date.label')}
+        label="Date"
       />
 
-      {/* Apply Button */}
-      <Button
-        fullWidth
-        variant="contained"
-        onClick={handleApply}
-        sx={{
-          borderRadius: '20px',
-          py: 1.5,
-          mt: 2,
-        }}
-      >
-        {t('filters.apply')}
-      </Button>
+      {/* Buttons */}
+      <Stack spacing={1}>
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={handleApply}
+          sx={{
+            borderRadius: '20px',
+            py: 1.5,
+          }}
+        >
+          Apply Filters
+        </Button>
+
+        <Button startIcon={<RefreshIcon />} onClick={handleReset} sx={{ textTransform: 'none' }}>
+          Reset Filters
+        </Button>
+      </Stack>
     </Stack>
   );
 };

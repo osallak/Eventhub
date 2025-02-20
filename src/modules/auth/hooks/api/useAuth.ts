@@ -1,234 +1,227 @@
 import ApiRoutes from '@common/defs/api-routes';
-import useApi, { FetchApiOptions, NormalizedResponse } from '@common/hooks/useApi';
+import useApi, { ApiOptions, ApiResponse } from '@common/hooks/useApi';
 import { User } from '@modules/users/defs/types';
-import { useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import useSWR from 'swr';
+import {
+  AuthResponse,
+  LoginInput,
+  RegisterInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
+} from '@modules/auth/types/auth.types';
 
-export interface LoginInput {
-  email: string;
-  password: string;
-  admin?: boolean;
-}
-
-export interface RegisterInput {
-  email: string;
-  password: string;
-}
-
-export interface RequestPasswordResetInput {
-  email: string;
-}
-
-export interface ResetPasswordInput {
-  email: string;
-  password: string;
-  passwordConfirmation: string;
-  token: string;
-}
-
-interface AuthResponse {
-  status: 'success' | 'error';
-  message: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    username?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
+interface ApiAuthResponse {
+  status: string;
+  user: User;
   authorization: {
     token: string;
     type: string;
   };
 }
 
-interface MeResponse {
-  status: 'success' | 'error';
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    username: string | null;
-    first_name: string | null;
-    last_name: string | null;
-    created_at: string;
-    updated_at: string;
-  };
-}
-
 interface AuthData {
   user: User | null;
-  initialized: boolean;
-  isAuthenticated: boolean;
-  login: (
-    _input: LoginInput,
-    _options?: FetchApiOptions
-  ) => Promise<NormalizedResponse<AuthResponse>>;
+  login: (credentials: LoginInput, options?: ApiOptions) => Promise<ApiResponse<AuthResponse>>;
   register: (
-    _input: RegisterInput & {
-      name: string;
-      password_confirmation: string;
-      username?: string;
-      first_name?: string;
-      last_name?: string;
-    },
-    _options?: FetchApiOptions
-  ) => Promise<NormalizedResponse<AuthResponse>>;
-  logout: (_options?: FetchApiOptions) => Promise<NormalizedResponse<null>>;
+    credentials: RegisterInput,
+    options?: ApiOptions
+  ) => Promise<ApiResponse<AuthResponse>>;
+  logout: (_options?: ApiOptions) => Promise<ApiResponse<null>>;
   requestPasswordReset: (
     _input: RequestPasswordResetInput,
-    _options?: FetchApiOptions
-  ) => Promise<NormalizedResponse<null>>;
+    _options?: ApiOptions
+  ) => Promise<ApiResponse<null>>;
   resetPassword: (
     _input: ResetPasswordInput,
-    _options?: FetchApiOptions
-  ) => Promise<NormalizedResponse<{ token: string }>>;
+    _options?: ApiOptions
+  ) => Promise<ApiResponse<AuthResponse>>;
+  initialized: boolean; // This is used to prevent the app from rendering before the useAuth initial fetch is complete
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const useAuth = (): AuthData => {
   const authEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+  const [isChecking, setIsChecking] = useState(true);
+  const fetchApi = useApi();
+
+  const getStorageItem = (key: string): string | null => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+    return null;
+  };
+
+  const handleAuthResponse = (response: ApiAuthResponse) => {
+    if (response.status === 'success' && response.authorization?.token) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.authorization.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+      mutate();
+      return {
+        success: true,
+        status: response.status,
+        data: response,
+        errors: [],
+      };
+    }
+
+    return {
+      success: false,
+      status: 'error',
+      errors: ['Authentication failed'],
+    };
+  };
+
+  const {
+    data: user,
+    mutate,
+    isValidating,
+  } = useSWR(
+    ApiRoutes.Auth.Me,
+    async (url) => {
+      try {
+        const token = getStorageItem('authToken');
+        console.log('useAuth: Fetching user data', {
+          hasToken: !!token,
+          url,
+        });
+
+        if (!token) {
+          setIsChecking(false);
+          return null;
+        }
+
+        const response = await fetchApi<{ user: User }>(url, { method: 'GET' });
+        console.log('useAuth: API response', {
+          success: response.success,
+          hasUser: !!response.data?.user,
+        });
+
+        if (!response.success) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+          }
+        }
+
+        setIsChecking(false);
+        return response.success ? response.data?.user : null;
+      } catch (error) {
+        console.error('useAuth: Error fetching user', error);
+        setIsChecking(false);
+        return null;
+      }
+    },
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 5000,
+      onSuccess: (data) => {
+        console.log('useAuth: SWR success', {
+          hasUser: !!data,
+        });
+        setIsChecking(false);
+      },
+      onError: (err) => {
+        console.error('useAuth: SWR error', err);
+        setIsChecking(false);
+      },
+    }
+  );
+
+  const isAuthenticated = typeof window !== 'undefined' && !!getStorageItem('authToken') && !!user;
+  const isLoading = isValidating || isChecking;
+
   if (!authEnabled) {
     return {
-      initialized: true,
       user: null,
+      initialized: true,
       isAuthenticated: false,
-      login: async () => ({ success: false, errors: ['Auth is disabled'] }),
-      register: async () => ({ success: false, errors: ['Auth is disabled'] }),
-      logout: async () => ({ success: false, errors: ['Auth is disabled'] }),
-      requestPasswordReset: async () => ({ success: false, errors: ['Auth is disabled'] }),
-      resetPassword: async () => ({ success: false, errors: ['Auth is disabled'] }),
+      isLoading: false,
+      login: async () => ({
+        success: false,
+        status: 'error',
+        errors: ['Auth is disabled'],
+      }),
+      register: async () => ({
+        success: false,
+        status: 'error',
+        errors: ['Auth is disabled'],
+      }),
+      logout: async () => ({
+        success: false,
+        status: 'error',
+        errors: ['Auth is disabled'],
+      }),
+      requestPasswordReset: async () => ({
+        success: false,
+        status: 'error',
+        errors: ['Auth is disabled'],
+      }),
+      resetPassword: async () => ({
+        success: false,
+        status: 'error',
+        errors: ['Auth is disabled'],
+      }),
     };
   }
 
-  const [initialized, setInitialized] = useState<boolean>(false);
-  const fetchApi = useApi();
+  const login = async (input: LoginInput, options?: ApiOptions) => {
+    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Login, {
+      data: input,
+      ...options,
+      displaySuccess: false,
+    });
 
-  const { data: user, mutate } = useSWR<User | null>(ApiRoutes.Auth.Me, async (url) => {
-    if (typeof window === 'undefined') {
-      return null;
+    if (response.success && response.data) {
+      // response.data is now the ApiAuthResponse
+      return handleAuthResponse(response.data);
     }
 
-    if (!localStorage.getItem('authToken')) {
-      setInitialized(true);
-      return null;
+    return {
+      success: false,
+      status: 'error',
+      errors: response.errors || ['Authentication failed'],
+    };
+  };
+
+  const register = async (input: RegisterInput, options?: ApiOptions) => {
+    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Register, {
+      data: input,
+      ...options,
+      displaySuccess: false,
+    });
+
+    if (response.success && response.data) {
+      // Handle successful registration same as login
+      const authResponse = handleAuthResponse(response.data);
+      // Trigger an immediate revalidation after registration
+      await mutate();
+      return authResponse;
     }
 
-    try {
-      const response = await fetchApi<MeResponse>(url, {
-        method: 'GET',
-      });
+    return {
+      success: false,
+      status: 'error',
+      errors: response.errors || ['Registration failed'],
+    };
+  };
 
-      setInitialized(true);
-
-      if (response.success && response.data?.status === 'success') {
-        return {
-          id: response.data.user.id,
-          name: response.data.user.name,
-          email: response.data.user.email,
-          username: response.data.user.username,
-          firstName: response.data.user.first_name,
-          lastName: response.data.user.last_name,
-          createdAt: response.data.user.created_at,
-          updatedAt: response.data.user.updated_at,
-          rolesNames: [],
-          permissionsNames: [],
-        };
-      }
-
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-      }
-      return null;
-    } catch (error) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-      }
-      setInitialized(true);
-      return null;
-    }
-  });
-
-  const { t } = useTranslation();
-
-  const login = useCallback(
-    async (input: LoginInput, options?: FetchApiOptions) => {
-      try {
-        const response = await fetchApi<AuthResponse>(ApiRoutes.Auth.Login, {
-          method: 'POST',
-          data: {
-            email: input.email,
-            password: input.password,
-          },
-          ...options,
-        });
-
-        if (response.success && response.data?.status === 'success') {
-          localStorage.setItem('authToken', response.data.authorization.token);
-          mutate();
-        }
-
-        return response;
-      } catch (error) {
-        console.error('Login error:', error);
-        return {
-          success: false,
-          errors: [t('auth.errors.login_failed')],
-        };
-      }
-    },
-    [fetchApi, mutate, t]
-  );
-
-  const register = useCallback(
-    async (
-      input: RegisterInput & {
-        name: string;
-        password_confirmation: string;
-        username?: string;
-        first_name?: string;
-        last_name?: string;
-      },
-      options?: FetchApiOptions
-    ) => {
-      try {
-        const response = await fetchApi<AuthResponse>(ApiRoutes.Auth.Register, {
-          method: 'POST',
-          data: input,
-          ...options,
-        });
-
-        if (response.success && response.data?.status === 'success') {
-          localStorage.setItem('authToken', response.data.authorization.token);
-          mutate();
-        }
-
-        return response;
-      } catch (error) {
-        console.error('Registration error:', error);
-        return {
-          success: false,
-          errors: [t('auth.errors.register_failed')],
-        };
-      }
-    },
-    [fetchApi, mutate, t]
-  );
-
-  const logout = async (options?: FetchApiOptions) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.Logout, { method: 'POST', ...options });
+  const logout = async (options?: ApiOptions) => {
+    const response = await fetchApi<null>(ApiRoutes.Auth.Logout, {
+      method: 'POST',
+      ...options,
+    });
     localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     mutate();
     return response;
   };
 
-  const requestPasswordReset = async (
-    input: RequestPasswordResetInput,
-    options?: FetchApiOptions
-  ) => {
+  const requestPasswordReset = async (input: RequestPasswordResetInput, options?: ApiOptions) => {
     const response = await fetchApi<null>(ApiRoutes.Auth.RequestPasswordReset, {
       data: input,
       ...options,
@@ -236,23 +229,33 @@ const useAuth = (): AuthData => {
     return response;
   };
 
-  const resetPassword = async (input: ResetPasswordInput, options?: FetchApiOptions) => {
-    const response = await fetchApi<{ token: string }>(ApiRoutes.Auth.ResetPassword, {
+  const resetPassword = async (input: ResetPasswordInput, options?: ApiOptions) => {
+    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.ResetPassword, {
       data: input,
       ...options,
     });
-    return response;
+
+    if (response.success && response.data) {
+      return handleAuthResponse(response.data);
+    }
+
+    return {
+      success: false,
+      status: 'error',
+      errors: response.errors || ['Password reset failed'],
+    };
   };
 
   return {
     user: user ?? null,
-    initialized,
-    isAuthenticated: !!user,
     login,
     register,
     logout,
     requestPasswordReset,
     resetPassword,
+    initialized: !isLoading,
+    isAuthenticated,
+    isLoading,
   };
 };
 

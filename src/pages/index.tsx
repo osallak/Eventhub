@@ -1,15 +1,13 @@
 import { Topbar } from '@common/layout/Topbar';
 import { useAuth } from '@modules/auth/contexts/AuthContext';
+import { DiscoverEventsSection } from '@modules/events/components/discover/DiscoverEventsSection';
 import { EventCard } from '@modules/events/components/discover/EventCard';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 import { Box, Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { menuItems } from '../common/defs/menu-items';
 import type { PageComponent } from './_app';
-import { DiscoverEventsSection } from '@modules/events/components/discover/DiscoverEventsSection';
-import { GetStaticProps } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 
 const Home: PageComponent = () => {
   const router = useRouter();
@@ -194,8 +192,8 @@ const Home: PageComponent = () => {
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
-            backgroundImage: (theme) =>
-              `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url("/images/hero-bg.jpg")`,
+            backgroundImage:
+              'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url("/images/hero-bg.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -528,12 +526,8 @@ const Home: PageComponent = () => {
 // Add this to tell the Layout if it's a landing page
 Home.isLandingPage = true;
 
-export const getStaticProps: GetStaticProps = async ({ locale }) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale ?? 'fr', ['events', 'common'])),
-    },
-  };
-};
+export const getStaticProps = async () => ({
+  props: {},
+});
 
 export default Home;

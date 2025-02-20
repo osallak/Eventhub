@@ -1,3 +1,4 @@
+import { Routes } from '@common/constants/routes';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import {
@@ -12,16 +13,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import { LoginFormData } from '../types/auth.types';
-import { Routes } from '@common/constants/routes';
 import useAuth from '../hooks/api/useAuth';
-import { useSnackbar } from 'notistack';
+import { LoginFormData } from '../types/auth.types';
 
 export const LoginForm: React.FC = () => {
-  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,32 +33,45 @@ export const LoginForm: React.FC = () => {
 
   const auth = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const router = useRouter();
+  const returnUrl = router.query.returnUrl || router.query.redirect;
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError(null);
+      console.log('Starting login process');
+
       const response = await auth.login(data, {
         displayProgress: true,
-        displaySuccess: true,
+        displaySuccess: false,
       });
 
-      if (response.success && response.data?.status === 'success') {
-        // Store user data
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      if (response.success) {
+        console.log('Login successful');
 
-        // Show success message
-        enqueueSnackbar(response.data.message, {
+        enqueueSnackbar('Successfully logged in', {
           variant: 'success',
+          autoHideDuration: 3000,
         });
 
-        // Redirect to home
-        window.location.href = '/';
-      } else if (response.errors?.length) {
-        setError(response.errors[0]);
+        // Check both redirect and returnUrl parameters
+        const redirectPath = router.query.redirect || router.query.returnUrl;
+        console.log('Redirect/Return path from query:', redirectPath);
+
+        if (redirectPath && typeof redirectPath === 'string') {
+          const decodedPath = decodeURIComponent(redirectPath);
+          console.log('Redirecting to:', decodedPath);
+          await router.push(decodedPath);
+        } else {
+          console.log('No redirect path, going to home');
+          await router.push(Routes.Common.Home);
+        }
+      } else {
+        setError(response.errors?.[0] || 'An error occurred during login');
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(t('auth.errors.login_failed'));
+      setError('An error occurred during login');
     }
   };
 
@@ -66,10 +79,10 @@ export const LoginForm: React.FC = () => {
     <Stack spacing={4}>
       <Stack spacing={1}>
         <Typography variant="h4" fontWeight={700}>
-          {t('auth.login.title')}
+          Login to your account
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {t('auth.login.subtitle')}
+          Login to your account to continue
         </Typography>
       </Stack>
 
@@ -79,14 +92,14 @@ export const LoginForm: React.FC = () => {
         <Stack spacing={3}>
           <TextField
             fullWidth
-            label={t('auth.fields.email')}
+            label="Email"
             error={!!errors.email}
             helperText={errors.email?.message}
             {...register('email', {
-              required: t('auth.validation.email_required'),
+              required: 'Email is required',
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: t('auth.validation.email_invalid'),
+                message: 'Invalid email address',
               },
             })}
           />
@@ -94,7 +107,7 @@ export const LoginForm: React.FC = () => {
           <TextField
             fullWidth
             type={showPassword ? 'text' : 'password'}
-            label={t('auth.fields.password')}
+            label="Password"
             error={!!errors.password}
             helperText={errors.password?.message}
             InputProps={{
@@ -107,14 +120,11 @@ export const LoginForm: React.FC = () => {
               ),
             }}
             {...register('password', {
-              required: t('auth.validation.password_required'),
+              required: 'Password is required',
             })}
           />
 
-          <FormControlLabel
-            control={<Checkbox {...register('remember')} />}
-            label={t('auth.login.remember_me')}
-          />
+          <FormControlLabel control={<Checkbox {...register('remember')} />} label="Remember me" />
 
           <Button
             type="submit"
@@ -123,26 +133,26 @@ export const LoginForm: React.FC = () => {
             disabled={isSubmitting}
             sx={{ py: 1.2 }}
           >
-            {t('auth.login.submit')}
+            Login
           </Button>
 
           <Button variant="outlined" size="large" startIcon={<GoogleIcon />} sx={{ py: 1.2 }}>
-            {t('auth.login.google')}
+            Login with Google
           </Button>
         </Stack>
       </form>
 
       <Box textAlign="center">
         <Typography variant="body2" color="text.secondary">
-          {t('auth.login.no_account')}{' '}
+          Don't have an account?{' '}
           <Typography
-            component="a"
-            href={Routes.Auth.Register}
+            component={Link}
+            href={`${Routes.Auth.Register}${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}
             variant="body2"
             color="primary"
             sx={{ textDecoration: 'none', fontWeight: 500 }}
           >
-            {t('auth.login.register_link')}
+            Create an account
           </Typography>
         </Typography>
       </Box>
