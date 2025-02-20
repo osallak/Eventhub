@@ -36,6 +36,8 @@ export const EventCard = ({ event }: EventCardProps) => {
   const router = useRouter();
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
+  console.log('EventCard auth state:', { isAuthenticated }); // Debug log
+
   // Calculate if event is full
   const hasLimitedSpots = event.maxParticipants !== undefined;
   const spotsLeft = hasLimitedSpots
@@ -57,12 +59,15 @@ export const EventCard = ({ event }: EventCardProps) => {
   const typeInfo = getEventTypeInfo(event.eventType);
 
   const getJoinButtonState = () => {
+    console.log('getJoinButtonState called with isAuthenticated:', isAuthenticated); // Debug log
     if (!isAuthenticated) {
       return {
         disabled: false,
         text: 'Login to Join',
       };
     }
+
+    // Only check these states for authenticated users
     if (isPastEvent) {
       return {
         disabled: true,

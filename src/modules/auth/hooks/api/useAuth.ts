@@ -87,6 +87,7 @@ const useAuth = (): AuthData => {
         console.log('useAuth: Fetching user data', {
           hasToken: !!token,
           url,
+          token,
         });
 
         if (!token) {
@@ -94,10 +95,11 @@ const useAuth = (): AuthData => {
           return null;
         }
 
-        const response = await fetchApi<{ user: User }>(url, { method: 'GET' });
+        const response = await fetchApi<ApiAuthResponse>(url, { method: 'GET' });
         console.log('useAuth: API response', {
           success: response.success,
           hasUser: !!response.data?.user,
+          userData: response.data,
         });
 
         if (!response.success) {
@@ -116,19 +118,9 @@ const useAuth = (): AuthData => {
       }
     },
     {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
+      revalidateOnFocus: true,
+      shouldRetryOnError: true,
       dedupingInterval: 5000,
-      onSuccess: (data) => {
-        console.log('useAuth: SWR success', {
-          hasUser: !!data,
-        });
-        setIsChecking(false);
-      },
-      onError: (err) => {
-        console.error('useAuth: SWR error', err);
-        setIsChecking(false);
-      },
     }
   );
 
