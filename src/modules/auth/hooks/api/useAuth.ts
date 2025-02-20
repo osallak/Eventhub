@@ -1,4 +1,4 @@
-import ApiRoutes from '@common/defs/api-routes';
+import { API_ROUTES } from '@common/defs/api-routes';
 import useApi, { ApiOptions, ApiResponse } from '@common/hooks/useApi';
 import { User } from '@modules/users/defs/types';
 import { useState } from 'react';
@@ -80,7 +80,7 @@ const useAuth = (): AuthData => {
     mutate,
     isValidating,
   } = useSWR(
-    ApiRoutes.Auth.Me,
+    API_ROUTES.Auth.Me,
     async (url) => {
       try {
         const token = getStorageItem('authToken');
@@ -162,7 +162,7 @@ const useAuth = (): AuthData => {
   }
 
   const login = async (input: LoginInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Login, {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.Login, {
       data: input,
       ...options,
       displaySuccess: false,
@@ -181,7 +181,7 @@ const useAuth = (): AuthData => {
   };
 
   const register = async (input: RegisterInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Register, {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.Register, {
       data: input,
       ...options,
       displaySuccess: false,
@@ -203,7 +203,7 @@ const useAuth = (): AuthData => {
   };
 
   const logout = async (options?: ApiOptions) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.Logout, {
+    const response = await fetchApi<null>(API_ROUTES.Auth.Logout, {
       method: 'POST',
       ...options,
     });
@@ -214,7 +214,7 @@ const useAuth = (): AuthData => {
   };
 
   const requestPasswordReset = async (input: RequestPasswordResetInput, options?: ApiOptions) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.RequestPasswordReset, {
+    const response = await fetchApi<null>(API_ROUTES.Auth.RequestPasswordReset, {
       data: input,
       ...options,
     });
@@ -222,7 +222,7 @@ const useAuth = (): AuthData => {
   };
 
   const resetPassword = async (input: ResetPasswordInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.ResetPassword, {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.ResetPassword, {
       data: input,
       ...options,
     });

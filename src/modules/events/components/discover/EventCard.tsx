@@ -28,6 +28,10 @@ interface EventCardProps {
     isFull: boolean;
     isOwner?: boolean;
     isParticipant?: boolean;
+    description: string;
+    image: string;
+    date: string;
+    location: string;
   };
 }
 

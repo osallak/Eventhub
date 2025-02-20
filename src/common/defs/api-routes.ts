@@ -2,7 +2,7 @@ import Posts from '@modules/posts/defs/api-routes';
 import Uploads from '@modules/uploads/defs/api-routes';
 import Users from '@modules/users/defs/api-routes';
 
-const ApiRoutes = {
+export const API_ROUTES = {
   Auth: {
     Me: '/auth/me', // This should be a GET request
     Login: '/auth/login',
@@ -14,6 +14,11 @@ const ApiRoutes = {
   Users,
   Uploads,
   Posts,
+  Events: {
+    Create: '/events',
+  },
 };
 
+// For backward compatibility
+const ApiRoutes = API_ROUTES;
 export default ApiRoutes;
