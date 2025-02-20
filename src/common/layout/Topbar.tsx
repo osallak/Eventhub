@@ -1,8 +1,7 @@
 import { Routes } from '@common/constants/routes';
 import { useTheme as useCustomTheme } from '@common/contexts/ThemeContext';
-import { useAuth as useAuthContext } from '@modules/auth/contexts/AuthContext';
 import useAuth from '@modules/auth/hooks/api/useAuth';
-import { AccountCircle, Language as LanguageIcon } from '@mui/icons-material';
+import { AccountCircle } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -25,18 +24,11 @@ import {
 import { Theme } from '@mui/material/styles';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { useTranslation } from 'next-i18next';
 
 interface TopbarProps {
   isLandingPage?: boolean;
   scrollProgress?: number;
 }
-
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'fr', label: 'Français' },
-  { code: 'es', label: 'Español' },
-];
 
 type NavItem = {
   label: string;
@@ -52,20 +44,14 @@ const navItems: NavItem[] = [
 ];
 
 export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProps) => {
-  const { t, i18n } = useTranslation();
   const router = useRouter();
   const customTheme = useCustomTheme();
-  // const theme = useMuiTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { mode, toggleMode } = customTheme;
-  const { logout } = useAuth();
-  const { isAuthenticated } = useAuthContext();
+  const { logout, isAuthenticated } = useAuth();
 
-  // Consolidate menu state
   const [menuState, setMenuState] = useState({
     mobileMenu: false,
     profile: null as HTMLElement | null,
-    language: null as HTMLElement | null,
     notifications: null as HTMLElement | null,
   });
 
@@ -74,7 +60,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
       ...prev,
       mobileMenu: false,
       profile: null,
-      language: null,
       notifications: null,
     }));
   };
@@ -87,7 +72,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
       }));
     };
 
-  // Remove unused variables and functions
   const handleNavigation = (href: string) => {
     router.push(href);
     handleMenuClose();
@@ -97,37 +81,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
     (item) => !item.requiresAuth || (item.requiresAuth && isAuthenticated)
   );
 
-  const renderAuthButtons = () => (
-    <Stack direction="row" spacing={2}>
-      {isAuthenticated ? (
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => {
-            logout();
-            router.push('/');
-          }}
-        >
-          Logout
-        </Button>
-      ) : (
-        <>
-          <Button variant="outlined" color="primary" onClick={() => router.push(Routes.Auth.Login)}>
-            Login
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => router.push(Routes.Auth.Register)}
-          >
-            Sign Up
-          </Button>
-        </>
-      )}
-    </Stack>
-  );
-
-  // Add this helper function
   const getBackgroundColor = (theme: Theme) => {
     if (isLandingPage) {
       const color = theme.palette.mode === 'dark' ? '33, 33, 33' : '255, 255, 255';
@@ -147,6 +100,8 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
       },
     },
   };
+
+  console.log('Auth state:', { isAuthenticated });
 
   return (
     <AppBar
@@ -182,11 +137,8 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             mx: { xs: 2, sm: 4, md: 5 },
           }}
         >
-          {/* Desktop Navigation */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', flex: 1 }}>
-            {/* Left section: Logo + Navigation */}
             <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-              {/* Logo */}
               <Typography
                 variant="h6"
                 component="div"
@@ -198,65 +150,35 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                   minWidth: 'fit-content',
                   mr: 4,
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
+                  alignItems: 'baseline',
                 }}
                 onClick={() => router.push('/')}
               >
-                {/* Logo Icon */}
-                <Box
+                <Typography
+                  component="span"
                   sx={{
-                    width: 32,
-                    height: 32,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '8px',
+                    fontSize: '1.5rem',
+                    fontWeight: 800,
                     background: (theme) =>
                       `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                    boxShadow: '0 2px 8px rgba(33, 150, 243, 0.15)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
                   }}
                 >
-                  <Typography
-                    sx={{
-                      color: '#fff',
-                      fontSize: '1.2rem',
-                      fontWeight: 900,
-                    }}
-                  >
-                    eh
-                  </Typography>
-                </Box>
-
-                {/* Brand Name */}
-                <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: '1.5rem',
-                      fontWeight: 800,
-                      background: (theme) =>
-                        `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    Event
-                  </Typography>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: '1.5rem',
-                      fontWeight: 800,
-                      color: 'text.primary',
-                    }}
-                  >
-                    Hub
-                  </Typography>
-                </Box>
+                  Event
+                </Typography>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: '1.5rem',
+                    fontWeight: 800,
+                    color: 'text.primary',
+                  }}
+                >
+                  Hub
+                </Typography>
               </Typography>
 
-              {/* Main Navigation */}
               <Stack direction="row" spacing={1}>
                 {filteredNavItems.map((item) => (
                   <Button
@@ -284,7 +206,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
               </Stack>
             </Stack>
 
-            {/* Right section: Actions */}
             <Stack
               direction="row"
               spacing={1}
@@ -299,7 +220,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                 p: 0.5,
               }}
             >
-              {/* 1. Notifications */}
               <IconButton
                 onClick={handleMenuOpen('notifications')}
                 size="small"
@@ -308,16 +228,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                 <NotificationsIcon fontSize="small" />
               </IconButton>
 
-              {/* 2. Language */}
-              <IconButton
-                onClick={handleMenuOpen('language')}
-                size="small"
-                sx={commonIconButtonStyles.sx}
-              >
-                <LanguageIcon fontSize="small" />
-              </IconButton>
-
-              {/* 3. Theme */}
               <IconButton onClick={toggleMode} size="small" sx={commonIconButtonStyles.sx}>
                 {mode === 'light' ? (
                   <DarkModeIcon fontSize="small" />
@@ -326,7 +236,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                 )}
               </IconButton>
 
-              {/* 4. Profile */}
               <IconButton
                 onClick={handleMenuOpen('profile')}
                 size="small"
@@ -337,7 +246,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             </Stack>
           </Box>
 
-          {/* Mobile: Only Logo + Menu Button */}
           <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', width: '100%' }}>
             <Typography
               variant="h6"
@@ -347,10 +255,34 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                 fontSize: '1.5rem',
                 cursor: 'pointer',
                 letterSpacing: '-0.5px',
+                display: 'flex',
+                alignItems: 'baseline',
               }}
               onClick={() => router.push('/')}
             >
-              Event<span style={{ color: '#2196F3' }}>Hub</span>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: '1.5rem',
+                  fontWeight: 800,
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Event
+              </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: '1.5rem',
+                  fontWeight: 800,
+                  color: 'text.primary',
+                }}
+              >
+                Hub
+              </Typography>
             </Typography>
             <IconButton
               sx={{ ml: 'auto' }}
@@ -362,7 +294,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
         </Toolbar>
       </Container>
 
-      {/* Mobile Menu Drawer */}
       <Drawer
         anchor="top"
         open={menuState.mobileMenu}
@@ -378,7 +309,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
         }}
       >
         <Box sx={{ p: 2 }}>
-          {/* Header */}
           <Box
             sx={{
               display: 'flex',
@@ -388,14 +318,33 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Menu
+              Menu {isAuthenticated ? '(Logged In)' : '(Not Logged In)'}
             </Typography>
             <IconButton onClick={handleMenuClose}>
               <CloseIcon />
             </IconButton>
           </Box>
 
-          {/* Main Menu Items */}
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              mb: 2,
+              p: 1,
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+              borderRadius: '8px',
+            }}
+          >
+            <IconButton onClick={toggleMode} size="small" sx={commonIconButtonStyles.sx}>
+              {mode === 'light' ? (
+                <DarkModeIcon fontSize="small" />
+              ) : (
+                <LightModeIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Stack>
+
           <Stack spacing={1}>
             {filteredNavItems.map((item) => (
               <Button
@@ -414,110 +363,75 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
                 {item.label}
               </Button>
             ))}
-            <Box sx={{ px: 2, py: 1 }}>{renderAuthButtons()}</Box>
+
+            <Divider sx={{ my: 1 }} />
+
+            {isAuthenticated ? (
+              <Stack spacing={1}>
+                <Button
+                  fullWidth
+                  onClick={() => handleNavigation('/profile')}
+                  startIcon={<AccountCircle />}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    color: 'text.primary',
+                    py: 1,
+                    px: 2,
+                    borderRadius: 2,
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  Profile
+                </Button>
+                <Button
+                  fullWidth
+                  onClick={() => {
+                    logout();
+                    router.push('/');
+                    handleMenuClose();
+                  }}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    color: 'error.main',
+                    py: 1,
+                    px: 2,
+                    borderRadius: 2,
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  Logout
+                </Button>
+              </Stack>
+            ) : (
+              <Stack spacing={1}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => {
+                    router.push(Routes.Auth.Login);
+                    handleMenuClose();
+                  }}
+                >
+                  Login
+                </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  onClick={() => {
+                    router.push(Routes.Auth.Register);
+                    handleMenuClose();
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </Box>
       </Drawer>
 
-      {/* Language Menu */}
-      <Menu
-        anchorEl={menuState.language}
-        open={Boolean(menuState.language)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            mt: 1.5,
-            minWidth: 180,
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-          },
-        }}
-      >
-        {LANGUAGES.map((lang) => (
-          <MenuItem
-            key={lang.code}
-            onClick={() => {
-              router.push(router.pathname, router.asPath, { locale: lang.code });
-              handleMenuClose();
-            }}
-            sx={{
-              py: 1,
-              px: 2,
-              bgcolor: router.locale === lang.code ? 'action.selected' : 'transparent',
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <Typography variant="body2">{lang.label}</Typography>
-              {router.locale === lang.code && (
-                <Typography variant="body2" color="primary">
-                  ✓
-                </Typography>
-              )}
-            </Stack>
-          </MenuItem>
-        ))}
-      </Menu>
-
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={menuState.profile}
-        open={Boolean(menuState.profile)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            mt: 1.5,
-            minWidth: 200,
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-          },
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            router.push('/profile');
-            handleMenuClose();
-          }}
-          sx={{ py: 1.5 }}
-        >
-          <Stack spacing={0.5}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('Profile')}
-            </Typography>
-          </Stack>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            router.push('/events/history');
-            handleMenuClose();
-          }}
-          sx={{ py: 1.5 }}
-        >
-          <Typography variant="body2">{t('History')}</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            router.push('/events/upcoming');
-            handleMenuClose();
-          }}
-          sx={{ py: 1.5 }}
-        >
-          <Typography variant="body2">{t('Upcoming Events')}</Typography>
-        </MenuItem>
-        <Divider sx={{ my: 1 }} />
-        <MenuItem
-          onClick={() => {
-            logout();
-            handleMenuClose();
-          }}
-          sx={{ py: 1.5, color: 'error.main' }}
-        >
-          <Typography variant="body2">{t('Logout')}</Typography>
-        </MenuItem>
-      </Menu>
-
-      {/* Notifications Menu */}
       <Menu
         anchorEl={menuState.notifications}
         open={Boolean(menuState.notifications)}
@@ -534,9 +448,74 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
       >
         <MenuItem sx={{ py: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            {t('No new notifications')}
+            No new notifications
           </Typography>
         </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={menuState.profile}
+        open={Boolean(menuState.profile)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: 1.5,
+            minWidth: 200,
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+          },
+        }}
+      >
+        {isAuthenticated ? (
+          <>
+            <MenuItem
+              onClick={() => {
+                handleNavigation('/profile');
+                handleMenuClose();
+              }}
+              sx={{ py: 1.5 }}
+            >
+              <Stack spacing={0.5}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Profile
+                </Typography>
+              </Stack>
+            </MenuItem>
+            <Divider sx={{ my: 1 }} />
+            <MenuItem
+              onClick={() => {
+                logout();
+                router.push('/');
+                handleMenuClose();
+              }}
+              sx={{ py: 1.5, color: 'error.main' }}
+            >
+              <Typography variant="body2">Logout</Typography>
+            </MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem
+              onClick={() => {
+                router.push(Routes.Auth.Login);
+                handleMenuClose();
+              }}
+              sx={{ py: 1.5 }}
+            >
+              <Typography variant="body2">Login</Typography>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                router.push(Routes.Auth.Register);
+                handleMenuClose();
+              }}
+              sx={{ py: 1.5 }}
+            >
+              <Typography variant="body2">Sign Up</Typography>
+            </MenuItem>
+          </>
+        )}
       </Menu>
     </AppBar>
   );

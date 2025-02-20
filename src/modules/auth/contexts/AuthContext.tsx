@@ -1,5 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
-import { AuthState, User, LoginCredentials, RegisterCredentials, PasswordResetRequest, PasswordReset } from '../types/auth.types';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  AuthState,
+  LoginCredentials,
+  PasswordReset,
+  PasswordResetRequest,
+  RegisterCredentials,
+} from '../types/auth.types';
 
 interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -38,13 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<void> => {
+    setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
       // Login logic here
-    } catch (error) {
-      throw error;
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, []);
 
