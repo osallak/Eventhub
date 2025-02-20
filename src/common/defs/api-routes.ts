@@ -16,6 +16,7 @@ export const API_ROUTES = {
   Posts,
   Events: {
     Create: '/events',
+    List: '/events',
   },
 };
 

@@ -1,7 +1,10 @@
+import { LoadingOverlay } from '@common/components/LoadingOverlay';
+import useApi from '@common/hooks/useApi';
 import { Topbar } from '@common/layout/Topbar';
 import { EventCard } from '@modules/events/components/discover/EventCard';
 import { EventFilters, EventFiltersData } from '@modules/events/components/discover/EventFilters';
-import { EVENT_CATEGORIES } from '@modules/events/types/categories';
+import { getEvents } from '@modules/events/services/eventService';
+import { Event } from '@modules/events/types/event';
 import {
   Close as CloseIcon,
   FilterList as FilterIcon,
@@ -14,10 +17,14 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  Pagination,
   TextField,
   Typography,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useSnackbar } from 'notistack';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/router';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {
@@ -44,40 +51,60 @@ const FiltersContent = ({
   showTitle,
   filters,
   setFilters,
+  onApply,
 }: {
   showTitle?: boolean;
   filters: EventFiltersData;
   setFilters: (filters: EventFiltersData) => void;
+  onApply?: () => void;
 }) => {
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {showTitle && (
         <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
           Filters
         </Typography>
       )}
-      <EventFilters filters={filters} onFilterChange={setFilters} />
-    </>
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        <EventFilters filters={filters} onFilterChange={setFilters} />
+      </Box>
+      {onApply && (
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={onApply}
+          sx={{
+            mt: 3,
+            py: 1.5,
+            borderRadius: 2,
+          }}
+        >
+          Apply Filters
+        </Button>
+      )}
+    </Box>
   );
-};
-
-const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
-  if (index % 3 === 0) {
-    return 'physical';
-  }
-  if (index % 3 === 1) {
-    return 'virtual';
-  }
-  return 'hybrid';
 };
 
 const DiscoverEvents = () => {
   const [_showCustomDate, _setShowCustomDate] = useState(false);
   const [_selectedDateOption, _setSelectedDateOption] = useState('upcoming');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const router = useRouter();
+  const { category } = router.query;
+  const fetchApi = useApi();
+  const { t } = useTranslation();
+  const { enqueueSnackbar } = useSnackbar();
+
+  // Initialize filters with category from URL if present
   const [filters, setFilters] = useState<EventFiltersData>({
-    search: '',
-    category: undefined,
+    category: category as string | undefined,
     eventType: undefined,
     isPaid: undefined,
     minAge: undefined,
@@ -85,27 +112,102 @@ const DiscoverEvents = () => {
     date: null,
   });
 
-  // Move mock data generation inside component after useTranslation
-  const mockEvents = useMemo(
-    () =>
-      [...Array(12)].map((_, index) => ({
-        id: index.toString(),
-        title: `Event Title ${index + 1}`,
-        category: index % 2 === 0 ? EVENT_CATEGORIES.SPORTS : EVENT_CATEGORIES.MUSIC,
-        eventType: getEventType(index),
-        isPaid: index % 2 === 0,
-        price: index % 2 === 0 ? 10 + index : undefined,
-        currency: 'USD',
-        startDate: new Date(2024, 2, 1 + index).toISOString(),
-        startTime: '19:00',
-        city: `City ${(index % 3) + 1}`,
-        maxParticipants: index % 3 === 0 ? undefined : 20,
-        currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
-        imageUrl: undefined,
-        isFull: index % 3 === 0,
-      })),
-    []
-  ); // Using useMemo to avoid recreating on every render
+  // Update filters when URL query changes
+  useEffect(() => {
+    if (category) {
+      setFilters((prev) => ({
+        ...prev,
+        category: category as string,
+      }));
+    }
+  }, [category]);
+
+  // Fetch events only once on mount
+  const fetchEvents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getEvents(fetchApi, {
+        page: 1,
+        per_page: 100,
+      });
+      setAllEvents(response.data as unknown as Event[]);
+    } catch (error) {
+      enqueueSnackbar(t('Failed to fetch events'), { variant: 'error' });
+      setAllEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchApi, enqueueSnackbar, t]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []); // Only run on mount
+
+  // Memoize filtered results
+  const filteredResults = useMemo(() => {
+    let result = [...allEvents];
+
+    if (searchTerm.trim()) {
+      // Only filter if search term is not empty
+      const searchLower = searchTerm.toLowerCase();
+      result = result.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchLower) ||
+          event.description.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply other filters
+    if (filters.category) {
+      result = result.filter(
+        (event) => event.category.toLowerCase() === filters.category?.toLowerCase()
+      );
+    }
+
+    if (filters.eventType) {
+      result = result.filter((event) => event.eventType === filters.eventType);
+    }
+
+    if (filters.isPaid !== undefined) {
+      result = result.filter((event) => event.isPaid === filters.isPaid);
+    }
+
+    if (filters.minAge) {
+      const minAgeValue = filters.minAge;
+      result = result.filter((event) => (event.minAge || 0) >= minAgeValue);
+    }
+
+    if (filters.city?.trim()) {
+      const cityLower = filters.city.trim().toLowerCase();
+      result = result.filter((event) => {
+        const eventCity = event.city || '';
+        return eventCity.toLowerCase().includes(cityLower);
+      });
+    }
+
+    return result;
+  }, [allEvents, searchTerm, filters]);
+
+  // Simple search handler
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (page !== 1) {
+      setPage(1); // Reset page only if not on first page
+    }
+  };
+
+  // Update pagination
+  useEffect(() => {
+    const startIndex = (page - 1) * 10;
+    setFilteredEvents(filteredResults.slice(startIndex, startIndex + 10));
+    setTotalPages(Math.ceil(filteredResults.length / 10));
+  }, [filteredResults, page]);
+
+  const handleFilterChange = (newFilters: EventFiltersData) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filtering
+  };
 
   return (
     <Box>
@@ -114,7 +216,7 @@ const DiscoverEvents = () => {
       <Box
         sx={{
           display: 'flex',
-          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.default'),
+          bgcolor: 'background.default',
         }}
       >
         {/* Desktop Filters - Hidden on mobile */}
@@ -124,39 +226,29 @@ const DiscoverEvents = () => {
             width: 280,
             flexShrink: 0,
             ml: { lg: 8 },
-            backgroundColor: 'background.paper',
+            bgcolor: 'background.paper',
             borderRadius: 2,
             boxShadow: (theme) => theme.shadows[1],
-            height: 'calc(100vh - 100px)',
             position: 'sticky',
             top: 88,
-            overflow: 'hidden',
+            p: 3,
+            alignSelf: 'flex-start',
+            maxHeight: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: (theme) =>
+                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              borderRadius: '3px',
+            },
           }}
         >
-          <Box
-            sx={{
-              height: '100%',
-              overflowY: 'auto',
-              p: 3,
-              '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                borderRadius: '3px',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                background: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-              },
-            }}
-          >
-            <FiltersContent showTitle filters={filters} setFilters={setFilters} />
-          </Box>
+          <FiltersContent showTitle filters={filters} setFilters={handleFilterChange} />
         </Box>
 
         {/* Main Content */}
@@ -202,8 +294,8 @@ const DiscoverEvents = () => {
             <TextField
               fullWidth
               placeholder="Search events..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              value={searchTerm}
+              onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -238,13 +330,27 @@ const DiscoverEvents = () => {
           </Box>
 
           {/* Events Grid */}
-          <Grid container spacing={3}>
-            {mockEvents.map((event, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <EventCard event={event} />
+          {isLoading ? (
+            <LoadingOverlay />
+          ) : (
+            <>
+              <Grid container spacing={3}>
+                {filteredEvents.map((event) => {
+                  return (
+                    <Grid item xs={12} sm={6} md={4} key={event.id}>
+                      <EventCard event={event} />
+                    </Grid>
+                  );
+                })}
               </Grid>
-            ))}
-          </Grid>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
+              />
+            </>
+          )}
         </Box>
       </Box>
 
@@ -273,7 +379,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          Show Filters
+          Show Filtersssss
         </Button>
       </Box>
 
@@ -289,21 +395,47 @@ const DiscoverEvents = () => {
             borderTopRightRadius: (theme) => theme.shape.borderRadius * 2,
             px: 2,
             py: 3,
+            bgcolor: 'background.paper',
           },
         }}
       >
-        <Box sx={{ overflowY: 'auto' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            pt: 1,
+          }}
+        >
           <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+            }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Filters
+              Filtersssss
             </Typography>
             <IconButton onClick={() => setMobileFiltersOpen(false)}>
               <CloseIcon />
             </IconButton>
           </Box>
-          <FiltersContent showTitle filters={filters} setFilters={setFilters} />
+          <Box
+            sx={{
+              pt: 2,
+              flex: 1,
+              overflowY: 'auto',
+            }}
+          >
+            <FiltersContent
+              showTitle={false}
+              filters={filters}
+              setFilters={handleFilterChange}
+              onApply={() => setMobileFiltersOpen(false)}
+            />
+          </Box>
         </Box>
       </Drawer>
     </Box>

@@ -1,5 +1,5 @@
-import { ApiResponse } from '@common/hooks/useApi';
 import { API_ROUTES } from '@common/defs/api-routes';
+import { ApiResponse } from '@common/hooks/useApi';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 
@@ -32,12 +32,6 @@ interface CreateEventPayload {
   status: 'draft' | 'published';
 }
 
-interface ApiError {
-  type: 'validation' | 'error';
-  message: string;
-  errors?: Record<string, string[]>;
-}
-
 class ValidationError extends Error {
   type: string;
 
@@ -49,6 +43,21 @@ class ValidationError extends Error {
     this.type = 'validation';
     this.errors = errors;
   }
+}
+
+interface PaginatedResponse<T> {
+  currentPage: number;
+  data: T[];
+  firstPageUrl: string;
+  from: number;
+  lastPage: number;
+  lastPageUrl: string;
+  nextPageUrl: string | null;
+  path: string;
+  perPage: number;
+  prevPageUrl: string | null;
+  to: number;
+  total: number;
 }
 
 export const createEvent = async (
@@ -125,4 +134,35 @@ export const createEvent = async (
 
 const isValidationErrors = (obj: unknown): obj is Record<string, string[]> => {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+};
+
+export const getEvents = async (
+  fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
+  options: { page: number; per_page: number }
+): Promise<PaginatedResponse<Event>> => {
+  const queryParams = new URLSearchParams({
+    page: options.page.toString(),
+    per_page: options.per_page.toString(),
+  });
+
+  const url = `${API_ROUTES.Events.List}?${queryParams.toString()}`;
+
+  try {
+    const response = await fetchApi<{ status: string; data: PaginatedResponse<Event> }>(url, {
+      method: 'GET',
+    });
+
+    if (!response.success || !response.data || response.data.status !== 'success') {
+      throw new Error(response.errors?.toString() || 'Failed to fetch events');
+    }
+
+    // Add debug log to see the response structure
+    console.log('Raw API response:', response.data);
+
+    // Return the data property from the response
+    return response.data.data;
+  } catch (error: unknown) {
+    console.error('API Error:', error);
+    throw error;
+  }
 };

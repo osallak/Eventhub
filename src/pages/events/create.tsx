@@ -15,7 +15,6 @@ import { Box, Button, Container, Stack, Step, StepLabel, Stepper, Typography } f
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import useApi from '@common/hooks/useApi';
 
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
@@ -31,7 +30,6 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   const [formData, setFormData] = useState<EventFormData>({});
   const [stepsValidation, setStepsValidation] = useState<Record<number, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -156,11 +154,11 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
     try {
       const response = await createEvent(fetchApi, formData);
 
-      enqueueSnackbar(t('Event created successfully'), {
+      enqueueSnackbar('Event created successfully', {
         variant: 'success',
       });
 
-      router.push(`/events/${response.id}`);
+      setIsSubmitted(true);
     } catch (err: any) {
       console.error('Error creating event:', err);
 
@@ -173,8 +171,8 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
           });
         }
       } else {
-        setError(err.message || t('Failed to create event. Please try again.'));
-        enqueueSnackbar(err.message || t('Failed to create event. Please try again.'), {
+        setError(err.message || 'Failed to create event. Please try again.');
+        enqueueSnackbar(err.message || 'Failed to create event. Please try again.', {
           variant: 'error',
         });
       }

@@ -21,6 +21,20 @@ export const DateSelector = ({ selectedDate, onDateChange, label }: DateSelector
             '& .MuiInputBase-root': {
               borderRadius: '16px',
               bgcolor: 'background.paper',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'divider',
+              },
+              '&:hover': {
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                },
+              },
+              '&.Mui-focused': {
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: '1px',
+                },
+              },
             },
           }}
         />

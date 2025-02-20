@@ -1,3 +1,4 @@
+import RefreshIcon from '@mui/icons-material/Refresh';
 import {
   Button,
   Chip,
@@ -8,13 +9,10 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { useState } from 'react';
 import { categories } from '../../../../constants/categories';
 import { DateSelector } from '../create/DateSelector';
-import RefreshIcon from '@mui/icons-material/Refresh';
 
 export interface EventFiltersData {
-  search: string;
   category?: string;
   eventType?: string;
   isPaid?: boolean;
@@ -36,13 +34,18 @@ const inputStyles = {
   },
   '&:hover': {
     '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: 'success.main',
+      borderColor: 'primary.main',
     },
   },
   '&.Mui-focused': {
     '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: 'success.main',
+      borderColor: 'primary.main',
       borderWidth: '1px',
+    },
+  },
+  '& + .MuiInputLabel-root': {
+    '&.MuiInputLabel-shrink': {
+      top: 0,
     },
   },
 };
@@ -53,15 +56,15 @@ const textFieldStyles = {
 };
 
 export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => {
-  const [localFilters, setLocalFilters] = useState(filters);
-
-  const handleLocalChange = (newFilters: Partial<typeof filters>) => {
-    setLocalFilters({ ...localFilters, ...newFilters });
+  const handleChange = (newFilters: Partial<EventFiltersData>) => {
+    onFilterChange({
+      ...filters,
+      ...newFilters,
+    });
   };
 
   const handleReset = () => {
     const resetFilters: EventFiltersData = {
-      search: '',
       category: undefined,
       eventType: undefined,
       isPaid: undefined,
@@ -69,29 +72,33 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
       city: undefined,
       date: null,
     };
-    setLocalFilters(resetFilters);
     onFilterChange(resetFilters);
-  };
-
-  const handleApply = () => {
-    onFilterChange(localFilters);
   };
 
   return (
     <Stack spacing={3}>
       {/* Category */}
       <FormControl fullWidth>
-        <InputLabel id="category-label">Category</InputLabel>
+        <InputLabel
+          id="category-label"
+          sx={{
+            '&.MuiInputLabel-shrink': {
+              transform: 'translate(14px, -8px) scale(0.75)',
+            },
+          }}
+        >
+          Category
+        </InputLabel>
         <Select
           labelId="category-label"
-          value={localFilters.category || ''}
+          value={filters.category || ''}
           label="Category"
-          onChange={(e) => handleLocalChange({ category: e.target.value })}
+          onChange={(e) => handleChange({ category: e.target.value })}
           sx={inputStyles}
         >
           <MenuItem value="">All Categories</MenuItem>
           {categories.map((category) => (
-            <MenuItem key={category} value={category}>
+            <MenuItem key={category} value={category.toLowerCase()}>
               {category}
             </MenuItem>
           ))}
@@ -100,12 +107,21 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
 
       {/* Event Type */}
       <FormControl fullWidth>
-        <InputLabel id="event-type-label">Event Type</InputLabel>
+        <InputLabel
+          id="event-type-label"
+          sx={{
+            '&.MuiInputLabel-shrink': {
+              transform: 'translate(14px, -8px) scale(0.75)',
+            },
+          }}
+        >
+          Event Type
+        </InputLabel>
         <Select
           labelId="event-type-label"
-          value={localFilters.eventType || ''}
+          value={filters.eventType || ''}
           label="Event Type"
-          onChange={(e) => handleLocalChange({ eventType: e.target.value })}
+          onChange={(e) => handleChange({ eventType: e.target.value })}
           sx={inputStyles}
         >
           <MenuItem value="">All Types</MenuItem>
@@ -120,8 +136,8 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
         fullWidth
         label="Location"
         placeholder="Enter location..."
-        value={localFilters.city || ''}
-        onChange={(e) => handleLocalChange({ city: e.target.value })}
+        value={filters.city || ''}
+        onChange={(e) => handleChange({ city: e.target.value })}
         sx={textFieldStyles}
       />
 
@@ -130,21 +146,17 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
         <Chip
           label="Free"
           clickable
-          variant={localFilters.isPaid === false ? 'filled' : 'outlined'}
-          color={localFilters.isPaid === false ? 'success' : 'default'}
-          onClick={() =>
-            handleLocalChange({ isPaid: localFilters.isPaid === false ? undefined : false })
-          }
+          variant={filters.isPaid === false ? 'filled' : 'outlined'}
+          color={filters.isPaid === false ? 'success' : 'default'}
+          onClick={() => handleChange({ isPaid: filters.isPaid === false ? undefined : false })}
           sx={{ flex: 1, height: 40, borderRadius: '20px' }}
         />
         <Chip
           label="Paid"
           clickable
-          variant={localFilters.isPaid === true ? 'filled' : 'outlined'}
-          color={localFilters.isPaid === true ? 'success' : 'default'}
-          onClick={() =>
-            handleLocalChange({ isPaid: localFilters.isPaid === true ? undefined : true })
-          }
+          variant={filters.isPaid === true ? 'filled' : 'outlined'}
+          color={filters.isPaid === true ? 'success' : 'default'}
+          onClick={() => handleChange({ isPaid: filters.isPaid === true ? undefined : true })}
           sx={{ flex: 1, height: 40, borderRadius: '20px' }}
         />
       </Stack>
@@ -155,9 +167,9 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
         type="number"
         label="Age Requirement"
         placeholder="Minimum age..."
-        value={localFilters.minAge || ''}
+        value={filters.minAge || ''}
         onChange={(e) =>
-          handleLocalChange({ minAge: e.target.value ? Number(e.target.value) : undefined })
+          handleChange({ minAge: e.target.value ? Number(e.target.value) : undefined })
         }
         InputProps={{ inputProps: { min: 0 } }}
         sx={textFieldStyles}
@@ -165,29 +177,15 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
 
       {/* Date Filter */}
       <DateSelector
-        selectedDate={localFilters.date}
-        onDateChange={(newDate) => handleLocalChange({ date: newDate })}
+        selectedDate={filters.date}
+        onDateChange={(newDate) => handleChange({ date: newDate })}
         label="Date"
       />
 
       {/* Buttons */}
-      <Stack spacing={1}>
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleApply}
-          sx={{
-            borderRadius: '20px',
-            py: 1.5,
-          }}
-        >
-          Apply Filters
-        </Button>
-
-        <Button startIcon={<RefreshIcon />} onClick={handleReset} sx={{ textTransform: 'none' }}>
-          Reset Filters
-        </Button>
-      </Stack>
+      <Button startIcon={<RefreshIcon />} onClick={handleReset} sx={{ textTransform: 'none' }}>
+        Reset Filters
+      </Button>
     </Stack>
   );
 };
