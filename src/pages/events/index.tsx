@@ -1,10 +1,10 @@
 import { Topbar } from '@common/layout/Topbar';
 import { EventCard } from '@modules/events/components/discover/EventCard';
-import { EventFilters } from '@modules/events/components/discover/EventFilters';
+import { EventFilters, EventFiltersData } from '@modules/events/components/discover/EventFilters';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 import {
   Close as CloseIcon,
   FilterList as FilterIcon,
-  Refresh as RefreshIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
 import {
@@ -17,8 +17,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMemo, useState } from 'react';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {
@@ -47,35 +46,20 @@ const FiltersContent = ({
   setFilters,
 }: {
   showTitle?: boolean;
-  filters: any;
-  setFilters: (filters: any) => void;
-}) => (
-  <>
-    {showTitle && (
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
-        Filters
-      </Typography>
-    )}
-    <EventFilters filters={filters} onFilterChange={setFilters} />
-    <Button
-      startIcon={<RefreshIcon />}
-      sx={{ textTransform: 'none' }}
-      onClick={() =>
-        setFilters({
-          search: '',
-          category: '',
-          eventType: '',
-          isPaid: undefined,
-          minAge: undefined,
-          city: '',
-          date: null,
-        })
-      }
-    >
-      Reset filters
-    </Button>
-  </>
-);
+  filters: EventFiltersData;
+  setFilters: (filters: EventFiltersData) => void;
+}) => {
+  return (
+    <>
+      {showTitle && (
+        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+          Filters
+        </Typography>
+      )}
+      <EventFilters filters={filters} onFilterChange={setFilters} />
+    </>
+  );
+};
 
 const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
   if (index % 3 === 0) {
@@ -87,36 +71,41 @@ const getEventType = (index: number): 'physical' | 'virtual' | 'hybrid' => {
   return 'hybrid';
 };
 
-const mockEvents = [...Array(12)].map((_, index) => ({
-  title: `Event Title ${index + 1}`,
-  category: 'Sports & Fitness',
-  eventType: getEventType(index),
-  isPaid: index % 2 === 0,
-  price: index % 2 === 0 ? 10 + index : undefined,
-  currency: 'USD',
-  startDate: new Date(2024, 2, 1 + index).toISOString(),
-  startTime: '19:00',
-  city: `City ${(index % 3) + 1}`,
-  maxParticipants: index % 3 === 0 ? undefined : 20,
-  currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
-  imageUrl: undefined,
-  isFull: index % 3 === 0,
-}));
-
 const DiscoverEvents = () => {
   const [_showCustomDate, _setShowCustomDate] = useState(false);
   const [_selectedDateOption, _setSelectedDateOption] = useState('upcoming');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<EventFiltersData>({
     search: '',
-    category: '',
-    eventType: '',
+    category: undefined,
+    eventType: undefined,
     isPaid: undefined,
     minAge: undefined,
-    city: '',
+    city: undefined,
     date: null,
   });
-  const { t } = useTranslation();
+
+  // Move mock data generation inside component after useTranslation
+  const mockEvents = useMemo(
+    () =>
+      [...Array(12)].map((_, index) => ({
+        id: index.toString(),
+        title: `Event Title ${index + 1}`,
+        category: index % 2 === 0 ? EVENT_CATEGORIES.SPORTS : EVENT_CATEGORIES.MUSIC,
+        eventType: getEventType(index),
+        isPaid: index % 2 === 0,
+        price: index % 2 === 0 ? 10 + index : undefined,
+        currency: 'USD',
+        startDate: new Date(2024, 2, 1 + index).toISOString(),
+        startTime: '19:00',
+        city: `City ${(index % 3) + 1}`,
+        maxParticipants: index % 3 === 0 ? undefined : 20,
+        currentParticipants: index % 3 === 0 ? undefined : 8 + (index % 5),
+        imageUrl: undefined,
+        isFull: index % 3 === 0,
+      })),
+    []
+  ); // Using useMemo to avoid recreating on every render
 
   return (
     <Box>
@@ -198,7 +187,7 @@ const DiscoverEvents = () => {
               color: 'text.primary',
             }}
           >
-            Discover events
+            Discover Events
           </Typography>
 
           {/* Search and Filter Bar */}
@@ -212,7 +201,7 @@ const DiscoverEvents = () => {
           >
             <TextField
               fullWidth
-              placeholder={t('Search events...')}
+              placeholder="Search events..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               InputProps={{
@@ -244,7 +233,7 @@ const DiscoverEvents = () => {
                 borderColor: 'divider',
               }}
             >
-              {t('Filters')}
+              Filters
             </Button>
           </Box>
 
@@ -284,7 +273,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          {t('Filters')}
+          Show Filters
         </Button>
       </Box>
 
@@ -320,5 +309,9 @@ const DiscoverEvents = () => {
     </Box>
   );
 };
+
+export const getStaticProps = async () => ({
+  props: {},
+});
 
 export default DiscoverEvents;

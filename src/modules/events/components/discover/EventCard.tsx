@@ -1,18 +1,20 @@
-import { Card, Chip, Stack, Typography, Button } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { formatPrice } from '../../utils/formatters';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Routes } from '@common/constants/routes';
+import useAuth from '@modules/auth/hooks/api/useAuth';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Box, Button, Card, CardActions, Chip, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useAuth } from '@modules/auth/contexts/AuthContext';
-import { Routes } from '@common/constants/routes';
 import { useRouter } from 'next/router';
+import { formatPrice } from '../../utils/formatters';
+import { EventActions } from './EventActions';
 
 interface EventCardProps {
   event: {
+    id: string;
     title: string;
-    category: string;
+    category: (typeof EVENT_CATEGORIES)[keyof typeof EVENT_CATEGORIES];
     eventType: 'physical' | 'virtual' | 'hybrid';
     isPaid: boolean;
     price?: number;
@@ -24,55 +26,110 @@ interface EventCardProps {
     currentParticipants?: number;
     imageUrl?: string;
     isFull: boolean;
+    isOwner?: boolean;
+    isParticipant?: boolean;
   };
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
-  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
-  // Helper to get event type icon and text
-  const getEventTypeInfo = (type: 'physical' | 'virtual' | 'hybrid') => {
-    switch (type) {
-      case 'physical':
-        return { icon: '🏠', text: t('In Person') };
-      case 'virtual':
-        return { icon: '💻', text: t('Online') };
-      default:
-        return { icon: '🌐', text: t('Hybrid') };
-    }
-  };
-
-  const typeInfo = getEventTypeInfo(event.eventType);
+  // Calculate if event is full
   const hasLimitedSpots = event.maxParticipants !== undefined;
   const spotsLeft = hasLimitedSpots
     ? event.maxParticipants! - (event.currentParticipants || 0)
     : undefined;
 
-  // Check if event is in the past
-  const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
-
-  const handleJoinClick = () => {
-    if (!isAuthenticated) {
-      router.push(`${Routes.Auth.Login}?returnUrl=${encodeURIComponent(router.asPath)}`);
-    } else {
-      // Existing join logic
-      console.log('Joining event...');
+  // Helper to get event type icon and text
+  const getEventTypeInfo = (type: 'physical' | 'virtual' | 'hybrid') => {
+    switch (type) {
+      case 'physical':
+        return { icon: '🏠', text: 'Physical' };
+      case 'virtual':
+        return { icon: '💻', text: 'Virtual' };
+      default:
+        return { icon: '🌐', text: 'Hybrid' };
     }
   };
 
-  const getButtonText = () => {
+  const typeInfo = getEventTypeInfo(event.eventType);
+
+  const getJoinButtonState = () => {
     if (!isAuthenticated) {
-      return 'Login to Join';
+      return {
+        disabled: false,
+        text: 'Login to Join',
+      };
     }
     if (isPastEvent) {
-      return 'Event Ended';
+      return {
+        disabled: true,
+        text: 'Event Ended',
+      };
     }
     if (event.isFull) {
-      return 'Event Full';
+      return {
+        disabled: true,
+        text: 'Event Full',
+      };
     }
-    return 'Join Event';
+    if (event.isParticipant) {
+      return {
+        disabled: true,
+        text: 'Already Joined',
+      };
+    }
+    if (event.isOwner) {
+      return {
+        disabled: true,
+        text: 'You are the Owner',
+      };
+    }
+    return {
+      disabled: false,
+      text: 'Join Event',
+    };
+  };
+
+  const buttonState = getJoinButtonState();
+
+  const handleJoinClick = () => {
+    if (!isAuthenticated) {
+      const currentPath = router.asPath;
+      console.log('EventCard current path:', currentPath);
+
+      const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
+      console.log('EventCard login URL:', loginUrl);
+
+      router.push(loginUrl);
+      return;
+    }
+    // Handle join logic for authenticated users
+    console.log('Joining event:', event.id);
+  };
+
+  const handleEditEvent = () => {
+    router.push(`/events/edit/${event.id}`);
+  };
+
+  const handleDeleteEvent = () => {
+    // TODO: Add confirmation dialog
+    console.log('Delete event:', event.id);
+  };
+
+  const handleLeaveEvent = () => {
+    // TODO: Add confirmation dialog
+    console.log('Leave event:', event.id);
+  };
+
+  // Get spots text
+  const getSpotsText = () => {
+    if (hasLimitedSpots) {
+      return `${spotsLeft} spots left`;
+    }
+    return 'Unlimited spots';
   };
 
   return (
@@ -123,7 +180,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           />
         ) : (
           <Chip
-            label={t('FREE')}
+            label="Free"
             size="small"
             sx={{
               height: 28,
@@ -162,7 +219,7 @@ export const EventCard = ({ event }: EventCardProps) => {
 
       {/* Category */}
       <Chip
-        label={t(event.category)}
+        label={event.category}
         size="small"
         sx={{
           mb: 2,
@@ -218,26 +275,45 @@ export const EventCard = ({ event }: EventCardProps) => {
               lineHeight: 1.5,
             }}
           >
-            {hasLimitedSpots ? `${spotsLeft} ${t('spots left')}` : t('Unlimited spots')}
+            {getSpotsText()}
           </Typography>
         </Stack>
       </Stack>
 
-      {/* Join Button */}
-      <Button
-        onClick={handleJoinClick}
-        variant="contained"
-        disabled={event.isFull || isPastEvent}
-        fullWidth
-        sx={{
-          mt: 'auto',
-          borderRadius: '20px',
-          textTransform: 'none',
-          py: 1,
-        }}
-      >
-        {getButtonText()}
-      </Button>
+      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+        <Button
+          variant="contained"
+          fullWidth
+          disabled={buttonState.disabled}
+          onClick={!isAuthenticated ? handleJoinClick : () => router.push(`/events/${event.id}`)}
+          sx={{
+            mt: 'auto',
+            borderRadius: '20px',
+            textTransform: 'none',
+            py: 1,
+            minWidth: '180px',
+            width: '100%',
+            mx: 'auto',
+          }}
+        >
+          {buttonState.text}
+        </Button>
+        {/* ... other actions ... */}
+      </CardActions>
+
+      {/* Show actions menu only if authenticated and is owner/participant */}
+      {isAuthenticated && (event.isOwner || event.isParticipant) && (
+        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+          <EventActions
+            eventId={event.id}
+            isOwner={event.isOwner || false}
+            isParticipant={event.isParticipant || false}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteEvent}
+            onLeave={handleLeaveEvent}
+          />
+        </Box>
+      )}
     </Card>
   );
 };

@@ -1,6 +1,8 @@
 import { Topbar } from '@common/layout/Topbar';
 import { useAuth } from '@modules/auth/contexts/AuthContext';
+import { DiscoverEventsSection } from '@modules/events/components/discover/DiscoverEventsSection';
 import { EventCard } from '@modules/events/components/discover/EventCard';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
 import { Box, Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -163,8 +165,9 @@ const Home: PageComponent = () => {
 
   // Update sample events data
   const sampleEvents = [...Array(5)].map((_, index) => ({
+    id: index.toString(),
     title: `Event Title ${index + 1}`,
-    category: index % 2 === 0 ? 'Sports' : 'Music',
+    category: index % 2 === 0 ? EVENT_CATEGORIES.SPORTS : EVENT_CATEGORIES.MUSIC,
     eventType: getEventType(index),
     isPaid: index % 2 === 0,
     price: index % 2 === 0 ? 25 + index * 5 : undefined,
@@ -176,26 +179,6 @@ const Home: PageComponent = () => {
     currentParticipants: 8 + index,
     isFull: index === 4, // Last event is full
   }));
-
-  // Create the DiscoverEventsSection component
-  const DiscoverEventsSection = () => {
-    return (
-      <Box sx={{ py: 8, bgcolor: 'background.default' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
-            Discover Events
-          </Typography>
-          <Grid container spacing={3}>
-            {sampleEvents.map((event, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <EventCard event={event} />
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-    );
-  };
 
   return (
     <Box>
@@ -209,8 +192,8 @@ const Home: PageComponent = () => {
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
-            backgroundImage: (theme) =>
-              `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url("/images/hero-bg.jpg")`,
+            backgroundImage:
+              'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url("/images/hero-bg.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -473,7 +456,11 @@ const Home: PageComponent = () => {
           </Container>
         </Box>
 
-        {isAuthenticated ? renderYourEventsSection() : <DiscoverEventsSection />}
+        {isAuthenticated ? (
+          renderYourEventsSection()
+        ) : (
+          <DiscoverEventsSection events={sampleEvents} />
+        )}
 
         {/* How It Works Section */}
         <Box
@@ -538,5 +525,9 @@ const Home: PageComponent = () => {
 
 // Add this to tell the Layout if it's a landing page
 Home.isLandingPage = true;
+
+export const getStaticProps = async () => ({
+  props: {},
+});
 
 export default Home;

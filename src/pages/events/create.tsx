@@ -1,28 +1,38 @@
+import { Routes } from '@common/constants/routes';
+import useAuth from '@modules/auth/hooks/api/useAuth';
+import { AUTH_MODE } from '@modules/auth/types/auth.types';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';
+import { InviteStep } from '@modules/events/components/create/InviteStep';
 import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { StepWrapper } from '@modules/events/components/create/StepWrapper';
 import { EventFormData } from '@modules/events/types/form';
-import { Box, Button, Container, Step, StepLabel, Stepper, Typography, Stack } from '@mui/material';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/router';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { InviteStep } from '@modules/events/components/create/InviteStep';
-import { withAuth } from '@modules/auth/hocs/withAuth';
-import { Routes } from '@common/constants/routes';
-import { AUTH_MODE } from '@modules/auth/types/auth.types';
+import { Box, Button, Container, Stack, Step, StepLabel, Stepper, Typography, CircularProgress } from '@mui/material';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
 
-const CreateEvent = () => {
-  const { t } = useTranslation();
+interface CreateEventProps {
+  mode?: 'create' | 'edit';
+}
+
+const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
+  const router = useRouter();
+  const { id } = router.query;
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<EventFormData>({});
   const [stepsValidation, setStepsValidation] = useState<Record<number, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const router = useRouter();
+
+  useEffect(() => {
+    if (mode === 'edit' && id) {
+      // TODO: Fetch event data and populate formData
+      console.log('Fetching event:', id);
+    }
+  }, [mode, id]);
 
   const handleFormChange = <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
     console.group('CreateEvent: Form Update');
@@ -101,17 +111,17 @@ const CreateEvent = () => {
         <CheckCircleIcon sx={{ fontSize: 40, color: 'white' }} />
       </Box>
       <Typography variant="h5" color="text.primary" gutterBottom>
-        {t('Event Created Successfully!')}
+        Event Created Successfully!
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        {t('You will receive a notification 30 minutes before the event starts.')}
+        You will receive a notification 30 minutes before the event starts.
       </Typography>
       <Stack direction="row" spacing={2}>
         <Button variant="outlined" onClick={() => router.push('/events')}>
-          {t('View All Events')}
+          View All Events
         </Button>
         <Button variant="contained" onClick={() => router.push('/events/created')}>
-          {t('View Event')}
+          View Event
         </Button>
       </Stack>
     </Box>
@@ -120,11 +130,11 @@ const CreateEvent = () => {
   const navigationButtons = (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
       <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
-        {t('Back')}
+        Back
       </Button>
       <Box sx={{ flex: '1 1 auto' }} />
       <Button onClick={handleNext} disabled={!stepsValidation[activeStep] && activeStep < 3}>
-        {activeStep === 4 ? t('Finish') : t('Next')}
+        {activeStep === 4 ? 'Finish' : 'Next'}
       </Button>
     </Box>
   );
@@ -158,7 +168,7 @@ const CreateEvent = () => {
           },
         }}
       >
-        {t('Create New Event')}
+        {mode === 'edit' ? 'Edit Event' : 'Create Event'}
       </Typography>
 
       <Box
@@ -195,7 +205,7 @@ const CreateEvent = () => {
                     },
                   }}
                 >
-                  {t(label)}
+                  {label}
                 </StepLabel>
               </Step>
             ))}
@@ -209,7 +219,27 @@ const CreateEvent = () => {
   );
 };
 
-export default withAuth(CreateEvent, {
-  mode: AUTH_MODE.LOGGED_IN,
-  redirectUrl: Routes.Auth.Login,
-});
+const CreateEventPage = () => {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const currentPath = router.asPath;
+      const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
+      router.replace(loginUrl);
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <CreateEvent />
+    </Container>
+  );
+};
+
+export default CreateEventPage;

@@ -2,28 +2,30 @@ import { Any } from '@common/defs/types';
 import { useSnackbar } from 'notistack';
 import { useCallback } from 'react';
 import useFetch from '@common/hooks/useFetch';
-import { useTranslation } from 'react-i18next';
 
 export interface ApiResponse<T> {
   success: boolean;
+  status: string;
   message?: string;
   errors?: string[];
   data?: T;
 }
+
 export interface FetchApiOptions {
   verbose?: boolean;
   displaySuccess?: boolean;
   displayProgress?: boolean;
 }
+
 export interface ApiOptions extends FetchApiOptions {
   headers?: HeadersInit;
   data?: Any;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 }
+
 const useApi = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { makeFetch } = useFetch<ApiResponse<Any>>();
-  const { t, i18n } = useTranslation(['common']);
 
   const fetchApi = useCallback(
     async <T>(endpoint: string, options?: ApiOptions): Promise<ApiResponse<T>> => {
@@ -33,7 +35,6 @@ const useApi = () => {
       if (!(options?.data instanceof FormData)) {
         headers.set('Content-Type', 'application/json');
       }
-      headers.set('Accept-Language', i18n.language);
       if (authToken) {
         headers.set('Authorization', `Bearer ${authToken}`);
       }
@@ -42,9 +43,11 @@ const useApi = () => {
           headers.set(key, value as string);
         });
       }
+
       const method = options?.method ?? (options?.data ? 'POST' : 'GET');
       const url = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
       const verbose = options?.verbose ?? false;
+
       if (verbose) {
         console.log(`useApi: requesting ${url}`, options);
       }
@@ -56,38 +59,40 @@ const useApi = () => {
       };
 
       const response = await makeFetch(url, {
-        verbose,
+        verbose: true,
         displayProgress: options?.displayProgress,
         request: requestOptions,
       });
 
-      if (verbose) {
-        console.log(`useApi: response`, response);
-      }
       if (!response) {
-        const errorMessage = t('common:error_occurred');
-        enqueueSnackbar(errorMessage, { variant: 'error' });
-        return { success: false, errors: [errorMessage] };
+        return {
+          success: false,
+          status: 'error',
+          errors: ['Request failed'],
+        };
       }
-      if (!response.success && !response.errors) {
-        response.success = false;
-        response.errors = [t('common:error_occurred')];
-      }
+
+      const apiResponse: ApiResponse<T> = {
+        success: response.status === 'success',
+        status: response.status,
+        data: response as T,
+        errors: [],
+      };
+
       const displaySuccess = options?.displaySuccess ?? false;
-      if (!response.success) {
-        if (response.errors) {
-          for (let i = 0; i < response.errors.length; i++) {
-            enqueueSnackbar(response.errors[i], { variant: 'error' });
-          }
-        } else {
-          enqueueSnackbar(t('common:error_occurred'), { variant: 'error' });
+      if (!apiResponse.success) {
+        if (apiResponse.errors?.length) {
+          apiResponse.errors.forEach((error) => {
+            enqueueSnackbar(error, { variant: 'error' });
+          });
         }
-      } else if (displaySuccess && response.message) {
-        enqueueSnackbar(response.message, { variant: 'success' });
+      } else if (displaySuccess && apiResponse.message) {
+        enqueueSnackbar(apiResponse.message, { variant: 'success' });
       }
-      return response;
+
+      return apiResponse;
     },
-    [enqueueSnackbar, makeFetch, t, i18n.language]
+    [enqueueSnackbar, makeFetch]
   );
 
   return fetchApi;

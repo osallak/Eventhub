@@ -1,4 +1,3 @@
-import { useTheme } from '@common/contexts/ThemeContext';
 import { Routes } from '@common/constants/routes';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -8,38 +7,67 @@ import {
   Button,
   IconButton,
   InputAdornment,
+  Link,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import { useRouter } from 'next/router';
+import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import { RegisterCredentials } from '../types/auth.types';
+import useAuth from '../hooks/api/useAuth';
+import { RegisterInput } from '../types/auth.types';
 
-export const RegisterForm = () => {
-  const { t } = useTranslation();
-  const theme = useTheme();
+export const RegisterForm: React.FC = () => {
+  const auth = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterCredentials>();
+  } = useForm<RegisterInput>();
 
   const password = watch('password');
 
-  const onSubmit = async (data: RegisterCredentials) => {
+  const onSubmit = async (data: RegisterInput) => {
     try {
       setError(null);
-      // TODO: Implement register logic
-      console.log(data);
-    } catch (err) {
-      setError(t('auth.errors.register_failed'));
+
+      const response = await auth.register(data, {
+        displayProgress: true,
+        displaySuccess: false,
+      });
+
+      if (response.success) {
+        enqueueSnackbar('Successfully registered', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+
+        // Check both redirect and returnUrl parameters
+        const redirectPath = router.query.redirect || router.query.returnUrl;
+
+        if (redirectPath && typeof redirectPath === 'string') {
+          const decodedPath = decodeURIComponent(redirectPath);
+          console.log('Redirecting to:', decodedPath);
+          await router.push(decodedPath);
+        } else {
+          console.log('No redirect path, going to home');
+          await router.push(Routes.Common.Home);
+        }
+      } else {
+        setError(response.errors?.[0] || 'An error occurred during registration');
+      }
+    } catch (err: unknown) {
+      console.error('Registration error:', err);
+      setError('An error occurred during registration');
     }
   };
 
@@ -47,10 +75,10 @@ export const RegisterForm = () => {
     <Stack spacing={4}>
       <Stack spacing={1}>
         <Typography variant="h4" fontWeight={700}>
-          {t('auth.register.title')}
+          Create an Account
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {t('auth.register.subtitle')}
+          Join us to start creating and discovering events
         </Typography>
       </Stack>
 
@@ -60,28 +88,28 @@ export const RegisterForm = () => {
         <Stack spacing={3}>
           <TextField
             fullWidth
-            label={t('auth.fields.name')}
+            label="Full Name"
             error={!!errors.name}
             helperText={errors.name?.message}
             {...register('name', {
-              required: t('auth.validation.name_required'),
+              required: 'Name is required',
               minLength: {
                 value: 2,
-                message: t('auth.validation.name_min_length'),
+                message: 'Name must be at least 2 characters',
               },
             })}
           />
 
           <TextField
             fullWidth
-            label={t('auth.fields.email')}
+            label="Email"
             error={!!errors.email}
             helperText={errors.email?.message}
             {...register('email', {
-              required: t('auth.validation.email_required'),
+              required: 'Email is required',
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: t('auth.validation.email_invalid'),
+                message: 'Invalid email address',
               },
             })}
           />
@@ -89,30 +117,23 @@ export const RegisterForm = () => {
           <TextField
             fullWidth
             type={showPassword ? 'text' : 'password'}
-            label={t('auth.fields.password')}
+            label="Password"
             error={!!errors.password}
             helperText={errors.password?.message}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
               ),
             }}
             {...register('password', {
-              required: t('auth.validation.password_required'),
+              required: 'Password is required',
               minLength: {
                 value: 8,
-                message: t('auth.validation.password_min_length'),
-              },
-              pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-                message: t('auth.validation.password_pattern'),
+                message: 'Password must be at least 8 characters',
               },
             })}
           />
@@ -120,7 +141,7 @@ export const RegisterForm = () => {
           <TextField
             fullWidth
             type={showConfirmPassword ? 'text' : 'password'}
-            label={t('auth.fields.confirm_password')}
+            label="Confirm Password"
             error={!!errors.password_confirmation}
             helperText={errors.password_confirmation?.message}
             InputProps={{
@@ -136,9 +157,8 @@ export const RegisterForm = () => {
               ),
             }}
             {...register('password_confirmation', {
-              required: t('auth.validation.confirm_password_required'),
-              validate: (value) =>
-                value === password || t('auth.validation.passwords_must_match'),
+              required: 'Please confirm your password',
+              validate: (value) => value === password || 'Passwords must match',
             })}
           />
 
@@ -149,31 +169,26 @@ export const RegisterForm = () => {
             disabled={isSubmitting}
             sx={{ py: 1.2 }}
           >
-            {t('auth.register.submit')}
+            Create Account
           </Button>
 
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<GoogleIcon />}
-            sx={{ py: 1.2 }}
-          >
-            {t('auth.register.google')}
+          <Button variant="outlined" size="large" startIcon={<GoogleIcon />} sx={{ py: 1.2 }}>
+            Sign up with Google
           </Button>
         </Stack>
       </form>
 
       <Box textAlign="center">
         <Typography variant="body2" color="text.secondary">
-          {t('auth.register.have_account')}{' '}
+          Already have an account?{' '}
           <Typography
-            component="a"
+            component={Link}
             href={Routes.Auth.Login}
             variant="body2"
             color="primary"
             sx={{ textDecoration: 'none', fontWeight: 500 }}
           >
-            {t('auth.register.login_link')}
+            Sign in
           </Typography>
         </Typography>
       </Box>

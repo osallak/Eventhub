@@ -37,6 +37,7 @@ const mockEvents = [...Array(6)].map((_, index) => {
   })();
 
   return {
+    id: index.toString(),
     title: `Event ${index + 1}`,
     category: 'Sports & Fitness',
     eventType,
