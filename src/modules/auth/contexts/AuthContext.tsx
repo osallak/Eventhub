@@ -5,17 +5,19 @@ import {
   PasswordReset,
   PasswordResetRequest,
   RegisterCredentials,
+  ApiResponse,
+  AuthResponse,
 } from '../types/auth.types';
 
 interface AuthContextValue extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => Promise<void>;
-  requestPasswordReset: (data: PasswordResetRequest) => Promise<void>;
-  resetPassword: (data: PasswordReset) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<ApiResponse<AuthResponse>>;
+  register: (credentials: RegisterCredentials) => Promise<ApiResponse<AuthResponse>>;
+  logout: () => Promise<ApiResponse<null>>;
+  requestPasswordReset: (data: PasswordResetRequest) => Promise<ApiResponse<null>>;
+  resetPassword: (data: PasswordReset) => Promise<ApiResponse<AuthResponse>>;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
@@ -43,29 +45,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<void> => {
-    setState((prev) => ({ ...prev, isLoading: true }));
-    try {
-      // Login logic here
-    } finally {
-      setState((prev) => ({ ...prev, isLoading: false }));
-    }
-  }, []);
+  const login = useCallback(
+    async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
+      setState((prev) => ({ ...prev, isLoading: true }));
+      try {
+        return {
+          success: false,
+          status: 'error',
+          errors: ['Not implemented'],
+        };
+      } finally {
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    },
+    []
+  );
 
-  const register = async (credentials: RegisterCredentials): Promise<void> => {
-    // TODO: Implement register logic
+  const register = async (credentials: RegisterCredentials): Promise<ApiResponse<AuthResponse>> => {
+    return {
+      success: false,
+      status: 'error',
+      errors: ['Not implemented'],
+    };
   };
 
-  const logout = async (): Promise<void> => {
-    // TODO: Implement logout logic
+  const logout = async (): Promise<ApiResponse<null>> => {
+    return {
+      success: false,
+      status: 'error',
+      errors: ['Not implemented'],
+    };
   };
 
-  const requestPasswordReset = async (data: PasswordResetRequest): Promise<void> => {
-    // TODO: Implement password reset request logic
+  const requestPasswordReset = async (data: PasswordResetRequest): Promise<ApiResponse<null>> => {
+    return {
+      success: false,
+      status: 'error',
+      errors: ['Not implemented'],
+    };
   };
 
-  const resetPassword = async (data: PasswordReset): Promise<void> => {
-    // TODO: Implement password reset logic
+  const resetPassword = async (data: PasswordReset): Promise<ApiResponse<AuthResponse>> => {
+    return {
+      success: false,
+      status: 'error',
+      errors: ['Not implemented'],
+    };
   };
 
   const value = useMemo(

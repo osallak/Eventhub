@@ -15,9 +15,10 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
         display: 'flex',
         alignItems: 'center',
         py: 8,
-        background: theme.palette.mode === 'dark'
-          ? 'linear-gradient(to bottom, #1a1a1a, #2d2d2d)'
-          : 'linear-gradient(to bottom, #f5f5f5, #e0e0e0)',
+        background:
+          theme.palette.mode === 'dark'
+            ? 'linear-gradient(to bottom, #1a1a1a, #2d2d2d)'
+            : 'linear-gradient(to bottom, #f5f5f5, #e0e0e0)',
       }}
     >
       <Container maxWidth="sm">
@@ -29,9 +30,8 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
             background: theme.palette.background.paper,
             backdropFilter: 'blur(20px)',
             border: '1px solid',
-            borderColor: theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.05)'
-              : 'rgba(0, 0, 0, 0.05)',
+            borderColor:
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
           }}
         >
           {children}

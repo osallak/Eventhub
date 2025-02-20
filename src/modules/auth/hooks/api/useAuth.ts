@@ -1,7 +1,7 @@
 import { API_ROUTES } from '@common/defs/api-routes';
 import useApi, { ApiOptions, ApiResponse } from '@common/hooks/useApi';
 import { User } from '@modules/users/defs/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import {
   AuthResponse,
@@ -13,10 +13,23 @@ import {
 
 interface ApiAuthResponse {
   status: string;
-  user: User;
+  user: User; // For user data
   authorization: {
     token: string;
     type: string;
+  };
+  data?: {
+    // For /me endpoint
+    id: number;
+    email: string;
+    name: string;
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    avatarUrl: string | null;
+    emailVerifiedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
   };
 }
 
@@ -48,26 +61,44 @@ const useAuth = (): AuthData => {
 
   const getStorageItem = (key: string): string | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(key);
+      const value = localStorage.getItem(key);
+      console.log(`Getting storage item ${key}:`, {
+        exists: !!value,
+        value: value ? value.substring(0, 10) + '...' : null,
+      });
+      return value;
     }
     return null;
   };
 
-  const handleAuthResponse = (response: ApiAuthResponse) => {
+  const handleAuthResponse = (response: ApiAuthResponse): ApiResponse<AuthResponse> => {
+    console.log('🔐 Handling auth response:', {
+      status: response.status,
+      hasToken: !!response.authorization?.token,
+      userData: response.user ? 'exists' : 'null',
+    });
+
     if (response.status === 'success' && response.authorization?.token) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('authToken', response.authorization.token);
+        // Store both token and user data
+        localStorage.setItem('token', response.authorization.token);
         localStorage.setItem('user', JSON.stringify(response.user));
+        console.log('💾 Stored auth data in localStorage');
       }
-      mutate();
+      // Update SWR cache with user data
+      mutate(response.user, false);
+
       return {
         success: true,
         status: response.status,
-        data: response,
+        data: {
+          status: response.status,
+          user: response.user,
+          authorization: response.authorization,
+        },
         errors: [],
       };
     }
-
     return {
       success: false,
       status: 'error',
@@ -83,36 +114,41 @@ const useAuth = (): AuthData => {
     API_ROUTES.Auth.Me,
     async (url) => {
       try {
-        const token = getStorageItem('authToken');
-        console.log('useAuth: Fetching user data', {
-          hasToken: !!token,
-          url,
-          token,
-        });
+        const token = getStorageItem('token');
+        console.log('🔍 Fetching user data:', { hasToken: !!token });
 
         if (!token) {
           setIsChecking(false);
           return null;
         }
 
-        const response = await fetchApi<ApiAuthResponse>(url, { method: 'GET' });
-        console.log('useAuth: API response', {
+        const response = await fetchApi<ApiAuthResponse>(url, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`, // Add Bearer prefix for API requests
+          },
+        });
+
+        console.log('👤 /me response:', {
           success: response.success,
-          hasUser: !!response.data?.user,
-          userData: response.data,
+          hasUser: !!response.data,
+          responseData: response.data,
         });
 
         if (!response.success) {
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken');
+            localStorage.removeItem('token');
             localStorage.removeItem('user');
+            console.log('🗑️ Cleared invalid auth data');
           }
+          setIsChecking(false);
+          return null;
         }
 
         setIsChecking(false);
-        return response.success ? response.data?.user : null;
+        return response.data || null; // Return the user data directly
       } catch (error) {
-        console.error('useAuth: Error fetching user', error);
+        console.error('❌ Error fetching user:', error);
         setIsChecking(false);
         return null;
       }
@@ -121,11 +157,24 @@ const useAuth = (): AuthData => {
       revalidateOnFocus: true,
       shouldRetryOnError: true,
       dedupingInterval: 5000,
+      revalidateOnMount: true,
+      suspense: false,
+      refreshInterval: 0,
     }
   );
 
-  const isAuthenticated = typeof window !== 'undefined' && !!getStorageItem('authToken') && !!user;
+  const isAuthenticated = typeof window !== 'undefined' && !!getStorageItem('token') && !!user;
   const isLoading = isValidating || isChecking;
+
+  // Add logging to debug auth state
+  useEffect(() => {
+    console.log('Auth state changed:', {
+      hasToken: !!getStorageItem('token'),
+      hasUser: !!user,
+      isAuthenticated,
+      user,
+    });
+  }, [user, isAuthenticated]);
 
   if (!authEnabled) {
     return {
@@ -161,7 +210,10 @@ const useAuth = (): AuthData => {
     };
   }
 
-  const login = async (input: LoginInput, options?: ApiOptions) => {
+  const login = async (
+    input: LoginInput,
+    options?: ApiOptions
+  ): Promise<ApiResponse<AuthResponse>> => {
     const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.Login, {
       data: input,
       ...options,
@@ -169,7 +221,6 @@ const useAuth = (): AuthData => {
     });
 
     if (response.success && response.data) {
-      // response.data is now the ApiAuthResponse
       return handleAuthResponse(response.data);
     }
 
@@ -207,7 +258,7 @@ const useAuth = (): AuthData => {
       method: 'POST',
       ...options,
     });
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     mutate();
     return response;
@@ -239,7 +290,7 @@ const useAuth = (): AuthData => {
   };
 
   return {
-    user: user ?? null,
+    user: (user as User) ?? null, // Type assertion to fix the user type
     login,
     register,
     logout,
