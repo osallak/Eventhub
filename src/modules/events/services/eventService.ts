@@ -64,10 +64,6 @@ export const createEvent = async (
   fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
   formData: any
 ): Promise<any> => {
-  console.log('Creating event with API:', fetchApi);
-  console.log('Form data:', formData);
-  console.log('API route:', API_ROUTES.Events.Create);
-
   // Transform the form data to match API requirements
   const payload: CreateEventPayload = {
     title: formData.title,
@@ -106,8 +102,6 @@ export const createEvent = async (
     payload.currency = formData.currency;
   }
 
-  console.log('Transformed payload:', payload);
-
   try {
     const response = await fetchApi(API_ROUTES.Events.Create, {
       method: 'POST',
@@ -127,7 +121,6 @@ export const createEvent = async (
 
     return response.data;
   } catch (error: unknown) {
-    console.error('API Error:', error);
     throw error;
   }
 };
@@ -157,12 +150,10 @@ export const getEvents = async (
     }
 
     // Add debug log to see the response structure
-    console.log('Raw API response:', response.data);
 
     // Return the data property from the response
     return response.data.data;
   } catch (error: unknown) {
-    console.error('API Error:', error);
     throw error;
   }
 };

@@ -33,9 +33,6 @@ const useFetch = <T>() => {
       }
 
       if (verbose) {
-        console.log('Starting fetch request...');
-        console.log('URL:', url);
-        console.log('Options:', options);
       }
 
       let finalUrl = url;
@@ -76,7 +73,6 @@ const useFetch = <T>() => {
       const httpResponse = await fetch(finalUrl, requestOptions);
 
       if (verbose) {
-        console.log('HTTP response status:', httpResponse.status);
       }
 
       if (!httpResponse.ok && httpResponse.status !== 403) {
@@ -99,7 +95,6 @@ const useFetch = <T>() => {
       setResponse(response); // Set the response state
 
       if (verbose) {
-        console.log('Fetch successful, response:', response);
       }
 
       return response;
@@ -107,12 +102,10 @@ const useFetch = <T>() => {
       if (err instanceof Error) {
         setError(err.message); // Set the error message
         if (verbose) {
-          console.error('Fetch error:', err.message);
         }
       } else {
         setError('An error occurred'); // Set a generic error message
         if (verbose) {
-          console.error('Fetch error: An error occurred');
         }
       }
       return null;
@@ -122,7 +115,6 @@ const useFetch = <T>() => {
         stop(); // Stop the progress bar
       }
       if (verbose) {
-        console.log('Fetch request completed.');
       }
     }
   }, []);

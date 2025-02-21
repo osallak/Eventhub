@@ -42,7 +42,6 @@ const Home: PageComponent = () => {
         });
         setEvents(response.data as unknown as Event[]);
       } catch (error) {
-        console.error('Failed to fetch events:', error);
       } finally {
         setIsLoading(false);
       }
@@ -59,9 +58,7 @@ const Home: PageComponent = () => {
           per_page: 5, // Fetch 5 events for the scroll
         });
         setPopularEvents(response.data as unknown as Event[]);
-      } catch (error) {
-        console.error('Failed to fetch popular events:', error);
-      }
+      } catch (error) {}
     };
 
     fetchPopularEvents();

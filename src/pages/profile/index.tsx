@@ -12,15 +12,16 @@ import {
   Stack,
   TextField,
   Typography,
+  CircularProgress,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
-import { withAuth } from '@modules/auth/hocs/withAuth';
-import { AUTH_MODE } from '@modules/auth/types/auth.types';
+import useAuth from '@modules/auth/hooks/api/useAuth';
 import { Routes } from '@common/constants/routes';
+import { User } from '@modules/users/defs/types';
 
 type EventType = 'physical' | 'virtual' | 'hybrid';
 
@@ -55,45 +56,110 @@ const mockEvents = [...Array(6)].map((_, index) => {
   };
 });
 
-// Update mockUser
-const mockUser = {
+// Update mockUser type to match User interface
+const mockUser: User = {
+  id: 1,
   firstName: 'John',
   lastName: 'Doe',
   username: 'johndoe',
   email: 'john.doe@example.com',
+  name: 'John Doe',
   avatarUrl: null,
-  createdEvents: mockEvents,
+  emailVerifiedAt: null,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  createdEvents: mockEvents.map((event) => ({
+    ...event,
+    id: parseInt(event.id),
+    description: '',
+    endTime: '20:00',
+    hideAddress: false,
+  })),
 };
 
 const Profile = () => {
   const router = useRouter();
   const { username } = router.query;
-
-  // If username is in the URL, it's a public view
-  const isPublicView = Boolean(username);
-
-  // If it's public view, we should fetch that user's data
-  const [userData, setUserData] = useState(mockUser);
-
-  useEffect(() => {
-    if (isPublicView) {
-      // In real app: fetch user data by username
-      // For now, just use mock data
-      setUserData(mockUser);
-    }
-  }, [isPublicView]);
-
+  const { user, isAuthenticated, initialized } = useAuth();
   const { t } = useTranslation();
+
+  // Get the actual user data from the nested structure
+  const actualUser = user?.data || user;
+
+  const [userData, setUserData] = useState<User | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'past'>('all');
 
-  // Update form state to use userData
-  const [formData, setFormData] = useState({
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    username: userData.username,
-    email: userData.email,
+  console.log('Profile component render:', {
+    hasUser: !!user,
+    user,
+    isAuthenticated,
+    initialized,
+    isPublicView: Boolean(username),
+  });
+
+  // If username is in the URL, it's a public view
+  const isPublicView = Boolean(username);
+
+  // Update userData when user data is available
+  useEffect(() => {
+    console.log('Profile userData effect:', {
+      isPublicView,
+      hasUser: !!user,
+      userData: user,
+      userEvents: user?.createdEvents,
+      eventsCount: user?.createdEvents?.length,
+    });
+
+    if (isPublicView) {
+      // TODO: Fetch public profile data from API
+      // For now, show error or redirect
+      router.replace('/404');
+    } else if (actualUser) {
+      setUserData(actualUser);
+    }
+  }, [isPublicView, actualUser, router]);
+
+  // Update form data when userData changes
+  useEffect(() => {
+    if (userData) {
+      setFormData({
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        username: userData.username || '',
+        email: userData.email || '',
+      });
+    }
+  }, [userData]);
+
+  // Show loading state if no userData yet
+  if (!userData) {
+    return <LoadingScreen />;
+  }
+
+  // Filter events from userData
+  const filteredEvents = (userData?.createdEvents || []).filter((event) => {
+    if (eventFilter === 'all') {
+      return true;
+    }
+    const eventDate = dayjs(event.startDate);
+    const now = dayjs();
+    return eventFilter === 'upcoming' ? eventDate.isAfter(now) : eventDate.isBefore(now);
+  });
+
+  console.log('Profile render:', {
+    hasUserData: !!userData,
+    userDataEvents: userData?.createdEvents,
+    eventsCount: userData?.createdEvents?.length,
+    filteredEvents,
+    filteredCount: filteredEvents.length,
   });
 
   // Add form handlers
@@ -119,16 +185,6 @@ const Profile = () => {
       setIsEditing(false);
     }
   };
-
-  // Add filter function
-  const filteredEvents = userData.createdEvents.filter((event) => {
-    if (eventFilter === 'all') {
-      return true;
-    }
-    const eventDate = dayjs(event.startDate);
-    const now = dayjs();
-    return eventFilter === 'upcoming' ? eventDate.isAfter(now) : eventDate.isBefore(now);
-  });
 
   return (
     <Box
@@ -183,10 +239,9 @@ const Profile = () => {
                       bgcolor: 'primary.main',
                       fontSize: '2rem',
                     }}
-                    src={userData.avatarUrl || undefined}
+                    src={userData?.avatarUrl || undefined}
                   >
-                    {userData.firstName[0]}
-                    {userData.lastName[0]}
+                    {userData?.name ? userData.name[0].toUpperCase() : '?'}
                   </Avatar>
                   {isEditing && (
                     <Box
@@ -248,6 +303,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
+                    placeholder={t('Enter your first name')}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -260,6 +316,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
+                    placeholder={t('Enter your last name')}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -272,6 +329,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
+                    placeholder={t('Enter your username')}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -285,6 +343,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
+                    placeholder={t('Enter your email')}
                   />
                 </Grid>
               </Grid>
@@ -330,9 +389,9 @@ const Profile = () => {
 
             {filteredEvents.length > 0 ? (
               <Grid container spacing={3}>
-                {filteredEvents.map((event, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={index}>
-                    <EventCard event={event} />
+                {filteredEvents.map((event) => (
+                  <Grid item xs={12} sm={6} md={4} key={event.id}>
+                    <EventCard event={event} isOwner={true} />
                   </Grid>
                 ))}
               </Grid>
@@ -355,7 +414,58 @@ const Profile = () => {
   );
 };
 
-export default withAuth(Profile, {
-  mode: AUTH_MODE.LOGGED_IN,
-  redirectUrl: Routes.Auth.Login,
-});
+// Add LoadingScreen component
+const LoadingScreen = () => (
+  <Box
+    sx={{
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);
+
+const ProfilePage = () => {
+  const { isAuthenticated, initialized, user } = useAuth();
+  const router = useRouter();
+
+  console.log('ProfilePage render:', {
+    isAuthenticated,
+    initialized,
+    hasUser: !!user,
+    currentPath: router.asPath,
+  });
+
+  useEffect(() => {
+    console.log('ProfilePage auth effect:', {
+      isAuthenticated,
+      initialized,
+      hasUser: !!user,
+    });
+
+    if (!initialized) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      const currentPath = router.asPath;
+      const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
+      router.replace(loginUrl);
+    }
+  }, [isAuthenticated, initialized, router, user]);
+
+  if (!initialized || !isAuthenticated) {
+    console.log('ProfilePage showing loading screen:', {
+      initialized,
+      isAuthenticated,
+    });
+    return <LoadingScreen />;
+  }
+
+  return <Profile />;
+};
+
+export default ProfilePage;

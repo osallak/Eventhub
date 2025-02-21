@@ -15,10 +15,11 @@ dayjs.extend(utc);
 
 interface EventCardProps {
   event: Event;
+  isOwner?: boolean;
 }
 
-export const EventCard = ({ event }: EventCardProps) => {
-  const { isAuthenticated } = useAuth();
+export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
@@ -33,7 +34,6 @@ export const EventCard = ({ event }: EventCardProps) => {
   // Update the type helper to handle backend data correctly
   const getEventTypeInfo = (type: string) => {
     // Add debug log
-    console.log('Event type from backend:', type);
 
     switch (type?.toLowerCase()) {
       case 'physical':
@@ -44,7 +44,7 @@ export const EventCard = ({ event }: EventCardProps) => {
         return { icon: '🌐', text: 'Hybrid' };
       default:
         // Default to physical if type is undefined or unknown
-        console.warn(`Unknown event type: ${type}, defaulting to physical`);
+
         return { icon: '🏠', text: 'Physical' };
     }
   };
@@ -60,7 +60,6 @@ export const EventCard = ({ event }: EventCardProps) => {
       };
     }
 
-    // Only check these states for authenticated users
     if (isPastEvent) {
       return {
         disabled: true,
@@ -73,9 +72,8 @@ export const EventCard = ({ event }: EventCardProps) => {
         text: 'Event Full',
       };
     }
-    // TODO: Add these properties to Event type when available
-    const isParticipant = false; // event.is_participant;
-    const isOwner = event.creator?.id === 1; // Replace with actual user ID check
+
+    const isParticipant = false; // TODO: Add this when available
 
     if (isParticipant) {
       return {
@@ -100,16 +98,13 @@ export const EventCard = ({ event }: EventCardProps) => {
   const handleJoinClick = () => {
     if (!isAuthenticated) {
       const currentPath = router.asPath;
-      console.log('EventCard current path:', currentPath);
 
       const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
-      console.log('EventCard login URL:', loginUrl);
 
       router.push(loginUrl);
       return;
     }
     // Handle join logic for authenticated users
-    console.log('Joining event:', event.id);
   };
 
   const handleEditEvent = () => {
@@ -118,12 +113,10 @@ export const EventCard = ({ event }: EventCardProps) => {
 
   const handleDeleteEvent = () => {
     // TODO: Add confirmation dialog
-    console.log('Delete event:', event.id);
   };
 
   const handleLeaveEvent = () => {
     // TODO: Add confirmation dialog
-    console.log('Leave event:', event.id);
   };
 
   // Get spots text

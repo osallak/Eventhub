@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { AUTH_MODE, WithAuthOptions } from '../types/auth.types';
-import { useAuth } from '../contexts/AuthContext';
+import useAuth from '../hooks/api/useAuth';
 import { Routes } from '@common/constants/routes';
 import { CircularProgress, Box } from '@mui/material';
 
@@ -25,19 +25,25 @@ export const withAuth = <P extends object>(
 ) => {
   const WithAuthComponent: React.FC<P> = (props) => {
     const router = useRouter();
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, initialized } = useAuth();
     const { mode, redirectUrl } = options;
 
     useEffect(() => {
-      if (!isLoading && mode === AUTH_MODE.LOGGED_IN && !isAuthenticated) {
+      if (!initialized) {
+        return;
+      }
+
+      if (mode === AUTH_MODE.LOGGED_IN && !isAuthenticated) {
         // Store the current URL to redirect back after login
         const returnUrl = encodeURIComponent(router.asPath);
         router.push(`${Routes.Auth.Login}?returnUrl=${returnUrl}`);
+      } else if (mode === AUTH_MODE.LOGGED_OUT && isAuthenticated) {
+        router.replace(options.redirectUrl);
       }
-    }, [isLoading, isAuthenticated, mode, redirectUrl, router]);
+    }, [router, isAuthenticated, initialized]);
 
     // Show loading screen while checking auth status
-    if (isLoading) {
+    if (!initialized) {
       return <LoadingScreen />;
     }
 

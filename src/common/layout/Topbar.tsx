@@ -101,8 +101,6 @@ export const Topbar = ({ isLandingPage = false, scrollProgress = 1 }: TopbarProp
     },
   };
 
-  console.log('Auth state:', { isAuthenticated });
-
   return (
     <AppBar
       position="fixed"

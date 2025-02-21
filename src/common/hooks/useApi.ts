@@ -49,7 +49,6 @@ const useApi = () => {
       const verbose = options?.verbose ?? false;
 
       if (verbose) {
-        console.log(`useApi: requesting ${url}`, options);
       }
 
       const requestOptions = {

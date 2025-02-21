@@ -38,7 +38,6 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   useEffect(() => {
     if (mode === 'edit' && id) {
       // TODO: Fetch event data and populate formData
-      console.log('Fetching event:', id);
     }
   }, [mode, id]);
 
@@ -160,8 +159,6 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
 
       setIsSubmitted(true);
     } catch (err: any) {
-      console.error('Error creating event:', err);
-
       if (err.type === 'validation') {
         const firstError = Object.entries(err.errors || {})[0];
         if (firstError) {

@@ -25,6 +25,7 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
+import useAuth from '@modules/auth/hooks/api/useAuth';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {
@@ -87,6 +88,7 @@ const FiltersContent = ({
 };
 
 const DiscoverEvents = () => {
+  const { user } = useAuth();
   const [_showCustomDate, _setShowCustomDate] = useState(false);
   const [_selectedDateOption, _setSelectedDateOption] = useState('upcoming');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -336,9 +338,10 @@ const DiscoverEvents = () => {
             <>
               <Grid container spacing={3}>
                 {filteredEvents.map((event) => {
+                  const isOwner = event.creator?.id === user?.data?.id;
                   return (
                     <Grid item xs={12} sm={6} md={4} key={event.id}>
-                      <EventCard event={event} />
+                      <EventCard event={event} isOwner={!!isOwner} />
                     </Grid>
                   );
                 })}

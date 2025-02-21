@@ -13,24 +13,7 @@ import {
 
 interface ApiAuthResponse {
   status: string;
-  user: User; // For user data
-  authorization: {
-    token: string;
-    type: string;
-  };
-  data?: {
-    // For /me endpoint
-    id: number;
-    email: string;
-    name: string;
-    username: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    avatarUrl: string | null;
-    emailVerifiedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
+  data: User;
 }
 
 interface AuthData {
@@ -59,6 +42,11 @@ const useAuth = (): AuthData => {
   const [isChecking, setIsChecking] = useState(true);
   const fetchApi = useApi();
 
+  console.log('useAuth hook state:', {
+    authEnabled,
+    isChecking,
+  });
+
   const getStorageItem = (key: string): string | null => {
     if (typeof window !== 'undefined') {
       const value = localStorage.getItem(key);
@@ -75,25 +63,23 @@ const useAuth = (): AuthData => {
     console.log('🔐 Handling auth response:', {
       status: response.status,
       hasToken: !!response.authorization?.token,
-      userData: response.user ? 'exists' : 'null',
+      userData: response.data ? 'exists' : 'null',
     });
 
     if (response.status === 'success' && response.authorization?.token) {
       if (typeof window !== 'undefined') {
-        // Store both token and user data
         localStorage.setItem('token', response.authorization.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        console.log('💾 Stored auth data in localStorage');
+        localStorage.setItem('user', JSON.stringify(response.data)); // Store user from data field
       }
       // Update SWR cache with user data
-      mutate(response.user, false);
+      mutate(response.data, false); // Pass user data from data field
 
       return {
         success: true,
         status: response.status,
         data: {
           status: response.status,
-          user: response.user,
+          user: response.data, // Use data field
           authorization: response.authorization,
         },
         errors: [],
@@ -106,65 +92,72 @@ const useAuth = (): AuthData => {
     };
   };
 
+  // Only fetch if we have a token
+  const shouldFetch = typeof window !== 'undefined' && !!getStorageItem('token');
+
   const {
     data: user,
     mutate,
     isValidating,
-  } = useSWR(
-    API_ROUTES.Auth.Me,
-    async (url) => {
-      try {
-        const token = getStorageItem('token');
-        console.log('🔍 Fetching user data:', { hasToken: !!token });
-
-        if (!token) {
-          setIsChecking(false);
-          return null;
-        }
-
-        const response = await fetchApi<ApiAuthResponse>(url, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`, // Add Bearer prefix for API requests
-          },
-        });
-
-        console.log('👤 /me response:', {
-          success: response.success,
-          hasUser: !!response.data,
-          responseData: response.data,
-        });
-
-        if (!response.success) {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            console.log('🗑️ Cleared invalid auth data');
-          }
-          setIsChecking(false);
-          return null;
-        }
-
-        setIsChecking(false);
-        return response.data || null; // Return the user data directly
-      } catch (error) {
-        console.error('❌ Error fetching user:', error);
+  } = useSWR<ApiAuthResponse | null>(shouldFetch ? API_ROUTES.Auth.Me : null, async (url) => {
+    try {
+      const token = getStorageItem('token');
+      if (!token) {
         setIsChecking(false);
         return null;
       }
-    },
-    {
-      revalidateOnFocus: true,
-      shouldRetryOnError: true,
-      dedupingInterval: 5000,
-      revalidateOnMount: true,
-      suspense: false,
-      refreshInterval: 0,
-    }
-  );
 
-  const isAuthenticated = typeof window !== 'undefined' && !!getStorageItem('token') && !!user;
+      const response = await fetchApi<ApiAuthResponse>(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.success || !response.data) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+        setIsChecking(false);
+        return null;
+      }
+
+      setIsChecking(false);
+      return response; // Return the whole response
+    } catch (error) {
+      setIsChecking(false);
+      return null;
+    }
+  });
+
+  // Set isChecking to false if we're not fetching
+  useEffect(() => {
+    if (!shouldFetch) {
+      setIsChecking(false);
+    }
+  }, [shouldFetch]);
+
+  // Also set isChecking to false when user data is available
+  useEffect(() => {
+    if (user) {
+      setIsChecking(false);
+    }
+  }, [user]);
+
+  const isAuthenticated =
+    typeof window !== 'undefined' && !!getStorageItem('token') && !!user?.data;
   const isLoading = isValidating || isChecking;
+  const initialized = !isLoading;
+
+  console.log('useAuth hook values:', {
+    isAuthenticated,
+    isLoading,
+    initialized,
+    hasUser: !!user,
+    isValidating,
+    isChecking,
+  });
 
   // Add logging to debug auth state
   useEffect(() => {
@@ -290,13 +283,13 @@ const useAuth = (): AuthData => {
   };
 
   return {
-    user: (user as User) ?? null, // Type assertion to fix the user type
+    user: user?.data || null, // Extract data from response
     login,
     register,
     logout,
     requestPasswordReset,
     resetPassword,
-    initialized: !isLoading,
+    initialized,
     isAuthenticated,
     isLoading,
   };

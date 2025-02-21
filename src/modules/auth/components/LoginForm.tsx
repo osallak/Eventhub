@@ -39,7 +39,6 @@ export const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError(null);
-      console.log('Starting login process');
 
       const response = await auth.login(data, {
         displayProgress: true,
@@ -47,8 +46,6 @@ export const LoginForm: React.FC = () => {
       });
 
       if (response.success) {
-        console.log('Login successful');
-
         enqueueSnackbar('Successfully logged in', {
           variant: 'success',
           autoHideDuration: 3000,
@@ -56,21 +53,18 @@ export const LoginForm: React.FC = () => {
 
         // Check both redirect and returnUrl parameters
         const redirectPath = router.query.redirect || router.query.returnUrl;
-        console.log('Redirect/Return path from query:', redirectPath);
 
         if (redirectPath && typeof redirectPath === 'string') {
           const decodedPath = decodeURIComponent(redirectPath);
-          console.log('Redirecting to:', decodedPath);
+
           await router.push(decodedPath);
         } else {
-          console.log('No redirect path, going to home');
           await router.push(Routes.Common.Home);
         }
       } else {
         setError(response.errors?.[0] || 'An error occurred during login');
       }
     } catch (err: unknown) {
-      console.error('Login error:', err);
       setError('An error occurred during login');
     }
   };

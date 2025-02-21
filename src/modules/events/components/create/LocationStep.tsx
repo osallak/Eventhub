@@ -112,7 +112,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
     );
 
     console.group('LocationStep: Validation');
-    console.log('Current fields:', locationFields);
+
     console.log('Validation:', {
       hasAddress: Boolean(locationFields.address),
       hasCity: Boolean(locationFields.city),
