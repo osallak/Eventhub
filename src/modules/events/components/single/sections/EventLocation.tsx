@@ -6,9 +6,11 @@ import { LocationMap } from '../../create/LocationMap';
 
 interface EventLocationProps {
   event: Event;
+  isEditing?: boolean;
+  onEdit?: (location: Partial<Event>) => void;
 }
 
-export const EventLocation = ({ event }: EventLocationProps) => {
+export const EventLocation = ({ event, isEditing, onEdit }: EventLocationProps) => {
   const isPhysical = event.eventType === 'physical' || event.eventType === 'hybrid';
   const isVirtual = event.eventType === 'virtual' || event.eventType === 'hybrid';
 
@@ -33,7 +35,34 @@ export const EventLocation = ({ event }: EventLocationProps) => {
           </Box>
 
           {!event.hideAddress && event.latitude && event.longitude && (
-            <Box sx={{ mt: 3, height: 300, borderRadius: 1, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                mt: 3,
+                height: 300,
+                width: '100%',
+                position: 'relative',
+                borderRadius: 1,
+                overflow: 'hidden',
+                '& > div': {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+                '& .mapboxgl-map': {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+                '& .mapboxgl-canvas': {
+                  width: '100% !important',
+                  height: '100% !important',
+                },
+              }}
+            >
               <LocationMap
                 address={event.address}
                 city={event.city}

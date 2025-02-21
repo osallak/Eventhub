@@ -1,7 +1,8 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Dynamically import the map component with no SSR
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -45,42 +46,40 @@ export const LocationMap = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) {
-      return;
-    }
+    if (!mapContainer.current || map.current) return;
 
-    const initialCenter = initialCoordinates || [lng, lat];
+    const defaultCoordinates: [number, number] = [-7.24465310, 33.06620380]; // Default to Casablanca
+    const coordinates = initialCoordinates || defaultCoordinates;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialCenter,
-      zoom,
+      center: coordinates,
+      zoom: 15,
+      accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
     });
 
     marker.current = new mapboxgl.Marker({
       draggable: true,
     })
-      .setLngLat(initialCenter)
+      .setLngLat(coordinates)
       .addTo(map.current);
-  }, []);
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [initialCoordinates]);
 
   return (
     <Box
+      ref={mapContainer}
       sx={{
         width: '100%',
-        overflow: 'hidden',
-        '& > div': {
-          width: '100% !important',
-          maxWidth: '100%',
-          '& .mapboxgl-map': {
-            maxWidth: '100%',
-            overflow: 'hidden',
-          },
-        },
+        height: '100%',
       }}
-    >
-      <MapComponent onLocationSelect={onLocationSelect} />
-    </Box>
+    />
   );
 };
