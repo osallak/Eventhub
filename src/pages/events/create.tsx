@@ -1,17 +1,21 @@
+import { ErrorAlert } from '@common/components/ErrorAlert';
+import { LoadingOverlay } from '@common/components/LoadingOverlay';
 import { Routes } from '@common/constants/routes';
 import useAuth from '@modules/auth/hooks/api/useAuth';
-import { AUTH_MODE } from '@modules/auth/types/auth.types';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';
 import { InviteStep } from '@modules/events/components/create/InviteStep';
 import { LocationStep } from '@modules/events/components/create/LocationStep';
 import { StepWrapper } from '@modules/events/components/create/StepWrapper';
+import { createEvent } from '@modules/events/services/eventService';
 import { EventFormData } from '@modules/events/types/form';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { Box, Button, Container, Stack, Step, StepLabel, Stepper, Typography, CircularProgress } from '@mui/material';
+import { Box, Button, Container, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
+import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
+import useApi from '@common/hooks/useApi';
 
 const steps = ['Basic Info', 'Date & Time', 'Location', 'Details & Rules', 'Invite People'];
 
@@ -26,11 +30,14 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   const [formData, setFormData] = useState<EventFormData>({});
   const [stepsValidation, setStepsValidation] = useState<Record<number, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fetchApi = useApi();
 
   useEffect(() => {
     if (mode === 'edit' && id) {
       // TODO: Fetch event data and populate formData
-      console.log('Fetching event:', id);
     }
   }, [mode, id]);
 
@@ -45,7 +52,7 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
 
   const handleNext = () => {
     if (activeStep === 4) {
-      setIsSubmitted(true);
+      handleSubmit(formData);
     } else if (stepsValidation[activeStep] || activeStep === 3) {
       setActiveStep((prevStep) => prevStep + 1);
     }
@@ -139,6 +146,38 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
     </Box>
   );
 
+  const handleSubmit = async (formData: any) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await createEvent(fetchApi, formData);
+
+      enqueueSnackbar('Event created successfully', {
+        variant: 'success',
+      });
+
+      setIsSubmitted(true);
+    } catch (err: any) {
+      if (err.type === 'validation') {
+        const firstError = Object.entries(err.errors || {})[0];
+        if (firstError) {
+          const [field, messages] = firstError as [string, string[]];
+          enqueueSnackbar(`${field}: ${messages[0]}`, {
+            variant: 'error',
+          });
+        }
+      } else {
+        setError(err.message || 'Failed to create event. Please try again.');
+        enqueueSnackbar(err.message || 'Failed to create event. Please try again.', {
+          variant: 'error',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Container
       maxWidth="md"
@@ -215,6 +254,9 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
           </StepWrapper>
         </Box>
       </Box>
+      {/* Add loading state and error display to your form */}
+      {isSubmitting && <LoadingOverlay />}
+      {error && <ErrorAlert message={error} />}
     </Container>
   );
 };

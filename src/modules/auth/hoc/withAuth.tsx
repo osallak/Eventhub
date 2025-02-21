@@ -11,7 +11,7 @@ const withAuth = ({
 }: WithAuthOptions) => {
   return (Component: ComponentType) => {
     const WithAuthComponent: FC = (props) => {
-      const { isAuthenticated, isLoading, user } = useAuth();
+      const { isAuthenticated, isLoading } = useAuth();
       const router = useRouter();
 
       useEffect(() => {

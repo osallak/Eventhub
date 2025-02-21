@@ -104,3 +104,5 @@ export interface ResetPasswordInput {
   password_confirmation: string;
   token: string;
 }
+
+export type { ApiResponse };

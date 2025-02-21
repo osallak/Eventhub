@@ -1,7 +1,7 @@
-import ApiRoutes from '@common/defs/api-routes';
+import { API_ROUTES } from '@common/defs/api-routes';
 import useApi, { ApiOptions, ApiResponse } from '@common/hooks/useApi';
 import { User } from '@modules/users/defs/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import {
   AuthResponse,
@@ -13,11 +13,7 @@ import {
 
 interface ApiAuthResponse {
   status: string;
-  user: User;
-  authorization: {
-    token: string;
-    type: string;
-  };
+  data: User;
 }
 
 interface AuthData {
@@ -46,28 +42,49 @@ const useAuth = (): AuthData => {
   const [isChecking, setIsChecking] = useState(true);
   const fetchApi = useApi();
 
+  console.log('useAuth hook state:', {
+    authEnabled,
+    isChecking,
+  });
+
   const getStorageItem = (key: string): string | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(key);
+      const value = localStorage.getItem(key);
+      console.log(`Getting storage item ${key}:`, {
+        exists: !!value,
+        value: value ? value.substring(0, 10) + '...' : null,
+      });
+      return value;
     }
     return null;
   };
 
-  const handleAuthResponse = (response: ApiAuthResponse) => {
+  const handleAuthResponse = (response: ApiAuthResponse): ApiResponse<AuthResponse> => {
+    console.log('🔐 Handling auth response:', {
+      status: response.status,
+      hasToken: !!response.authorization?.token,
+      userData: response.data ? 'exists' : 'null',
+    });
+
     if (response.status === 'success' && response.authorization?.token) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('authToken', response.authorization.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('token', response.authorization.token);
+        localStorage.setItem('user', JSON.stringify(response.data)); // Store user from data field
       }
-      mutate();
+      // Update SWR cache with user data
+      mutate(response.data, false); // Pass user data from data field
+
       return {
         success: true,
         status: response.status,
-        data: response,
+        data: {
+          status: response.status,
+          user: response.data, // Use data field
+          authorization: response.authorization,
+        },
         errors: [],
       };
     }
-
     return {
       success: false,
       status: 'error',
@@ -75,65 +92,82 @@ const useAuth = (): AuthData => {
     };
   };
 
+  // Only fetch if we have a token
+  const shouldFetch = typeof window !== 'undefined' && !!getStorageItem('token');
+
   const {
     data: user,
     mutate,
     isValidating,
-  } = useSWR(
-    ApiRoutes.Auth.Me,
-    async (url) => {
-      try {
-        const token = getStorageItem('authToken');
-        console.log('useAuth: Fetching user data', {
-          hasToken: !!token,
-          url,
-        });
-
-        if (!token) {
-          setIsChecking(false);
-          return null;
-        }
-
-        const response = await fetchApi<{ user: User }>(url, { method: 'GET' });
-        console.log('useAuth: API response', {
-          success: response.success,
-          hasUser: !!response.data?.user,
-        });
-
-        if (!response.success) {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-          }
-        }
-
-        setIsChecking(false);
-        return response.success ? response.data?.user : null;
-      } catch (error) {
-        console.error('useAuth: Error fetching user', error);
+  } = useSWR<ApiAuthResponse | null>(shouldFetch ? API_ROUTES.Auth.Me : null, async (url) => {
+    try {
+      const token = getStorageItem('token');
+      if (!token) {
         setIsChecking(false);
         return null;
       }
-    },
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
-      dedupingInterval: 5000,
-      onSuccess: (data) => {
-        console.log('useAuth: SWR success', {
-          hasUser: !!data,
-        });
-        setIsChecking(false);
-      },
-      onError: (err) => {
-        console.error('useAuth: SWR error', err);
-        setIsChecking(false);
-      },
-    }
-  );
 
-  const isAuthenticated = typeof window !== 'undefined' && !!getStorageItem('authToken') && !!user;
+      const response = await fetchApi<ApiAuthResponse>(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.success || !response.data) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+        setIsChecking(false);
+        return null;
+      }
+
+      setIsChecking(false);
+      return response; // Return the whole response
+    } catch (error) {
+      setIsChecking(false);
+      return null;
+    }
+  });
+
+  // Set isChecking to false if we're not fetching
+  useEffect(() => {
+    if (!shouldFetch) {
+      setIsChecking(false);
+    }
+  }, [shouldFetch]);
+
+  // Also set isChecking to false when user data is available
+  useEffect(() => {
+    if (user) {
+      setIsChecking(false);
+    }
+  }, [user]);
+
+  const isAuthenticated =
+    typeof window !== 'undefined' && !!getStorageItem('token') && !!user?.data;
   const isLoading = isValidating || isChecking;
+  const initialized = !isLoading;
+
+  console.log('useAuth hook values:', {
+    isAuthenticated,
+    isLoading,
+    initialized,
+    hasUser: !!user,
+    isValidating,
+    isChecking,
+  });
+
+  // Add logging to debug auth state
+  useEffect(() => {
+    console.log('Auth state changed:', {
+      hasToken: !!getStorageItem('token'),
+      hasUser: !!user,
+      isAuthenticated,
+      user,
+    });
+  }, [user, isAuthenticated]);
 
   if (!authEnabled) {
     return {
@@ -169,15 +203,17 @@ const useAuth = (): AuthData => {
     };
   }
 
-  const login = async (input: LoginInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Login, {
+  const login = async (
+    input: LoginInput,
+    options?: ApiOptions
+  ): Promise<ApiResponse<AuthResponse>> => {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.Login, {
       data: input,
       ...options,
       displaySuccess: false,
     });
 
     if (response.success && response.data) {
-      // response.data is now the ApiAuthResponse
       return handleAuthResponse(response.data);
     }
 
@@ -189,7 +225,7 @@ const useAuth = (): AuthData => {
   };
 
   const register = async (input: RegisterInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.Register, {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.Register, {
       data: input,
       ...options,
       displaySuccess: false,
@@ -211,18 +247,18 @@ const useAuth = (): AuthData => {
   };
 
   const logout = async (options?: ApiOptions) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.Logout, {
+    const response = await fetchApi<null>(API_ROUTES.Auth.Logout, {
       method: 'POST',
       ...options,
     });
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     mutate();
     return response;
   };
 
   const requestPasswordReset = async (input: RequestPasswordResetInput, options?: ApiOptions) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.RequestPasswordReset, {
+    const response = await fetchApi<null>(API_ROUTES.Auth.RequestPasswordReset, {
       data: input,
       ...options,
     });
@@ -230,7 +266,7 @@ const useAuth = (): AuthData => {
   };
 
   const resetPassword = async (input: ResetPasswordInput, options?: ApiOptions) => {
-    const response = await fetchApi<ApiAuthResponse>(ApiRoutes.Auth.ResetPassword, {
+    const response = await fetchApi<ApiAuthResponse>(API_ROUTES.Auth.ResetPassword, {
       data: input,
       ...options,
     });
@@ -247,13 +283,13 @@ const useAuth = (): AuthData => {
   };
 
   return {
-    user: user ?? null,
+    user: user?.data || null, // Extract data from response
     login,
     register,
     logout,
     requestPasswordReset,
     resetPassword,
-    initialized: !isLoading,
+    initialized,
     isAuthenticated,
     isLoading,
   };

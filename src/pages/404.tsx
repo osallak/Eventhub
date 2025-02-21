@@ -10,8 +10,7 @@ const ForbiddenPage: NextPage = () => {
 };
 
 export const getStaticProps = async ({ locale }: { locale: string }) => ({
-  props: {
-  },
+  props: {},
 });
 
 export default ForbiddenPage;

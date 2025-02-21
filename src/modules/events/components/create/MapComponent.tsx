@@ -135,9 +135,7 @@ const MapComponent = ({ onLocationSelect }: MapComponentProps) => {
         };
         onLocationSelect(selectedLocation);
       }
-    } catch (error) {
-      console.error('Error getting location data:', error);
-    }
+    } catch (error) {}
   };
 
   // Update handler

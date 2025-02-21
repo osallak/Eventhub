@@ -1,68 +1,65 @@
 import { Routes } from '@common/constants/routes';
 import useAuth from '@modules/auth/hooks/api/useAuth';
-import { EVENT_CATEGORIES } from '@modules/events/types/categories';
+import { Event } from '@modules/events/types/event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { Box, Button, Card, CardActions, Chip, Stack, Typography } from '@mui/material';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import { Box, Button, Card, Chip, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/router';
 import { formatPrice } from '../../utils/formatters';
-import { EventActions } from './EventActions';
+
+dayjs.extend(utc);
 
 interface EventCardProps {
-  event: {
-    id: string;
-    title: string;
-    category: (typeof EVENT_CATEGORIES)[keyof typeof EVENT_CATEGORIES];
-    eventType: 'physical' | 'virtual' | 'hybrid';
-    isPaid: boolean;
-    price?: number;
-    currency?: string;
-    startDate: string;
-    startTime: string;
-    city?: string;
-    maxParticipants?: number;
-    currentParticipants?: number;
-    imageUrl?: string;
-    isFull: boolean;
-    isOwner?: boolean;
-    isParticipant?: boolean;
-  };
+  event: Event;
+  isOwner?: boolean;
 }
 
-export const EventCard = ({ event }: EventCardProps) => {
-  const { isAuthenticated } = useAuth();
+export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
+
+  console.log('EventCard auth state:', { isAuthenticated }); // Debug log
 
   // Calculate if event is full
   const hasLimitedSpots = event.maxParticipants !== undefined;
   const spotsLeft = hasLimitedSpots
-    ? event.maxParticipants! - (event.currentParticipants || 0)
+    ? event.maxParticipants! - event.currentParticipants
     : undefined;
 
-  // Helper to get event type icon and text
-  const getEventTypeInfo = (type: 'physical' | 'virtual' | 'hybrid') => {
-    switch (type) {
+  // Update the type helper to handle backend data correctly
+  const getEventTypeInfo = (type: string) => {
+    // Add debug log
+
+    switch (type?.toLowerCase()) {
       case 'physical':
         return { icon: '🏠', text: 'Physical' };
       case 'virtual':
         return { icon: '💻', text: 'Virtual' };
-      default:
+      case 'hybrid':
         return { icon: '🌐', text: 'Hybrid' };
+      default:
+        // Default to physical if type is undefined or unknown
+
+        return { icon: '🏠', text: 'Physical' };
     }
   };
 
   const typeInfo = getEventTypeInfo(event.eventType);
 
   const getJoinButtonState = () => {
+    console.log('getJoinButtonState called with isAuthenticated:', isAuthenticated); // Debug log
     if (!isAuthenticated) {
       return {
         disabled: false,
         text: 'Login to Join',
       };
     }
+
     if (isPastEvent) {
       return {
         disabled: true,
@@ -75,13 +72,16 @@ export const EventCard = ({ event }: EventCardProps) => {
         text: 'Event Full',
       };
     }
-    if (event.isParticipant) {
+
+    const isParticipant = false; // TODO: Add this when available
+
+    if (isParticipant) {
       return {
         disabled: true,
         text: 'Already Joined',
       };
     }
-    if (event.isOwner) {
+    if (isOwner) {
       return {
         disabled: true,
         text: 'You are the Owner',
@@ -98,16 +98,13 @@ export const EventCard = ({ event }: EventCardProps) => {
   const handleJoinClick = () => {
     if (!isAuthenticated) {
       const currentPath = router.asPath;
-      console.log('EventCard current path:', currentPath);
 
       const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
-      console.log('EventCard login URL:', loginUrl);
 
       router.push(loginUrl);
       return;
     }
     // Handle join logic for authenticated users
-    console.log('Joining event:', event.id);
   };
 
   const handleEditEvent = () => {
@@ -116,12 +113,10 @@ export const EventCard = ({ event }: EventCardProps) => {
 
   const handleDeleteEvent = () => {
     // TODO: Add confirmation dialog
-    console.log('Delete event:', event.id);
   };
 
   const handleLeaveEvent = () => {
     // TODO: Add confirmation dialog
-    console.log('Leave event:', event.id);
   };
 
   // Get spots text
@@ -132,188 +127,256 @@ export const EventCard = ({ event }: EventCardProps) => {
     return 'Unlimited spots';
   };
 
+  const formatDateTime = (dateStr: string, timeStr: string | null) => {
+    const dateTime = dayjs(dateStr);
+    const time = timeStr?.substring(0, 5) || '00:00'; // Default time if not provided
+
+    return {
+      date: dateTime.format('MMM D, YYYY'),
+      time,
+    };
+  };
+
+  const datetime = formatDateTime(event.startDate, event.endTime);
+
+  const getLocationInfo = () => {
+    return (
+      <Stack spacing={1.5} sx={{ width: '100%' }}>
+        {/* Physical Location */}
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              fontSize: '0.875rem',
+              lineHeight: 1.5,
+            }}
+          >
+            {event.venueName && event.city
+              ? `${event.venueName}, ${event.city}`
+              : event.venueName || event.city || 'Location not specified'}
+          </Typography>
+        </Stack>
+
+        {/* Meeting Link - only show for virtual/hybrid events */}
+        {(event.eventType === 'virtual' || event.eventType === 'hybrid') && (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <VideocamIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            {event.meetingLink ? (
+              <Button
+                variant="text"
+                size="small"
+                href={event.meetingLink}
+                target="_blank"
+                sx={{
+                  p: 0,
+                  minWidth: 'auto',
+                  color: 'primary.main',
+                  textTransform: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Join Meeting
+              </Button>
+            ) : (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: '0.875rem',
+                  lineHeight: 1.5,
+                }}
+              >
+                Meeting link not available yet
+              </Typography>
+            )}
+          </Stack>
+        )}
+      </Stack>
+    );
+  };
+
+  // Move getLocationInfo before using it
+  const locationInfo = getLocationInfo();
+
+  // Add debug logs
+  console.log('Event data:', {
+    id: event.id,
+    type: event.eventType,
+    venue: event.venueName,
+    city: event.city,
+    location: locationInfo,
+  });
+
+  // Only show meeting link section for virtual/hybrid events
+  const showMeetingLink = ['virtual', 'hybrid'].includes(event.eventType?.toLowerCase());
+
   return (
     <Card
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        position: 'relative',
         bgcolor: 'background.paper',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: (theme) => theme.shadows[4],
         },
-        p: 2.5,
-        borderRadius: 3,
+        borderRadius: 2,
+        height: '100%',
       }}
     >
-      {/* Event Type & Price */}
-      <Stack direction="row" spacing={1} sx={{ mb: 2, width: '100%', justifyContent: 'center' }}>
+      {/* Top Section with Category and Price */}
+      <Box
+        sx={{
+          p: 2,
+          pb: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Chip
-          label={
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <Typography sx={{ fontSize: '1rem' }}>{typeInfo.icon}</Typography>
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{typeInfo.text}</Typography>
-            </Stack>
-          }
+          label={event.category}
           size="small"
           sx={{
-            height: 28,
-            borderRadius: '14px',
-            bgcolor: 'background.neutral',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.100',
             color: 'text.primary',
+            fontWeight: 500,
+            height: '24px',
           }}
         />
-        {event.isPaid ? (
-          <Chip
-            label={formatPrice(event.price || 0, event.currency)}
-            size="small"
-            sx={{
-              height: 28,
-              borderRadius: '14px',
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-            }}
-          />
-        ) : (
-          <Chip
-            label="Free"
-            size="small"
-            sx={{
-              height: 28,
-              borderRadius: '14px',
-              bgcolor: 'success.light',
-              color: 'success.contrastText',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-            }}
-          />
-        )}
-      </Stack>
+        <Chip
+          label={event.isPaid ? formatPrice(event.price || 0, event.currency) : 'Free'}
+          color={event.isPaid ? 'primary' : 'success'}
+          size="small"
+          sx={{
+            fontWeight: 600,
+            height: '24px',
+          }}
+        />
+      </Box>
 
-      {/* Title */}
-      <Typography
-        variant="h6"
-        align="center"
-        sx={{
-          mb: 1.5,
-          fontSize: '1.125rem',
-          fontWeight: 600,
-          color: 'text.primary',
-          lineHeight: 1.3,
-          width: '100%',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          minHeight: '2.6em',
-        }}
-        title={event.title}
-      >
-        {event.title}
-      </Typography>
+      {/* Main Content */}
+      <Box sx={{ p: 2, pt: 1.5, flexGrow: 1 }}>
+        {/* Title */}
+        <Typography
+          variant="h6"
+          align="center"
+          gutterBottom
+          sx={{
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            mb: 2,
+            color: 'text.primary',
+          }}
+        >
+          {event.title}
+        </Typography>
 
-      {/* Category */}
-      <Chip
-        label={event.category}
-        size="small"
-        sx={{
-          mb: 2,
-          height: 24,
-          borderRadius: '12px',
-          bgcolor: 'background.neutral',
-          color: 'text.secondary',
-          fontSize: '0.75rem',
-          fontWeight: 500,
-        }}
-      />
-
-      {/* Event Details */}
-      <Stack spacing={1.5} sx={{ width: '100%', mb: 2.5 }}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <AccessTimeIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'text.secondary',
-              fontSize: '0.875rem',
-              lineHeight: 1.5,
-            }}
-          >
-            {new Date(event.startDate).toLocaleDateString()} • {event.startTime}
-          </Typography>
-        </Stack>
-
-        {event.city && (
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                fontSize: '0.875rem',
-                lineHeight: 1.5,
-              }}
-            >
-              {event.city}
+        {/* Event Info List */}
+        <Stack spacing={1.5}>
+          {/* Type */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Box sx={{ fontSize: '1.2rem', width: 24, textAlign: 'center' }}>{typeInfo.icon}</Box>
+            <Typography variant="body2" color="text.secondary">
+              {typeInfo.text} Event
             </Typography>
           </Stack>
-        )}
 
-        {/* Spots information */}
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <GroupIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'text.secondary',
-              fontSize: '0.875rem',
-              lineHeight: 1.5,
-            }}
-          >
-            {getSpotsText()}
-          </Typography>
+          {/* Date and Time */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <AccessTimeIcon sx={{ fontSize: 20, color: 'text.secondary', width: 24 }} />
+            <Typography variant="body2" color="text.secondary">
+              {datetime.date} • {datetime.time}
+            </Typography>
+          </Stack>
+
+          {/* Location */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <LocationOnIcon sx={{ fontSize: 20, color: 'text.secondary', width: 24 }} />
+            <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+              {event.venueName && event.city
+                ? `${event.venueName}, ${event.city}`
+                : event.venueName || event.city || 'Location not specified'}
+            </Typography>
+          </Stack>
+
+          {/* Meeting Link for Virtual/Hybrid */}
+          {showMeetingLink && (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <VideocamIcon sx={{ fontSize: 20, color: 'text.secondary', width: 24 }} />
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  cursor: event.meetingLink ? 'pointer' : 'default',
+                  '&:hover': event.meetingLink
+                    ? {
+                        color: 'primary.dark',
+                        textDecoration: 'underline',
+                      }
+                    : {},
+                }}
+                onClick={() => event.meetingLink && window.open(event.meetingLink, '_blank')}
+              >
+                {event.meetingLink ? 'Join online meeting' : 'Unavailable'}
+              </Typography>
+            </Stack>
+          )}
+
+          {/* Spots */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <GroupIcon sx={{ fontSize: 20, color: 'text.secondary', width: 24 }} />
+            <Typography variant="body2" color="text.secondary">
+              {getSpotsText()}
+            </Typography>
+          </Stack>
         </Stack>
-      </Stack>
+      </Box>
 
-      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+      {/* Action Button */}
+      <Box
+        sx={{
+          p: 2,
+          pt: 0,
+          mt: 'auto',
+          textAlign: 'center',
+        }}
+      >
         <Button
           variant="contained"
-          fullWidth
           disabled={buttonState.disabled}
           onClick={!isAuthenticated ? handleJoinClick : () => router.push(`/events/${event.id}`)}
           sx={{
-            mt: 'auto',
+            minWidth: '140px',
+            height: '36px',
+            px: 3,
             borderRadius: '20px',
+            fontSize: '0.875rem',
+            letterSpacing: '0.02em',
             textTransform: 'none',
-            py: 1,
-            minWidth: '180px',
-            width: '100%',
-            mx: 'auto',
+            fontWeight: 600,
+            boxShadow: 'none',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+              transform: 'translateY(-1px)',
+              boxShadow: (theme) => theme.shadows[2],
+            },
           }}
         >
           {buttonState.text}
         </Button>
-        {/* ... other actions ... */}
-      </CardActions>
-
-      {/* Show actions menu only if authenticated and is owner/participant */}
-      {isAuthenticated && (event.isOwner || event.isParticipant) && (
-        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-          <EventActions
-            eventId={event.id}
-            isOwner={event.isOwner || false}
-            isParticipant={event.isParticipant || false}
-            onEdit={handleEditEvent}
-            onDelete={handleDeleteEvent}
-            onLeave={handleLeaveEvent}
-          />
-        </Box>
-      )}
+      </Box>
     </Card>
   );
 };

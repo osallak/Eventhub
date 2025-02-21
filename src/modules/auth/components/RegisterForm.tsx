@@ -56,17 +56,15 @@ export const RegisterForm: React.FC = () => {
 
         if (redirectPath && typeof redirectPath === 'string') {
           const decodedPath = decodeURIComponent(redirectPath);
-          console.log('Redirecting to:', decodedPath);
+
           await router.push(decodedPath);
         } else {
-          console.log('No redirect path, going to home');
           await router.push(Routes.Common.Home);
         }
       } else {
         setError(response.errors?.[0] || 'An error occurred during registration');
       }
     } catch (err: unknown) {
-      console.error('Registration error:', err);
       setError('An error occurred during registration');
     }
   };
