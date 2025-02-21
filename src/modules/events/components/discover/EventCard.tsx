@@ -216,14 +216,24 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
   // Only show meeting link section for virtual/hybrid events
   const showMeetingLink = ['virtual', 'hybrid'].includes(event.eventType?.toLowerCase());
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on a button
+    if ((e.target as HTMLElement).tagName === 'BUTTON') {
+      return;
+    }
+    router.push(`/events/${event.id}`);
+  };
+
   return (
     <Card
+      onClick={handleCardClick}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         bgcolor: 'background.paper',
-        transition: 'all 0.2s ease-in-out',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: 'pointer',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: (theme) => theme.shadows[4],
@@ -344,7 +354,7 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
         </Stack>
       </Box>
 
-      {/* Action Button */}
+      {/* Action Button - Stop propagation to prevent card click when clicking button */}
       <Box
         sx={{
           p: 2,
@@ -356,7 +366,10 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
         <Button
           variant="contained"
           disabled={buttonState.disabled}
-          onClick={!isAuthenticated ? handleJoinClick : () => router.push(`/events/${event.id}`)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click
+            !isAuthenticated ? handleJoinClick() : router.push(`/events/${event.id}`);
+          }}
           sx={{
             minWidth: '140px',
             height: '36px',
