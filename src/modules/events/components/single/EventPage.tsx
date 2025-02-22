@@ -1,14 +1,11 @@
-import { Box, Container, Grid, Paper, Typography, Button, Divider, Chip } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useTranslation } from 'react-i18next';
+import { useAuth } from '@modules/auth/hooks/useAuth';
+import { Box, Chip, Container, Grid, Paper, Typography } from '@mui/material';
 import { Event } from '../../types/event';
-import { LocationMap } from '../create/LocationMap';
-import { getInputStyles } from '../create/styles/inputStyles';
 import { EventDateTime } from './sections/EventDateTime';
-import { EventLocation } from './sections/EventLocation';
 import { EventDetails } from './sections/EventDetails';
-import { EventParticipants } from './sections/EventParticipants';
 import { EventHeader } from './sections/EventHeader';
+import { EventLocation } from './sections/EventLocation';
+import { EventParticipants } from './sections/EventParticipants';
 
 interface EventPageProps {
   event: Event;
@@ -19,11 +16,16 @@ interface EventPageProps {
 }
 
 export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPageProps) => {
-  const { t } = useTranslation();
-  const theme = useTheme();
+  const { user } = useAuth();
 
-  const hasJoined = event.participants?.some(
-    (participant) => participant.id === /* current user id */ 1
+  const handleJoin = () => {
+    if (onJoin) {
+      onJoin();
+    }
+  };
+
+  const hasJoined = (event?.participants || []).some(
+    (participant) => Number(participant.id) === Number(user?.id)
   );
 
   return (
@@ -32,7 +34,7 @@ export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPage
         flexGrow: 1,
         py: { xs: 2, md: 3 },
         px: { xs: 2, md: 0 },
-        mt: { xs: 7, md: 8.5 }, // Add top margin to account for the topbar
+        mt: { xs: 7, md: 8.5 },
         bgcolor: 'background.default',
       }}
     >
@@ -43,17 +45,16 @@ export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPage
             isOwner={isOwner}
             onEdit={onEdit}
             hasJoined={hasJoined}
-            onJoin={onJoin}
+            onJoin={handleJoin}
             onLeave={onLeave}
           />
         </Paper>
 
         <Grid container spacing={4}>
-          {/* Main Content */}
           <Grid item xs={12} md={8}>
             <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
               <Typography variant="h6" gutterBottom>
-                {t('About this event')}
+                About this event
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
                 {event.description}
@@ -65,7 +66,7 @@ export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPage
             {event.rules && event.rules.length > 0 && (
               <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('Rules and Guidelines')}
+                  Rules and Guidelines
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {event.rules.map((rule, index) => (
@@ -78,7 +79,7 @@ export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPage
             {event.notes && (
               <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('Additional Notes')}
+                  Additional Notes
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
                   {event.notes}
@@ -87,16 +88,13 @@ export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPage
             )}
           </Grid>
 
-          {/* Sidebar */}
           <Grid item xs={12} md={4}>
             <Box sx={{ position: 'sticky', top: 88 }}>
-              {' '}
-              {/* Adjusted top position to account for topbar */}
               <EventDateTime event={event} />
               <EventDetails event={event} />
               <EventParticipants
                 participants={event.participants || []}
-                maxParticipants={event.max_participants}
+                maxParticipants={event.maxParticipants}
               />
             </Box>
           </Grid>

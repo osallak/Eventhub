@@ -25,7 +25,7 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {

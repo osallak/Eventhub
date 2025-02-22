@@ -1,7 +1,7 @@
 import { ErrorAlert } from '@common/components/ErrorAlert';
 import { LoadingOverlay } from '@common/components/LoadingOverlay';
 import { Routes } from '@common/constants/routes';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';

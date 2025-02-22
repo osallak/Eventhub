@@ -98,30 +98,6 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
     onFormChange('coordinates', location.coordinates);
   };
 
-  // Track form data changes
-  useEffect(() => {
-    const locationFields = {
-      address: formData.address,
-      city: formData.city,
-      postalCode: formData.postalCode,
-      coordinates: formData.coordinates,
-    };
-
-    const isValid = Boolean(
-      locationFields.coordinates && locationFields.address && locationFields.city
-    );
-
-    console.group('LocationStep: Validation');
-
-    console.log('Validation:', {
-      hasAddress: Boolean(locationFields.address),
-      hasCity: Boolean(locationFields.city),
-      hasCoordinates: Boolean(locationFields.coordinates),
-      isValid,
-    });
-    console.groupEnd();
-  }, [formData]);
-
   return (
     <Box>
       <Grid container spacing={3}>

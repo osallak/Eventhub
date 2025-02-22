@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { ROLE } from '@modules/permissions/defs/types';
 
 interface RolesAPI {

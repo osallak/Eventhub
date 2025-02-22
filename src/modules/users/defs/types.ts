@@ -1,6 +1,3 @@
-import { CrudObject } from '@common/defs/types';
-import { ROLE } from '@modules/permissions/defs/types';
-
 export interface User {
   id: number;
   email: string;

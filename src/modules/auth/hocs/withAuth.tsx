@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { AUTH_MODE, WithAuthOptions } from '../types/auth.types';
-import useAuth from '../hooks/api/useAuth';
+import useAuth from '../hooks/useAuth';
 import { Routes } from '@common/constants/routes';
 import { CircularProgress, Box } from '@mui/material';
 

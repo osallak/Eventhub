@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import useAuth from '../hooks/api/useAuth';
+import useAuth from '../hooks/useAuth';
 import { RegisterInput } from '../types/auth.types';
 
 export const RegisterForm: React.FC = () => {

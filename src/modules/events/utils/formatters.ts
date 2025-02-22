@@ -1,4 +1,4 @@
-export const formatPrice = (amount: number, currency?: string): string => {
+export const formatPrice = (amount: number, currency: string | null): string => {
   if (!currency) {
     return amount.toString();
   }

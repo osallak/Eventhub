@@ -93,12 +93,7 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
 
         {/* Event Content */}
         <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
-          <EventHeader
-            event={editedEvent}
-            isOwner={true}
-            hasJoined={false}
-            isEditing={true}
-          />
+          <EventHeader event={editedEvent} isOwner={true} hasJoined={false} isEditing={true} />
         </Paper>
 
         <Grid container spacing={4}>
@@ -122,9 +117,13 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
               />
             </Paper>
 
-            <EventLocation event={editedEvent} isEditing={true} onEdit={(location) => {
-              setEditedEvent({ ...editedEvent, ...location });
-            }} />
+            <EventLocation
+              event={editedEvent}
+              isEditing={true}
+              onEdit={(location) => {
+                setEditedEvent({ ...editedEvent, ...location });
+              }}
+            />
 
             {/* Rules Section */}
             <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>

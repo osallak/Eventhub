@@ -1,6 +1,6 @@
 import FormProvider, { RHFTextField } from '@common/components/lib/react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import useAuth, { RequestPasswordResetInput } from '@modules/auth/hooks/api/useAuth';
+import useAuth, { RequestPasswordResetInput } from '@modules/auth/hooks/useAuth';
 import { LockOpen } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import Card from '@mui/material/Card';

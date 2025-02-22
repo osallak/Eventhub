@@ -1,7 +1,7 @@
 import { LoadingOverlay } from '@common/components/LoadingOverlay';
 import useApi from '@common/hooks/useApi';
 import { Topbar } from '@common/layout/Topbar';
-import { useAuth } from '@modules/auth/contexts/AuthContext';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { EventCard } from '@modules/events/components/discover/EventCard';
 import { getEvents } from '@modules/events/services/eventService';
 import { EVENT_CATEGORIES } from '@modules/events/types/categories';

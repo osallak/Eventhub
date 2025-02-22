@@ -18,29 +18,10 @@ interface EventDateTimeProps {
 }
 
 export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) => {
-  // Log raw event data first
-  console.log('Raw event data:', {
-    event,
-    rawStartDate: event.startDate,
-    rawStartTime: event.startTime,
-    rawEndTime: event.endTime,
-    eventKeys: Object.keys(event),
-  });
-
   const formatDateTime = (dateStr: string, startTimeStr: string, endTimeStr: string) => {
     const date = dayjs(dateStr);
     const startTime = dayjs(startTimeStr);
     const endTime = dayjs(endTimeStr);
-
-    // Debug log
-    console.log('DateTime formatting:', {
-      dateStr,
-      startTimeStr,
-      endTimeStr,
-      formattedDate: date.format('dddd, MMMM D, YYYY'),
-      formattedStartTime: startTime.format('h:mm A'),
-      formattedEndTime: endTime.format('h:mm A'),
-    });
 
     return {
       date: date.format('dddd, MMMM D, YYYY'),
@@ -48,18 +29,7 @@ export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) 
     };
   };
 
-  // Debug log the event data
-  console.log('Event data:', {
-    startDate: event.startDate,
-    startTime: event.startTime,
-    endTime: event.endTime,
-  });
-
-  const datetime = formatDateTime(
-    event.startDate,
-    event.startTime,
-    event.endTime
-  );
+  const datetime = formatDateTime(event.startDate, event.startTime, event.endTime);
 
   if (isEditing) {
     return (
@@ -82,7 +52,13 @@ export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) 
             label="Start Time"
             type="time"
             value={dayjs(event.startTime).format('HH:mm')}
-            onChange={(e) => onEdit?.({ startTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${e.target.value}:00.000Z` })}
+            onChange={(e) =>
+              onEdit?.({
+                startTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${
+                  e.target.value
+                }:00.000Z`,
+              })
+            }
             fullWidth
             InputLabelProps={{ shrink: true }}
           />
@@ -91,7 +67,11 @@ export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) 
             label="End Time"
             type="time"
             value={dayjs(event.endTime).format('HH:mm')}
-            onChange={(e) => onEdit?.({ endTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${e.target.value}:00.000Z` })}
+            onChange={(e) =>
+              onEdit?.({
+                endTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${e.target.value}:00.000Z`,
+              })
+            }
             fullWidth
             InputLabelProps={{ shrink: true }}
           />

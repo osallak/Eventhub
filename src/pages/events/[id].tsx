@@ -1,48 +1,61 @@
+import useApi from '@common/hooks/useApi';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { EventPage } from '../../modules/events/components/single/EventPage';
 import { Event } from '../../modules/events/types/event';
-import { useAuth } from '../../modules/auth/hooks/useAuth';
-import { withAuth } from '../../modules/auth/hocs/withAuth';
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import useApi from '@common/hooks/useApi';
-import { AUTH_MODE } from '../../modules/auth/types/auth.types';
 
 interface EventPageProps {
-  initialEvent: Event; // renamed to indicate it's initial data
+  initialEvent: Event;
 }
 
 const SingleEventPage = ({ initialEvent }: EventPageProps) => {
-  const { user } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
   const api = useApi();
-  const [event, setEvent] = useState<Event>(initialEvent);
-  const isOwner = user?.id === event.creator?.id;
 
-  // Fetch fresh event data when needed (after join/leave)
+  const [event, setEvent] = useState<Event>(initialEvent);
+  const isOwner = auth.user?.id === event?.creator?.id;
+
+  const handleJoin = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No auth token found');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}/join`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        setEvent(data.data.event);
+      }
+    } catch (error) {
+      console.error('Error joining event:', error);
+    }
+  };
+
   const refreshEventData = async () => {
     try {
       const response = await api(`/events/${event.id}`);
-      if (response.success) {
-        setEvent(response.data);
+      if (response.success && response.data) {
+        return response.data as Event;
       }
     } catch (error) {
       console.error('Failed to refresh event data:', error);
     }
-  };
-
-  const handleJoin = async () => {
-    try {
-      const response = await api(`/events/${event.id}/join`, {
-        method: 'POST',
-        displaySuccess: true,
-      });
-      if (response.success) {
-        await refreshEventData();
-      }
-    } catch (error) {
-      console.error('Failed to join event:', error);
-    }
+    return null;
   };
 
   const handleLeave = async () => {
@@ -51,8 +64,12 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
         method: 'POST',
         displaySuccess: true,
       });
+
       if (response.success) {
-        await refreshEventData();
+        const updatedEvent = await refreshEventData();
+        if (updatedEvent) {
+          setEvent(updatedEvent);
+        }
       }
     } catch (error) {
       console.error('Failed to leave event:', error);
@@ -77,31 +94,31 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
 
-  try {
-    // Using fetch for SSR since we can't use hooks here
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`);
-    const data = await response.json();
+  if (!id) {
+    return { notFound: true };
+  }
 
-    if (!data || data.status === 'error') {
-      return {
-        notFound: true,
-      };
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${id}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return { notFound: true };
+    }
+
+    const data = await response.json();
+    if (!data || !data.data) {
+      return { notFound: true };
     }
 
     return {
       props: {
-        initialEvent: data.data, // renamed to match the prop name
+        initialEvent: data.data,
       },
     };
   } catch (error) {
-    console.error('Failed to fetch event:', error);
-    return {
-      notFound: true,
-    };
+    return { notFound: true };
   }
 };
 
-export default withAuth(SingleEventPage, {
-  mode: AUTH_MODE.OPTIONAL,
-  redirectUrl: '/auth/login',
-});
+export default SingleEventPage;

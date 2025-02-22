@@ -1,5 +1,5 @@
 import { CRUD_ACTION, Id } from '@common/defs/types';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { useMemo } from 'react';
 
 interface PermissionsAPI {

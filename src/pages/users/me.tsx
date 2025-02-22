@@ -8,7 +8,7 @@ import PageHeader from '@common/components/lib/partials/PageHeader';
 import FormProvider, { RHFTextField } from '@common/components/lib/react-hook-form';
 import { useForm } from 'react-hook-form';
 import { LoadingButton } from '@mui/lab';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { LockOpen } from '@mui/icons-material';
 import useUsers, { UpdateOneInput } from '@modules/users/hooks/api/useUsers';
 

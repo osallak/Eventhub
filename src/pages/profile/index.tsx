@@ -19,7 +19,7 @@ import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { Routes } from '@common/constants/routes';
 import { User } from '@modules/users/defs/types';
 
@@ -97,27 +97,11 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'past'>('all');
 
-  console.log('Profile component render:', {
-    hasUser: !!user,
-    user,
-    isAuthenticated,
-    initialized,
-    isPublicView: Boolean(username),
-  });
-
   // If username is in the URL, it's a public view
   const isPublicView = Boolean(username);
 
   // Update userData when user data is available
   useEffect(() => {
-    console.log('Profile userData effect:', {
-      isPublicView,
-      hasUser: !!user,
-      userData: user,
-      userEvents: user?.createdEvents,
-      eventsCount: user?.createdEvents?.length,
-    });
-
     if (isPublicView) {
       // TODO: Fetch public profile data from API
       // For now, show error or redirect
@@ -152,14 +136,6 @@ const Profile = () => {
     const eventDate = dayjs(event.startDate);
     const now = dayjs();
     return eventFilter === 'upcoming' ? eventDate.isAfter(now) : eventDate.isBefore(now);
-  });
-
-  console.log('Profile render:', {
-    hasUserData: !!userData,
-    userDataEvents: userData?.createdEvents,
-    eventsCount: userData?.createdEvents?.length,
-    filteredEvents,
-    filteredCount: filteredEvents.length,
   });
 
   // Add form handlers
@@ -432,20 +408,7 @@ const ProfilePage = () => {
   const { isAuthenticated, initialized, user } = useAuth();
   const router = useRouter();
 
-  console.log('ProfilePage render:', {
-    isAuthenticated,
-    initialized,
-    hasUser: !!user,
-    currentPath: router.asPath,
-  });
-
   useEffect(() => {
-    console.log('ProfilePage auth effect:', {
-      isAuthenticated,
-      initialized,
-      hasUser: !!user,
-    });
-
     if (!initialized) {
       return;
     }
@@ -458,10 +421,6 @@ const ProfilePage = () => {
   }, [isAuthenticated, initialized, router, user]);
 
   if (!initialized || !isAuthenticated) {
-    console.log('ProfilePage showing loading screen:', {
-      initialized,
-      isAuthenticated,
-    });
     return <LoadingScreen />;
   }
 
