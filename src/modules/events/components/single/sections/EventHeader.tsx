@@ -26,6 +26,10 @@ export const EventHeader = ({
   const isButtonDisabled =
     event.maxParticipants && event.participants?.length >= event.maxParticipants;
   const handleClick = (e: React.MouseEvent) => {
+    console.log('handleClick', {
+      isButtonDisabled,
+      event,
+    });
     e.preventDefault();
 
     if (hasJoined) {

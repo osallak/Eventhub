@@ -18,13 +18,17 @@ interface EventPageProps {
 export const EventPage = ({ event, isOwner, onJoin, onLeave, onEdit }: EventPageProps) => {
   const { user } = useAuth();
 
+  if (!event) {
+    return null; // Or a loading/error state component
+  }
+
   const handleJoin = () => {
     if (onJoin) {
       onJoin();
     }
   };
 
-  const hasJoined = (event?.participants || []).some(
+  const hasJoined = (event.participants || []).some(
     (participant) => Number(participant.id) === Number(user?.id)
   );
 

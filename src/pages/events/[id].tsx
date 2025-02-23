@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { EventPage } from '../../modules/events/components/single/EventPage';
 import { Event } from '../../modules/events/types/event';
+import { useSnackbar } from 'notistack';
 
 interface EventPageProps {
   initialEvent: Event;
@@ -14,18 +15,22 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
   const auth = useAuth();
   const router = useRouter();
   const api = useApi();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [event, setEvent] = useState<Event>(initialEvent);
   const isOwner = auth.user?.id === event?.creator?.id;
 
-  const handleJoin = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No auth token found');
-      return;
-    }
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleJoin = async () => {
     try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        enqueueSnackbar('Please login to join events', { variant: 'error' });
+        return;
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}/join`,
         {
@@ -40,9 +45,15 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
       const data = await response.json();
       if (response.ok && data.status === 'success') {
         setEvent(data.data.event);
+        enqueueSnackbar('Successfully joined event!', { variant: 'success' });
+      } else {
+        enqueueSnackbar(data.message || 'Failed to join event', { variant: 'error' });
       }
     } catch (error) {
       console.error('Error joining event:', error);
+      enqueueSnackbar('An error occurred while joining the event', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,16 +80,22 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
         const updatedEvent = await refreshEventData();
         if (updatedEvent) {
           setEvent(updatedEvent);
+          enqueueSnackbar('Successfully left event', { variant: 'success' });
         }
       }
     } catch (error) {
       console.error('Failed to leave event:', error);
+      enqueueSnackbar('Failed to leave event', { variant: 'error' });
     }
   };
 
   const handleEdit = () => {
     router.push(`/events/${event.id}/edit`);
   };
+
+  if (!event || isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <EventPage
