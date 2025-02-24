@@ -422,7 +422,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          Show Filtersssss
+          Show Filters
         </Button>
       </Box>
 
@@ -459,7 +459,7 @@ const DiscoverEvents = () => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Filtersssss
+              Filters
             </Typography>
             <IconButton onClick={() => setMobileFiltersOpen(false)}>
               <CloseIcon />

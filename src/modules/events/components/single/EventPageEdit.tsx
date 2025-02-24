@@ -3,7 +3,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useState } from 'react';
-import { BasicInfoStep } from '../components/create/BasicInfoStep';
+import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { Event } from '../../types/event';
 import { EventDateTime } from './sections/EventDateTime';
 import { EventDetails } from './sections/EventDetails';

@@ -1,9 +1,15 @@
-import React, { useEffect } from 'react';
+import { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import { AUTH_MODE, WithAuthOptions } from '../types/auth.types';
-import useAuth from '../hooks/useAuth';
+import { useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Routes } from '@common/constants/routes';
 import { CircularProgress, Box } from '@mui/material';
+
+export enum AUTH_MODE {
+  LOGGED_IN = 'LOGGED_IN',
+  LOGGED_OUT = 'LOGGED_OUT',
+  ANY = 'ANY'
+}
 
 // Loading component
 const LoadingScreen = () => (
@@ -19,46 +25,27 @@ const LoadingScreen = () => (
   </Box>
 );
 
-export const withAuth = <P extends object>(
-  Component: React.ComponentType<P>,
-  options: WithAuthOptions
-) => {
-  const WithAuthComponent: React.FC<P> = (props) => {
+export const withAuth = (WrappedComponent: NextPage, mode: AUTH_MODE = AUTH_MODE.LOGGED_IN) => {
+  const WithAuthWrapper: NextPage = (props) => {
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
-    const { isAuthenticated, initialized } = useAuth();
-    const { mode, redirectUrl } = options;
 
     useEffect(() => {
-      if (!initialized) {
-        return;
-      }
+      if (isLoading) return;
 
       if (mode === AUTH_MODE.LOGGED_IN && !isAuthenticated) {
-        // Store the current URL to redirect back after login
-        const returnUrl = encodeURIComponent(router.asPath);
-        router.push(`${Routes.Auth.Login}?returnUrl=${returnUrl}`);
+        router.replace('/auth/login');
       } else if (mode === AUTH_MODE.LOGGED_OUT && isAuthenticated) {
-        router.replace(options.redirectUrl);
+        router.replace('/');
       }
-    }, [router, isAuthenticated, initialized]);
+    }, [isAuthenticated, isLoading, router]);
 
-    // Show loading screen while checking auth status
-    if (!initialized) {
-      return <LoadingScreen />;
-    }
+    if (isLoading) return null;
 
-    // Allow rendering for public routes
-    if (mode === AUTH_MODE.PUBLIC) {
-      return <Component {...props} />;
-    }
-
-    // Don't render protected content for non-authenticated users
-    if (mode === AUTH_MODE.LOGGED_IN && !isAuthenticated) {
-      return <LoadingScreen />;
-    }
-
-    return <Component {...props} />;
+    return <WrappedComponent {...props} />;
   };
 
-  return WithAuthComponent;
+  return WithAuthWrapper;
 };
+
+export default withAuth;
