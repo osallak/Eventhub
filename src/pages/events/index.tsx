@@ -336,22 +336,62 @@ const DiscoverEvents = () => {
             <LoadingOverlay />
           ) : (
             <>
-              <Grid container spacing={3}>
-                {filteredEvents.map((event) => {
-                  const isOwner = event.creator?.id === user?.data?.id;
-                  return (
-                    <Grid item xs={12} sm={6} md={4} key={event.id}>
-                      <EventCard event={event} isOwner={!!isOwner} />
-                    </Grid>
-                  );
-                })}
-              </Grid>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
-              />
+              {filteredEvents.length > 0 ? (
+                <>
+                  <Grid container spacing={3}>
+                    {filteredEvents.map((event) => {
+                      const isOwner = event.creator?.id === user?.data?.id;
+                      return (
+                        <Grid item xs={12} sm={6} md={4} key={event.id}>
+                          <EventCard event={event} isOwner={!!isOwner} />
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(_, value) => setPage(value)}
+                    sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
+                  />
+                </>
+              ) : (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 8,
+                    px: 4,
+                    borderRadius: 4,
+                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'),
+                    border: '1px dashed',
+                    borderColor: (theme) =>
+                      theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300',
+                    minHeight: '60vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mb: 4,
+                  }}
+                >
+                  <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                    No Events Found
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+                    {searchTerm || Object.values(filters).some(Boolean)
+                      ? "We couldn't find any events matching your search criteria. Try adjusting your filters or search terms."
+                      : 'There are no events available at the moment. Check back later or create your own event!'}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => router.push('/events/create')}
+                    sx={{ px: 4 }}
+                  >
+                    Create Event
+                  </Button>
+                </Box>
+              )}
             </>
           )}
         </Box>

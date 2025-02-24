@@ -23,7 +23,6 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
   const router = useRouter();
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
 
-
   // Calculate if event is full
   const hasLimitedSpots = event.maxParticipants !== undefined;
   const spotsLeft = hasLimitedSpots

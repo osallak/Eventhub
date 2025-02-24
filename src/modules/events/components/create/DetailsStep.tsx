@@ -65,8 +65,12 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
             fullWidth
             type="number"
             label={t('Maximum Participants')}
-            value={formData.maxParticipants || ''}
-            onChange={(e) => onFormChange('maxParticipants', e.target.value)}
+            value={formData.maxParticipants > 0 ? formData.maxParticipants : ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onFormChange('maxParticipants', value === '' ? -1 : Number(value));
+            }}
+            placeholder={t('Leave empty for unlimited')}
             InputProps={{ inputProps: { min: 1 } }}
             sx={inputStyles}
           />

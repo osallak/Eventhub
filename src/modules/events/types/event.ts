@@ -4,7 +4,7 @@ export interface Event {
   description?: string;
   category?: string;
   eventType: string;
-  maxParticipants?: number;
+  maxParticipants: number;
   participants?: Array<{
     id: string;
     name?: string;

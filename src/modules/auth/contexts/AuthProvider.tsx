@@ -127,7 +127,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       displaySuccess: false,
     });
 
-
     if (response.success && response.data) {
       return handleAuthResponse(response);
     }

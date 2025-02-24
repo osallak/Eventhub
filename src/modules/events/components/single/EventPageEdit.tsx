@@ -1,13 +1,14 @@
-import { Box, Container, Grid, Paper, Typography, Button, Stack } from '@mui/material';
-import { Event } from '../../types/event';
-import { useState } from 'react';
-import { EventDateTime } from './sections/EventDateTime';
-import { EventLocation } from './sections/EventLocation';
-import { EventDetails } from './sections/EventDetails';
-import { EventParticipants } from './sections/EventParticipants';
-import { EventHeader } from './sections/EventHeader';
-import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
+import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useState } from 'react';
+import { BasicInfoStep } from '../components/create/BasicInfoStep';
+import { Event } from '../../types/event';
+import { EventDateTime } from './sections/EventDateTime';
+import { EventDetails } from './sections/EventDetails';
+import { EventLocation } from './sections/EventLocation';
+import { EventParticipants } from './sections/EventParticipants';
 
 interface EventPageEditProps {
   event: Event;
@@ -20,6 +21,7 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
   const [editedEvent, setEditedEvent] = useState<Event>(event);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const theme = useTheme();
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -50,51 +52,33 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
       }}
     >
       <Container maxWidth="lg">
-        {/* Fixed Action Bar */}
+        {/* Basic Info Section */}
         <Paper
-          elevation={2}
+          elevation={0}
           sx={{
-            position: 'sticky',
-            top: 64,
-            zIndex: 1100,
-            py: 2,
-            px: 3,
-            mb: 3,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderRadius: 0,
+            p: { xs: 3, md: 4 },
+            mb: 4,
+            borderRadius: 2,
+            bgcolor: 'background.paper',
           }}
         >
-          <Typography variant="h6">Editing Event</Typography>
-          <Stack direction="row" spacing={2}>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              Delete Event
-            </Button>
-            <Button variant="outlined" onClick={onCancel} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              Save Changes
-            </Button>
-          </Stack>
+          <BasicInfoStep
+            formData={editedEvent}
+            onFormChange={(field, value) => {
+              setEditedEvent({ ...editedEvent, [field]: value });
+            }}
+            onValidationChange={() => {}} // We'll handle validation at the form level
+          />
         </Paper>
 
-        {/* Event Content */}
-        <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
-          <EventHeader event={editedEvent} isOwner={true} hasJoined={false} isEditing={true} />
-        </Paper>
+        {/* Date and Time Section */}
+        <EventDateTime
+          event={editedEvent}
+          isEditing
+          onEdit={(dateTime) => {
+            setEditedEvent({ ...editedEvent, ...dateTime });
+          }}
+        />
 
         <Grid container spacing={4}>
           {/* Main Content */}
@@ -110,9 +94,13 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
                   width: '100%',
                   minHeight: '200px',
                   padding: '16px',
-                  border: '1px solid #ddd',
+                  border: '1px solid',
+                  borderColor: theme.palette.divider,
                   borderRadius: '4px',
                   resize: 'vertical',
+                  backgroundColor: theme.palette.background.paper,
+                  color: theme.palette.text.primary,
+                  fontFamily: theme.typography.fontFamily,
                 }}
               />
             </Paper>
@@ -142,9 +130,13 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
                   width: '100%',
                   minHeight: '100px',
                   padding: '16px',
-                  border: '1px solid #ddd',
+                  border: '1px solid',
+                  borderColor: theme.palette.divider,
                   borderRadius: '4px',
                   resize: 'vertical',
+                  backgroundColor: theme.palette.background.paper,
+                  color: theme.palette.text.primary,
+                  fontFamily: theme.typography.fontFamily,
                 }}
               />
             </Paper>
@@ -153,13 +145,6 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
           {/* Sidebar */}
           <Grid item xs={12} md={4}>
             <Box sx={{ position: 'sticky', top: 88 }}>
-              <EventDateTime
-                event={editedEvent}
-                isEditing={true}
-                onEdit={(dateTime) => {
-                  setEditedEvent({ ...editedEvent, ...dateTime });
-                }}
-              />
               <EventDetails
                 event={editedEvent}
                 isEditing={true}
@@ -174,6 +159,47 @@ export const EventPageEdit = ({ event, onSave, onDelete, onCancel }: EventPageEd
             </Box>
           </Grid>
         </Grid>
+
+        {/* Action Buttons at Bottom */}
+        <Paper
+          elevation={2}
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            py: 2,
+            px: 3,
+            mt: 4,
+            bgcolor: 'background.paper',
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            Delete Event
+          </Button>
+          <Button variant="outlined" onClick={onCancel} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            Save Changes
+          </Button>
+        </Paper>
       </Container>
     </Box>
   );

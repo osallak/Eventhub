@@ -3,6 +3,7 @@ import { Event } from '../../../types/event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { LocationMap } from '../../create/LocationMap';
+import { LocationStep } from '../../create/LocationStep';
 
 interface EventLocationProps {
   event: Event;
@@ -13,6 +14,23 @@ interface EventLocationProps {
 export const EventLocation = ({ event, isEditing, onEdit }: EventLocationProps) => {
   const isPhysical = event.eventType === 'physical' || event.eventType === 'hybrid';
   const isVirtual = event.eventType === 'virtual' || event.eventType === 'hybrid';
+
+  if (isEditing && onEdit) {
+    return (
+      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Location
+        </Typography>
+        <LocationStep
+          formData={event}
+          onFormChange={(field, value) => {
+            onEdit({ [field]: value });
+          }}
+          onValidationChange={() => {}} // We'll handle validation at the form level
+        />
+      </Paper>
+    );
+  }
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>

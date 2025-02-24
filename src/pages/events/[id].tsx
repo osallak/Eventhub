@@ -44,8 +44,11 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        setEvent(data.data.event);
-        enqueueSnackbar('Successfully joined event!', { variant: 'success' });
+        const updatedEvent = await refreshEventData();
+        if (updatedEvent) {
+          setEvent(updatedEvent);
+          enqueueSnackbar('Successfully joined event!', { variant: 'success' });
+        }
       } else {
         enqueueSnackbar(data.message || 'Failed to join event', { variant: 'error' });
       }
@@ -59,9 +62,19 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
 
   const refreshEventData = async () => {
     try {
-      const response = await api(`/events/${event.id}`);
-      if (response.success && response.data) {
-        return response.data as Event;
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        return data.data;
       }
     } catch (error) {
       console.error('Failed to refresh event data:', error);
@@ -71,21 +84,42 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
 
   const handleLeave = async () => {
     try {
-      const response = await api(`/events/${event.id}/leave`, {
-        method: 'POST',
-        displaySuccess: true,
-      });
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      console.log('Retrieved token:', token);
+      console.log('All localStorage keys:', Object.keys(localStorage));
 
-      if (response.success) {
+      if (!token) {
+        enqueueSnackbar('Please login to leave events', { variant: 'error' });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}/leave`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
         const updatedEvent = await refreshEventData();
         if (updatedEvent) {
           setEvent(updatedEvent);
           enqueueSnackbar('Successfully left event', { variant: 'success' });
         }
+      } else {
+        enqueueSnackbar(data.message || 'Failed to leave event', { variant: 'error' });
       }
     } catch (error) {
       console.error('Failed to leave event:', error);
       enqueueSnackbar('Failed to leave event', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 

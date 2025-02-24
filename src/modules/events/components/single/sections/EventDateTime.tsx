@@ -6,6 +6,7 @@ import timezone from 'dayjs/plugin/timezone';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PublicIcon from '@mui/icons-material/Public';
+import { DateTimeStep } from '../../create/DateTimeStep';
 
 // Add plugins
 dayjs.extend(utc);
@@ -31,58 +32,19 @@ export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) 
 
   const datetime = formatDateTime(event.startDate, event.startTime, event.endTime);
 
-  if (isEditing) {
+  if (isEditing && onEdit) {
     return (
-      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
         <Typography variant="h6" gutterBottom>
-          Date & Time
+          Date and Time
         </Typography>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Start Date"
-            type="date"
-            value={dayjs(event.startDate).format('YYYY-MM-DD')}
-            onChange={(e) => onEdit?.({ startDate: e.target.value })}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            label="Start Time"
-            type="time"
-            value={dayjs(event.startTime).format('HH:mm')}
-            onChange={(e) =>
-              onEdit?.({
-                startTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${
-                  e.target.value
-                }:00.000Z`,
-              })
-            }
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            label="End Time"
-            type="time"
-            value={dayjs(event.endTime).format('HH:mm')}
-            onChange={(e) =>
-              onEdit?.({
-                endTime: `${dayjs(event.startDate).format('YYYY-MM-DD')}T${e.target.value}:00.000Z`,
-              })
-            }
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            label="Timezone"
-            value={event.timezone}
-            onChange={(e) => onEdit?.({ timezone: e.target.value })}
-            fullWidth
-          />
-        </Box>
+        <DateTimeStep
+          formData={event}
+          onFormChange={(field, value) => {
+            onEdit({ [field]: value });
+          }}
+          onValidationChange={() => {}} // We'll handle validation at the form level
+        />
       </Paper>
     );
   }

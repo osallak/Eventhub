@@ -9,7 +9,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { categories } from '../../../../constants/categories';
+import { EVENT_CATEGORIES } from '../../../../constants/categories';
 import { DateSelector } from '../create/DateSelector';
 
 export interface EventFiltersData {
@@ -55,6 +55,10 @@ const textFieldStyles = {
   '& .MuiOutlinedInput-root': inputStyles,
 };
 
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => {
   const handleChange = (newFilters: Partial<EventFiltersData>) => {
     onFilterChange({
@@ -97,9 +101,16 @@ export const EventFilters = ({ filters, onFilterChange }: EventFiltersProps) => 
           sx={inputStyles}
         >
           <MenuItem value="">All Categories</MenuItem>
-          {categories.map((category) => (
-            <MenuItem key={category} value={category.toLowerCase()}>
-              {category}
+          {[
+            { label: 'Music', value: EVENT_CATEGORIES.MUSIC },
+            { label: 'Art', value: EVENT_CATEGORIES.ART },
+            { label: 'Sports', value: EVENT_CATEGORIES.SPORTS },
+            { label: 'Tech', value: EVENT_CATEGORIES.TECHNOLOGY },
+            { label: 'Food', value: EVENT_CATEGORIES.FOOD },
+            { label: 'Business', value: EVENT_CATEGORIES.BUSINESS },
+          ].map((category) => (
+            <MenuItem key={category.value} value={category.value}>
+              {capitalizeFirstLetter(category.value)}
             </MenuItem>
           ))}
         </Select>
