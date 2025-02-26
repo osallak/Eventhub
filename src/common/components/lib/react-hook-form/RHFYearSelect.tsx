@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import 'dayjs/locale/fr';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface Props {
   name: string;
@@ -36,7 +35,6 @@ const RHFYearSelect = (props: Props) => {
     sortYear = 'asc',
   } = props;
   const { control, watch, setValue } = useFormContext();
-  const { t } = useTranslation(['common']);
   const [year, setYear] = useState<string>('');
   const value = watch(name);
   const yearsRange = Array.from({ length: endYear - startYear + 1 }, (_, i) => i + startYear);
@@ -90,7 +88,7 @@ const RHFYearSelect = (props: Props) => {
                 }}
               >
                 <MenuItem disabled value="">
-                  <em>{t('common:year')}</em>
+                  <em>Year</em>
                 </MenuItem>
                 {yearsOptions.map((year) => (
                   <MenuItem key={year} value={year}>

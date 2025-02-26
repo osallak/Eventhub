@@ -17,7 +17,6 @@ import {
 import Grid from '@mui/material/Grid';
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
 import useAuth from '@modules/auth/hooks/useAuth';
 import { Routes } from '@common/constants/routes';
@@ -81,7 +80,6 @@ const Profile = () => {
   const router = useRouter();
   const { username } = router.query;
   const { user, isAuthenticated, initialized } = useAuth();
-  const { t } = useTranslation();
 
   // Get the actual user data from the nested structure
   const actualUser = user?.data || user;
@@ -191,7 +189,7 @@ const Profile = () => {
             color: 'text.primary',
           }}
         >
-          {t('Profile')}
+          Profile
         </Typography>
 
         <Stack spacing={4}>
@@ -248,7 +246,7 @@ const Profile = () => {
                           px: 1,
                         }}
                       >
-                        {t('Upload Photo')}
+                        Upload Photo
                       </Typography>
                     </Box>
                   )}
@@ -263,7 +261,7 @@ const Profile = () => {
                   onClick={isEditing ? handleSave : () => setIsEditing(true)}
                   sx={{ minWidth: 150 }} // Ensure consistent width
                 >
-                  {isEditing ? t('Save Changes') : t('Edit Profile')}
+                  {isEditing ? 'Save Changes' : 'Edit Profile'}
                 </LoadingButton>
               </Stack>
 
@@ -271,7 +269,7 @@ const Profile = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label={t('First Name')}
+                    label="First Name"
                     fullWidth
                     value={formData.firstName}
                     onChange={handleInputChange('firstName')}
@@ -279,12 +277,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your first name')}
+                    placeholder="Enter your first name"
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label={t('Last Name')}
+                    label="Last Name"
                     fullWidth
                     value={formData.lastName}
                     onChange={handleInputChange('lastName')}
@@ -292,12 +290,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your last name')}
+                    placeholder="Enter your last name"
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label={t('Username')}
+                    label="Username"
                     fullWidth
                     value={formData.username}
                     onChange={handleInputChange('username')}
@@ -305,12 +303,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your username')}
+                    placeholder="Enter your username"
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label={t('Email')}
+                    label="Email"
                     fullWidth
                     value={formData.email}
                     onChange={handleInputChange('email')}
@@ -319,7 +317,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your email')}
+                    placeholder="Enter your email"
                   />
                 </Grid>
               </Grid>
@@ -341,7 +339,7 @@ const Profile = () => {
                   color: 'text.primary',
                 }}
               >
-                {t('Created Events')}
+                Created Events
               </Typography>
               <FormControl
                 size="small"
@@ -356,9 +354,9 @@ const Profile = () => {
                   value={eventFilter}
                   onChange={(e) => setEventFilter(e.target.value as typeof eventFilter)}
                 >
-                  <MenuItem value="all">{t('All Events')}</MenuItem>
-                  <MenuItem value="upcoming">{t('Upcoming')}</MenuItem>
-                  <MenuItem value="past">{t('Past')}</MenuItem>
+                  <MenuItem value="all">All Events</MenuItem>
+                  <MenuItem value="upcoming">Upcoming</MenuItem>
+                  <MenuItem value="past">Past</MenuItem>
                 </Select>
               </FormControl>
             </Stack>
@@ -380,7 +378,7 @@ const Profile = () => {
                   py: 4,
                 }}
               >
-                {t('No events found')}
+                No events found
               </Typography>
             )}
           </Box>

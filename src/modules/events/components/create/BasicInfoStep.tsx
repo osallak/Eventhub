@@ -9,9 +9,6 @@ import {
   FormHelperText,
   Stack,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { EventFormData } from '../../types/form';
-import { EVENT_CATEGORIES } from '../../../../constants/categories';
 import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { getInputStyles } from './styles/inputStyles';
@@ -36,7 +33,6 @@ export const BasicInfoStep = ({
   onFormChange,
   onValidationChange,
 }: BasicInfoStepProps) => {
-  const { t } = useTranslation();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const theme = useTheme();
@@ -46,15 +42,15 @@ export const BasicInfoStep = ({
     switch (field) {
       case 'title':
         if (!value?.trim()) {
-          return t('Title is required');
+          return 'Title is required';
         }
         if (value.trim().length < 3) {
-          return t('Title must be at least 3 characters');
+          return 'Title must be at least 3 characters';
         }
         break;
       case 'category':
         if (!value) {
-          return t('Please select a category');
+          return 'Please select a category';
         }
         break;
       default:
@@ -116,7 +112,7 @@ export const BasicInfoStep = ({
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label={t('Event Title')}
+            label="Event Title"
             value={formData.title || ''}
             onChange={(e) => handleChange('title', e.target.value)}
             onBlur={() => handleBlur('title')}
@@ -168,7 +164,7 @@ export const BasicInfoStep = ({
             fullWidth
             multiline
             rows={4}
-            label={t('Description')}
+            label="Description"
             value={formData.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
             sx={{

@@ -23,7 +23,6 @@ import {
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
 import useAuth from '@modules/auth/hooks/useAuth';
 
@@ -101,7 +100,6 @@ const DiscoverEvents = () => {
   const router = useRouter();
   const { category } = router.query;
   const fetchApi = useApi();
-  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
 
   // Initialize filters with category from URL if present
@@ -134,12 +132,12 @@ const DiscoverEvents = () => {
       });
       setAllEvents(response.data as unknown as Event[]);
     } catch (error) {
-      enqueueSnackbar(t('Failed to fetch events'), { variant: 'error' });
+      enqueueSnackbar('Failed to fetch events', { variant: 'error' });
       setAllEvents([]);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchApi, enqueueSnackbar, t]);
+  }, [fetchApi, enqueueSnackbar]);
 
   useEffect(() => {
     fetchEvents();

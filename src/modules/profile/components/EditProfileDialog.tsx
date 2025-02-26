@@ -9,7 +9,6 @@ import {
   Avatar,
   IconButton,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 interface EditProfileDialogProps {
@@ -25,11 +24,9 @@ interface EditProfileDialogProps {
 }
 
 export const EditProfileDialog = ({ open, onClose, user, _onSave }: EditProfileDialogProps) => {
-  const { t } = useTranslation();
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('Edit Profile')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>Edit Profile</DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 2 }}>
           {/* Avatar Upload */}
@@ -59,15 +56,15 @@ export const EditProfileDialog = ({ open, onClose, user, _onSave }: EditProfileD
             </IconButton>
           </Stack>
 
-          <TextField label={t('First Name')} defaultValue={user.firstName} fullWidth />
-          <TextField label={t('Last Name')} defaultValue={user.lastName} fullWidth />
-          <TextField label={t('Username')} defaultValue={user.username} fullWidth />
+          <TextField label="First Name" defaultValue={user.firstName} fullWidth />
+          <TextField label="Last Name" defaultValue={user.lastName} fullWidth />
+          <TextField label="Username" defaultValue={user.username} fullWidth />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('Cancel')}</Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={onClose}>
-          {t('Save')}
+          Save
         </Button>
       </DialogActions>
     </Dialog>

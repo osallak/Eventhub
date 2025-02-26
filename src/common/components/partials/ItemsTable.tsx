@@ -8,8 +8,6 @@ import Skeleton from '@mui/material/Skeleton';
 import Grid from '@mui/material/Unstable_Grid2';
 import {
   DataGrid,
-  frFR,
-  esES,
   enUS,
   GridColumns,
   GridToolbar,
@@ -21,7 +19,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { GridRowHeightParams, GridRowHeightReturnValue } from '@mui/x-data-grid-premium';
 import { useDialogContext } from '@common/contexts/DialogContext';
-import { useTranslation } from 'react-i18next';
 import { FetchApiOptions } from '@common/hooks/useApi';
 
 interface ItemsTableProps<Item, CreateOneInput, UpdateOneInput, Row> {
@@ -84,23 +81,8 @@ const ItemsTable = <Item, CreateOneInput, UpdateOneInput, Row extends CrudRow>(
 
   const TABLE_MIN_HEIGHT = '400px';
 
-  const { i18n, t } = useTranslation(['common']);
-  const currentLanguage = i18n.language || 'fr';
-
-  let localeText;
-  switch (currentLanguage) {
-    case 'fr':
-      localeText = frFR.components.MuiDataGrid.defaultProps.localeText;
-      break;
-    case 'es':
-      localeText = esES.components.MuiDataGrid.defaultProps.localeText;
-      break;
-    case 'en':
-      localeText = enUS.components.MuiDataGrid.defaultProps.localeText;
-      break;
-    default:
-      localeText = frFR.components.MuiDataGrid.defaultProps.localeText;
-  }
+  // Simplify to always use English
+  const localeText = enUS.components.MuiDataGrid.defaultProps.localeText;
 
   useEffect(() => {
     setColumns(initColumns);
@@ -113,7 +95,7 @@ const ItemsTable = <Item, CreateOneInput, UpdateOneInput, Row extends CrudRow>(
 
       const actionsColumn: GridEnrichedColDef<Row> = {
         field: 'actions',
-        headerName: t('common:actions'),
+        headerName: 'Actions',
         filterable: false,
         sortable: false,
         width: 85,
@@ -147,7 +129,7 @@ const ItemsTable = <Item, CreateOneInput, UpdateOneInput, Row extends CrudRow>(
       setRows([]);
       setColumns([...initColumns]);
     }
-  }, [items, currentLanguage]);
+  }, [items, localeText]);
 
   useEffect(() => {
     let filterParam: FilterParam | undefined;
@@ -323,7 +305,7 @@ const RowActionCell = <Item, CreateOneInput, UpdateOneInput>(
               router.push(routes.UpdateOne.replace('{id}', id.toString()));
             }}
           >
-            <Edit /> Éditer
+            <Edit /> Edit
           </MenuItem>
         )}
         {enabledActions.map((action, index) => (
@@ -346,18 +328,18 @@ const RowActionCell = <Item, CreateOneInput, UpdateOneInput>(
             onClick={() => {
               handleMenuClose();
               openConfirmDialog(
-                'Supprimer',
-                'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.',
+                'Delete',
+                'Are you sure you want to delete this item? This action cannot be undone.',
                 () => {
                   deleteOne(id, { displayProgress: true, displaySuccess: true });
                 },
-                'Oui, supprimer',
+                'Yes, delete',
                 'error'
               );
             }}
             sx={{ color: 'error.main' }}
           >
-            <DeleteOutline /> Supprimer
+            <DeleteOutline /> Delete
           </MenuItem>
         )}
       </MenuPopover>

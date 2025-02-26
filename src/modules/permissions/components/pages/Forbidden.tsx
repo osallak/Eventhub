@@ -5,14 +5,12 @@ import Button from '@mui/material/Button';
 import NextLink from 'next/link';
 import Routes from '@common/defs/routes';
 import { Box } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 
 const Forbidden = () => {
-  const { t } = useTranslation(['permissions']);
   return (
     <Container className="flex flex-col items-center justify-center pt-12" maxWidth="xs">
       <Typography variant="h3" paragraph className="mb-6" textAlign="center">
-        {t('permissions:unauthorized_access')}
+        Unauthorized Access
       </Typography>
       <Typography
         variant="body1"
@@ -21,9 +19,9 @@ const Forbidden = () => {
         textAlign="center"
         sx={{ color: 'text.secondary' }}
       >
-        {t('permissions:access_limited')}
+        Access to this page is limited.
         <br />
-        {t('permissions:contact_admin')}
+        Please contact an administrator if you believe this is an error.
       </Typography>
       <ForbiddenIllustration
         sx={{
@@ -34,7 +32,7 @@ const Forbidden = () => {
       />
       <Box sx={{ textAlign: 'center' }}>
         <Button component={NextLink} href={Routes.Common.Home} size="large" variant="contained">
-          {t('permissions:return_home')}
+          Return Home
         </Button>
       </Box>
     </Container>

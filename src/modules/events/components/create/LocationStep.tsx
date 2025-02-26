@@ -10,11 +10,10 @@ import {
   Switch,
   Paper,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { useTheme } from '@mui/material/styles';
 import { EventFormData } from '../../types/form';
 import { LocationMap } from './LocationMap';
 import { useEffect, useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { getInputStyles } from './styles/inputStyles';
 
 interface LocationStepProps {
@@ -24,7 +23,6 @@ interface LocationStepProps {
 }
 
 export const LocationStep = ({ formData, onFormChange, onValidationChange }: LocationStepProps) => {
-  const { t } = useTranslation();
   const theme = useTheme();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const inputStyles = getInputStyles(theme);
@@ -52,25 +50,25 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
 
     if (formData.eventType === 'physical' || formData.eventType === 'hybrid') {
       if (!formData.venueName?.trim()) {
-        newErrors.venueName = t('Venue name is required');
+        newErrors.venueName = 'Venue name is required';
         isValid = false;
       }
       if (!formData.address?.trim()) {
-        newErrors.address = t('Address is required');
+        newErrors.address = 'Address is required';
         isValid = false;
       }
       if (!formData.city?.trim()) {
-        newErrors.city = t('City is required');
+        newErrors.city = 'City is required';
         isValid = false;
       }
     }
 
     if (formData.eventType === 'virtual' || formData.eventType === 'hybrid') {
       if (!formData.meetingLink?.trim()) {
-        newErrors.meetingLink = t('Meeting link is required');
+        newErrors.meetingLink = 'Meeting link is required';
         isValid = false;
       } else if (!isValidUrl(formData.meetingLink)) {
-        newErrors.meetingLink = t('Please enter a valid URL');
+        newErrors.meetingLink = 'Please enter a valid URL';
         isValid = false;
       }
     }
@@ -104,26 +102,26 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
         {/* Event Type Selection */}
         <Grid item xs={12}>
           <FormControl fullWidth>
-            <InputLabel>{t('Event Type')}</InputLabel>
+            <InputLabel>Event Type</InputLabel>
             <Select
-              value={formData.eventType || 'physical'}
-              label={t('Event Type')}
+              value={formData.eventType || ''}
+              label="Event Type"
               onChange={(e) => onFormChange('eventType', e.target.value)}
               sx={inputStyles}
             >
-              <MenuItem value="physical">{t('In Person')}</MenuItem>
-              <MenuItem value="virtual">{t('Virtual')}</MenuItem>
-              <MenuItem value="hybrid">{t('Hybrid')}</MenuItem>
+              <MenuItem value="physical">Physical</MenuItem>
+              <MenuItem value="virtual">Virtual</MenuItem>
+              <MenuItem value="hybrid">Hybrid</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {/* Virtual Meeting Link */}
+        {/* Virtual Event Fields */}
         {(formData.eventType === 'virtual' || formData.eventType === 'hybrid') && (
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('Meeting Link')}
+              label="Meeting Link"
               value={formData.meetingLink || ''}
               onChange={(e) => onFormChange('meetingLink', e.target.value)}
               error={!!errors.meetingLink}
@@ -140,7 +138,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label={t('Venue Name')}
+                label="Venue Name"
                 value={formData.venueName || ''}
                 onChange={(e) => onFormChange('venueName', e.target.value)}
                 error={!!errors.venueName}
@@ -152,7 +150,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label={t('Address')}
+                label="Address"
                 value={formData.address || ''}
                 onChange={(e) => onFormChange('address', e.target.value)}
                 error={!!errors.address}
@@ -164,7 +162,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label={t('City')}
+                label="City"
                 value={formData.city || ''}
                 onChange={(e) => onFormChange('city', e.target.value)}
                 error={!!errors.city}
@@ -176,7 +174,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label={t('Postal Code')}
+                label="Postal Code"
                 value={formData.postalCode || ''}
                 onChange={(e) => onFormChange('postalCode', e.target.value)}
                 sx={inputStyles}
@@ -191,7 +189,7 @@ export const LocationStep = ({ formData, onFormChange, onValidationChange }: Loc
                     color="primary"
                   />
                 }
-                label={t('Hide exact address from public view')}
+                label="Hide exact address from public view"
                 sx={{
                   color: 'text.secondary',
                   '& .MuiSwitch-root': {

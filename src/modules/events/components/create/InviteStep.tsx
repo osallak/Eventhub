@@ -1,8 +1,6 @@
 import { Box, Button, Chip, Divider, Grid, Stack, TextField, Typography } from '@mui/material';
 import { Theme, useTheme } from '@mui/material/styles';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { EventFormData } from '../../types/form';
 import { getInputStyles } from './styles/inputStyles';
 
 interface InviteStepProps {
@@ -33,7 +31,6 @@ const inputStyles = (theme: Theme) => ({
 });
 
 export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
-  const { t } = useTranslation();
   const theme = useTheme();
 
   const [email, setEmail] = useState('');
@@ -67,7 +64,7 @@ export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
         {/* Share Link Section */}
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            {t('Share via Link')}
+            Share via Link
           </Typography>
           <TextField
             fullWidth
@@ -77,7 +74,7 @@ export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
               readOnly: true,
               endAdornment: (
                 <Button variant="contained" onClick={handleCopyLink} sx={buttonStyles}>
-                  {copied ? t('Copied!') : t('Copy')}
+                  {copied ? 'Copied!' : 'Copy'}
                 </Button>
               ),
             }}
@@ -92,12 +89,12 @@ export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
         {/* Email Invites Section */}
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            {t('Invite via Email')}
+            Invite via Email
           </Typography>
           <TextField
             fullWidth
             size="small"
-            label={t('Email Address')}
+            label="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddEmail()}
@@ -109,7 +106,7 @@ export const InviteStep = ({ formData, onFormChange }: InviteStepProps) => {
                   disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
                   sx={buttonStyles}
                 >
-                  {t('Add')}
+                  Add
                 </Button>
               ),
             }}

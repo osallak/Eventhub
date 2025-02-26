@@ -6,7 +6,6 @@ import { ROLE } from '@modules/permissions/defs/types';
 import { User } from '@modules/users/defs/types';
 import useUsers, { UpdateOneInput } from '@modules/users/hooks/api/useUsers';
 import { Grid, MenuItem } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
 
 interface UpdateUserFormProps {
@@ -15,19 +14,16 @@ interface UpdateUserFormProps {
 
 const UpdateUserForm = (props: UpdateUserFormProps) => {
   const { item } = props;
-  const { t } = useTranslation(['common']);
   const schema = Yup.object().shape({
     email: Yup.string()
-      .email(t('common:email_format_incorrect'))
-      .required(t('common:field_required')),
+      .email('Email format is incorrect')
+      .required('This field is required'),
     password: Yup.string(),
     role: Yup.mixed<ROLE>()
       .oneOf(Object.values(ROLE), (_values) => {
-        return `${t('common:role_criteria')} ${ROLES_OPTIONS.map((option) => t(option.label)).join(
-          ', '
-        )}`;
+        return `Role must be one of: ${ROLES_OPTIONS.map((option) => option.label).join(', ')}`;
       })
-      .required(t('common:field_required')),
+      .required('This field is required'),
   });
   const defaultValues: UpdateOneInput = {
     email: item.email,
@@ -45,16 +41,16 @@ const UpdateUserForm = (props: UpdateUserFormProps) => {
       >
         <Grid container spacing={3} sx={{ padding: 6 }}>
           <Grid item xs={6}>
-            <RHFTextField name="email" label={t('common:email')} />
+            <RHFTextField name="email" label="Email" />
           </Grid>
           <Grid item xs={6}>
-            <RHFTextField name="password" label={t('common:password')} type="password" />
+            <RHFTextField name="password" label="Password" type="password" />
           </Grid>
           <Grid item xs={6}>
-            <RHFSelect name="role" label={t('common:role')}>
+            <RHFSelect name="role" label="Role">
               {ROLES_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
-                  {t(option.label)}
+                  {option.label}
                 </MenuItem>
               ))}
             </RHFSelect>

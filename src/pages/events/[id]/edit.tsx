@@ -6,7 +6,6 @@ import { Event } from '@modules/events/types/event';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 import dayjs from 'dayjs';
 
@@ -17,7 +16,6 @@ const EditEventPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated, user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
-  const { t } = useTranslation();
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +28,7 @@ const EditEventPage = () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          enqueueSnackbar(t('Authentication required'), { variant: 'error' });
+          enqueueSnackbar('Authentication required', { variant: 'error' });
           router.push('/auth/login');
           return;
         }
@@ -52,7 +50,7 @@ const EditEventPage = () => {
         }
 
         if (!data.status || data.status !== 'success') {
-          enqueueSnackbar(t('Event not found'), { variant: 'error' });
+          enqueueSnackbar('Event not found', { variant: 'error' });
           router.push('/events');
           return;
         }
@@ -70,7 +68,7 @@ const EditEventPage = () => {
         console.log('Is owner:', isOwner);
 
         if (!isOwner) {
-          enqueueSnackbar(t('You are not authorized to edit this event'), { variant: 'error' });
+          enqueueSnackbar('You are not authorized to edit this event', { variant: 'error' });
           router.push(`/events/${id}`);
           return;
         }
@@ -79,7 +77,7 @@ const EditEventPage = () => {
       } catch (error) {
         if (!mounted) return;
         console.error('Failed to fetch event:', error);
-        enqueueSnackbar(t('Failed to fetch event'), { variant: 'error' });
+        enqueueSnackbar('Failed to fetch event', { variant: 'error' });
         router.push('/events');
       } finally {
         if (mounted) {
@@ -101,7 +99,7 @@ const EditEventPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        enqueueSnackbar(t('Authentication required'), { variant: 'error' });
+        enqueueSnackbar('Authentication required', { variant: 'error' });
         return;
       }
 
@@ -136,14 +134,14 @@ const EditEventPage = () => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        enqueueSnackbar(t('Event updated successfully'), { variant: 'success' });
+        enqueueSnackbar('Event updated successfully', { variant: 'success' });
         router.push(`/events/${id}`);
       } else {
         throw new Error(data.message || 'Update failed');
       }
     } catch (error) {
       console.error('Failed to update event:', error);
-      enqueueSnackbar(t('Failed to update event'), { variant: 'error' });
+      enqueueSnackbar('Failed to update event', { variant: 'error' });
     }
   };
 
@@ -155,7 +153,7 @@ const EditEventPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        enqueueSnackbar(t('Authentication required'), { variant: 'error' });
+        enqueueSnackbar('Authentication required', { variant: 'error' });
         return;
       }
 
@@ -172,14 +170,14 @@ const EditEventPage = () => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        enqueueSnackbar(t('Event deleted successfully'), { variant: 'success' });
+        enqueueSnackbar('Event deleted successfully', { variant: 'success' });
         router.push('/events');
       } else {
         throw new Error(data.message || 'Delete failed');
       }
     } catch (error) {
       console.error('Failed to delete event:', error);
-      enqueueSnackbar(t('Failed to delete event'), { variant: 'error' });
+      enqueueSnackbar('Failed to delete event', { variant: 'error' });
     }
   };
 

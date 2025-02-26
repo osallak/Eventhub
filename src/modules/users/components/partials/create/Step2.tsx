@@ -13,7 +13,6 @@ import { User } from '@modules/users/defs/types';
 import useUsers, { CreateOneInput } from '@modules/users/hooks/api/useUsers';
 import { MenuItem, Stack } from '@mui/material';
 import { Ref, forwardRef, useImperativeHandle, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
 
 interface CreateUserStep2Props extends FormStepProps {}
@@ -21,15 +20,12 @@ interface CreateUserStep2Props extends FormStepProps {}
 const CreateUserStep2 = forwardRef((props: CreateUserStep2Props, ref: Ref<FormStepRef>) => {
   const { next, data } = props;
   const formRef = useRef<CurrentFormStepRef>();
-  const { t } = useTranslation(['user', 'common']);
   const schema = Yup.object().shape({
     role: Yup.mixed<ROLE>()
       .oneOf(Object.values(ROLE), (_values) => {
-        return `${t('common:role_criteria')} ${ROLES_OPTIONS.map((option) => t(option.label)).join(
-          ', '
-        )}`;
+        return `Role must be one of: ${ROLES_OPTIONS.map((option) => option.label).join(', ')}`;
       })
-      .required(t('common:field_required')),
+      .required('This field is required'),
   });
   const defaultValues: Omit<CreateOneInput, 'email' | 'password'> = {
     role: data?.role || ROLE.USER,
@@ -54,10 +50,10 @@ const CreateUserStep2 = forwardRef((props: CreateUserStep2Props, ref: Ref<FormSt
         displayFooter={false}
       >
         <Stack justifyContent="center" sx={{ padding: 6 }}>
-          <RHFSelect name="role" label={t('common:role')} sx={{ width: 350, margin: '0 auto' }}>
+          <RHFSelect name="role" label="Role" sx={{ width: 350, margin: '0 auto' }}>
             {ROLES_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
-                {t(option.label)}
+                {option.label}
               </MenuItem>
             ))}
           </RHFSelect>

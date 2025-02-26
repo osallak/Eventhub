@@ -2,7 +2,6 @@ import { Box, Typography, Button, Stack, Chip } from '@mui/material';
 import { Event } from '../../../types/event';
 import EditIcon from '@mui/icons-material/Edit';
 import useAuth from '@modules/auth/hooks/useAuth';
-import { useTranslation } from 'react-i18next';
 
 interface EventHeaderProps {
   event: Event;
@@ -21,8 +20,6 @@ export const EventHeader = ({
   onJoin,
   onLeave,
 }: EventHeaderProps) => {
-  const { t } = useTranslation();
-
   const isButtonDisabled =
     event.maxParticipants && event.participants?.length >= event.maxParticipants;
   const handleClick = (e: React.MouseEvent) => {
@@ -66,7 +63,7 @@ export const EventHeader = ({
               onClick={onEdit}
               sx={{ minWidth: 120 }}
             >
-              {t('Edit Event')}
+              Edit Event
             </Button>
           ) : (
             <Button
@@ -76,7 +73,7 @@ export const EventHeader = ({
               disabled={!hasJoined && isButtonDisabled}
               sx={{ minWidth: 120 }}
             >
-              {hasJoined ? t('Leave Event') : t('Join Event')}
+              {hasJoined ? 'Leave Event' : 'Join Event'}
             </Button>
           )}
         </Box>

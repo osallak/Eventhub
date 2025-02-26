@@ -14,7 +14,6 @@ import { User } from '@modules/users/defs/types';
 import useUsers, { CreateOneInput } from '@modules/users/hooks/api/useUsers';
 import { Grid } from '@mui/material';
 import { Ref, forwardRef, useImperativeHandle, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
 
 interface CreateUserStep1Props extends FormStepProps {}
@@ -26,12 +25,12 @@ interface CurrentFormStepRef extends ParentCurrentFormStepRef {
 const CreateUserStep1 = forwardRef((props: CreateUserStep1Props, ref: Ref<FormStepRef>) => {
   const { next, data } = props;
   const formRef = useRef<CurrentFormStepRef>();
-  const { t } = useTranslation(['user', 'common']);
   const schema = Yup.object().shape({
     email: Yup.string()
-      .email(t('common:email_format_incorrect'))
-      .required(t('common:field_required')),
-    password: Yup.string().required(t('common:field_required')),
+      .email('Email format is incorrect')
+      .required('This field is required'),
+    password: Yup.string()
+      .required('This field is required'),
   });
   const defaultValues: Omit<CreateOneInput, 'role'> = {
     email: data?.email || '',
@@ -58,10 +57,10 @@ const CreateUserStep1 = forwardRef((props: CreateUserStep1Props, ref: Ref<FormSt
       >
         <Grid container spacing={3} sx={{ padding: 6 }}>
           <Grid item xs={6}>
-            <RHFTextField name="email" label={t('common:email')} />
+            <RHFTextField name="email" label="Email" />
           </Grid>
           <Grid item xs={6}>
-            <RHFTextField name="password" label={t('common:password')} type="password" />
+            <RHFTextField name="password" label="Password" type="password" />
           </Grid>
         </Grid>
       </CreateCrudItemForm>

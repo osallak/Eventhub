@@ -12,7 +12,6 @@ import {
 import 'dayjs/locale/fr';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { useTranslation } from 'react-i18next';
 
 interface Props {
   name: string;
@@ -36,7 +35,6 @@ const RHFDateSelects = (props: Props) => {
   } = props;
 
   const { control, watch, setValue } = useFormContext();
-  const { t } = useTranslation(['common']);
   const [day, setDay] = useState<string>('');
   const [month, setMonth] = useState<string>('');
   const [year, setYear] = useState<string>('');
@@ -107,7 +105,7 @@ const RHFDateSelects = (props: Props) => {
                 }}
               >
                 <MenuItem disabled value="">
-                  <em>{t('common:day')}</em>
+                  <em>Day</em>
                 </MenuItem>
                 {daysOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -132,7 +130,7 @@ const RHFDateSelects = (props: Props) => {
                 }}
               >
                 <MenuItem disabled value="">
-                  <em>{t('common:month')}</em>
+                  <em>Month</em>
                 </MenuItem>
                 {monthsOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -157,7 +155,7 @@ const RHFDateSelects = (props: Props) => {
                 }}
               >
                 <MenuItem disabled value="">
-                  <em>{t('common:year')}</em>
+                  <em>Year</em>
                 </MenuItem>
                 {yearsOptions.map((year) => (
                   <MenuItem key={year} value={year}>

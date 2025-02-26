@@ -21,7 +21,6 @@ import { useSnackbar } from 'notistack';
 import { Theme } from '@emotion/react';
 import { AutoDelete, Close, OpenInNew, Undo } from '@mui/icons-material';
 import { useUploadFormContext } from '@common/contexts/UploadFormContext';
-import { useTranslation } from 'react-i18next';
 
 interface RHFImageDropzoneMainProps {
   name: string;
@@ -60,7 +59,7 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
     deleteImmediately = false,
     upsertImmediately = true,
     keyToAssign,
-    placeholder = "Choisir l'image à télécharger",
+    placeholder = "Choose image to upload",
   } = props;
   const { createOne, updateOne, deleteOne } = useUploads();
   const [loading, setLoading] = useState(false);
@@ -69,7 +68,6 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
   const [upload, setUpload] = useState<Upload | null>(props.upload || null);
   const [uploadToDelete, setUploadToDelete] = useState<Upload | null>(null);
   const { addOrRemoveUploadIdToDelete, addOrRemoveFilesToUpload } = useUploadFormContext();
-  const { t } = useTranslation(['common']);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -77,7 +75,7 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
       let uploaded: Upload | null = null;
 
       if (maxSize && file.size / 1000 > maxSize) {
-        enqueueSnackbar(t('common:file_size_error', { maxSize: maxSize / 1000 }), {
+        enqueueSnackbar(`File size must not exceed ${maxSize / 1000}MB`, {
           variant: 'error',
         });
         return false;
@@ -127,7 +125,7 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
         onChange(name, null);
         setLoading(false);
       } else {
-        enqueueSnackbar(t('common:delete_file_error'), {
+        enqueueSnackbar('Error deleting file', {
           variant: 'error',
         });
       }
@@ -141,7 +139,7 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
       onChange(name, null);
       setUpload(null);
     } else {
-      enqueueSnackbar(t('common:no_file_in_dropzone'), {
+      enqueueSnackbar('No file in dropzone', {
         variant: 'warning',
       });
     }
@@ -229,7 +227,7 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
                 <Box sx={{ position: 'absolute', top: 4, right: 4, display: 'flex' }}>
-                  <Tooltip title={t('common:preview_in_new_tab')}>
+                  <Tooltip title="Preview in new tab">
                     <Button
                       color="secondary"
                       variant="text"
@@ -277,14 +275,14 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
                     fontWeight="600"
                     textAlign="center"
                   >
-                    {t(placeholder)}
+                    {placeholder}
                   </Typography>
                   {maxSize && (
                     <Typography
                       variant="body2"
                       sx={{ textAlign: 'center', fontVariantNumeric: 'lining-nums' }}
                     >
-                      {t('common:max_file_size')} <strong>{maxSize / 1000}mb</strong>
+                      Maximum file size: <strong>{maxSize / 1000}mb</strong>
                     </Typography>
                   )}
                 </>
@@ -297,15 +295,14 @@ const RHFImageDropzone = (props: RHFImageDropzoneProps) => {
                   justifyContent="center"
                   marginTop="5px"
                 >
-                  <Tooltip title={t('common:resolution_tooltip')}>
+                  <Tooltip title="Recommended resolution for optimal display">
                     <InfoIcon fontSize="inherit" />
                   </Tooltip>
                   <Typography
                     variant="caption"
                     sx={{ textAlign: 'center', fontVariantNumeric: 'lining-nums' }}
                   >
-                    {t(placeholder) && <>{t('common:recommended_resolution')}:</>}{' '}
-                    <strong>{resolution}</strong>
+                    {placeholder && <>Recommended resolution:</>} <strong>{resolution}</strong>
                   </Typography>
                 </Grid>
               )}
