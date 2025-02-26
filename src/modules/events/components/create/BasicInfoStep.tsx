@@ -12,6 +12,8 @@ import {
 import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { getInputStyles } from './styles/inputStyles';
+import { EVENT_CATEGORIES } from '@modules/events/types/categories';
+import { EventFormData } from '@modules/events/types/form';
 
 interface BasicInfoStepProps {
   formData: EventFormData;
@@ -24,7 +26,8 @@ interface ValidationErrors {
   category?: string;
 }
 
-const capitalizeFirstLetter = (str: string) => {
+const capitalizeFirstLetter = (str: string | undefined) => {
+  if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
@@ -143,12 +146,13 @@ export const BasicInfoStep = ({
               sx={inputStyles}
             >
               {[
-                { label: 'Music', value: EVENT_CATEGORIES.MUSIC },
-                { label: 'Art', value: EVENT_CATEGORIES.ART },
                 { label: 'Sports', value: EVENT_CATEGORIES.SPORTS },
-                { label: 'Tech', value: EVENT_CATEGORIES.TECHNOLOGY },
-                { label: 'Food', value: EVENT_CATEGORIES.FOOD },
+                { label: 'Music', value: EVENT_CATEGORIES.MUSIC },
+                { label: 'Tech', value: EVENT_CATEGORIES.TECH },
                 { label: 'Business', value: EVENT_CATEGORIES.BUSINESS },
+                { label: 'Art', value: EVENT_CATEGORIES.ART },
+                { label: 'Food', value: EVENT_CATEGORIES.FOOD },
+                { label: 'Other', value: EVENT_CATEGORIES.OTHER },
               ].map((category) => (
                 <MenuItem key={category.value} value={category.value}>
                   {capitalizeFirstLetter(category.value)}

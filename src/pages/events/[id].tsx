@@ -32,7 +32,7 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}/join`,
+        new URL(`/api/events/${event.id}/join`, process.env.NEXT_PUBLIC_API_URL).toString(),
         {
           method: 'POST',
           headers: {
@@ -63,7 +63,7 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
   const refreshEventData = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}`,
+        new URL(`/api/events/${event.id}`, process.env.NEXT_PUBLIC_API_URL).toString(),
         {
           method: 'GET',
           headers: {
@@ -86,8 +86,6 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      console.log('Retrieved token:', token);
-      console.log('All localStorage keys:', Object.keys(localStorage));
 
       if (!token) {
         enqueueSnackbar('Please login to leave events', { variant: 'error' });
@@ -95,7 +93,7 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${event.id}/leave`,
+        new URL(`/api/events/${event.id}/leave`, process.env.NEXT_PUBLIC_API_URL).toString(),
         {
           method: 'POST',
           headers: {
@@ -150,15 +148,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${id}`;
+    const url = new URL('/api/events/' + id, process.env.NEXT_PUBLIC_API_URL).toString();
     const response = await fetch(url);
+    
+    const data = await response.json();
+
 
     if (!response.ok) {
+      console.error('Server response not OK:', data);
       return { notFound: true };
     }
 
-    const data = await response.json();
     if (!data || !data.data) {
+      console.error('Invalid data structure:', data);
       return { notFound: true };
     }
 
@@ -168,6 +170,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
+    console.error('Error fetching event:', error);
     return { notFound: true };
   }
 };

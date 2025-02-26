@@ -33,39 +33,30 @@ const EditEventPage = () => {
           return;
         }
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${id}`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const url = new URL(`/api/events/${id}`, process.env.NEXT_PUBLIC_API_URL).toString();
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
         const data = await response.json();
-        console.log('API Response:', data);
-        if (!mounted) {
-          return;
-        }
+
+        if (!mounted) return;
 
         if (!data.status || data.status !== 'success') {
+          console.error('Invalid response status:', data);
           enqueueSnackbar('Event not found', { variant: 'error' });
           router.push('/events');
           return;
         }
 
-        const eventData = data.data as Event;
-
-        console.log('Debug ownership check:', {
-          userId: user?.id,
-          creatorId: eventData?.creator?.id,
-          eventData,
-          user,
-        });
+        const eventData = data.data;
 
         const isOwner = user?.id === eventData?.creator?.id;
-        console.log('Is owner:', isOwner);
 
         if (!isOwner) {
           enqueueSnackbar('You are not authorized to edit this event', { variant: 'error' });
@@ -118,19 +109,15 @@ const EditEventPage = () => {
             : Number(updatedEvent.maxParticipants), // Ensure it's a number
       };
 
-      console.log('Sending event data:', formattedEvent); // Debug log
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${id}`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formattedEvent),
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedEvent),
+      });
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
@@ -157,16 +144,13 @@ const EditEventPage = () => {
         return;
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/api/events/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
