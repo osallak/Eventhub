@@ -62,7 +62,8 @@ interface PaginatedResponse<T> {
 
 export const createEvent = async (
   fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
-  formData: any
+  formData: any,
+  token: string
 ): Promise<any> => {
   // Transform the form data to match API requirements
   const payload: CreateEventPayload = {
@@ -105,6 +106,10 @@ export const createEvent = async (
   const response = await fetchApi(API_ROUTES.Events.Create, {
     method: 'POST',
     data: payload,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.success) {

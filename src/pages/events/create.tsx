@@ -34,6 +34,7 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fetchApi = useApi();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     if (mode === 'edit' && id) {
@@ -151,7 +152,14 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
     setError(null);
 
     try {
-      const response = await createEvent(fetchApi, formData);
+      // Get token directly from localStorage like in edit.tsx
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      await createEvent(fetchApi, formData, token);
 
       enqueueSnackbar('Event created successfully', {
         variant: 'success',

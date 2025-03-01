@@ -24,6 +24,7 @@ interface BasicInfoStepProps {
 interface ValidationErrors {
   title?: string;
   category?: string;
+  description?: string;
 }
 
 const capitalizeFirstLetter = (str: string | undefined) => {
@@ -56,6 +57,11 @@ export const BasicInfoStep = ({
           return 'Please select a category';
         }
         break;
+      case 'description':
+        if (!value?.trim()) {
+          return 'Description is required';
+        }
+        break;
       default:
         return '';
     }
@@ -80,10 +86,18 @@ export const BasicInfoStep = ({
       isValid = false;
     }
 
+    // Validate description
+    const descriptionError = validateField('description', formData.description);
+    if (descriptionError) {
+      newErrors.description = descriptionError;
+      isValid = false;
+    }
+
     setErrors(newErrors);
     setTouched({
       title: true,
       category: true,
+      description: true,
     });
 
     return isValid;
@@ -107,7 +121,7 @@ export const BasicInfoStep = ({
   useEffect(() => {
     const isValid = validateForm();
     onValidationChange(isValid);
-  }, [formData.title, formData.category]);
+  }, [formData.title, formData.category, formData.description]);
 
   return (
     <Stack spacing={3}>
@@ -171,6 +185,10 @@ export const BasicInfoStep = ({
             label="Description"
             value={formData.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
+            onBlur={() => handleBlur('description')}
+            error={!!errors.description}
+            helperText={errors.description}
+            required
             sx={{
               ...inputStyles,
               '& .MuiOutlinedInput-root': {
