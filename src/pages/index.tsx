@@ -6,7 +6,7 @@ import { getEvents } from '@modules/events/services/eventService';
 import { Event } from '@modules/events/types/event';
 import { Box, Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { menuItems } from '../common/defs/menu-items';
 import { EVENT_CATEGORIES } from '../constants/categories';
 import type { PageComponent } from './_app';
@@ -19,6 +19,8 @@ const Home: PageComponent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const fetchApi = useApi();
   const [popularEvents, setPopularEvents] = useState<Event[]>([]);
+  const [popularEventsLoading, setPopularEventsLoading] = useState(true);
+  const popularEventsRequestedRef = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,27 +39,49 @@ const Home: PageComponent = () => {
       try {
         const response = await getEvents(fetchApi, {
           page: 1,
-          per_page: 6, // Show fewer events on home page
+          per_page: 6,
         });
-        setEvents(response.data as unknown as Event[]);
+        setEvents(response);
       } catch (error) {
+        console.error('Failed to fetch latest events:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchLatestEvents();
-  }, []);
+  }, [fetchApi]);
 
   useEffect(() => {
     const fetchPopularEvents = async () => {
+      if (popularEventsRequestedRef.current) {
+        return;
+      }
+      
+      popularEventsRequestedRef.current = true;
+      setPopularEventsLoading(true);
+      
       try {
         const response = await getEvents(fetchApi, {
           page: 1,
-          per_page: 5, // Fetch 5 events for the scroll
+          per_page: 5,
+          popular: true
         });
-        setPopularEvents(response.data as unknown as Event[]);
-      } catch (error) {}
+        console.log('Popular events response:', response);
+        if (Array.isArray(response)) {
+          setPopularEvents(response);
+        } else if (response && Array.isArray(response.data)) {
+          setPopularEvents(response.data);
+        } else {
+          console.error('Unexpected response format:', response);
+          setPopularEvents([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch popular events:', error);
+        setPopularEvents([]);
+      } finally {
+        setPopularEventsLoading(false);
+      }
     };
 
     fetchPopularEvents();
@@ -322,8 +346,42 @@ const Home: PageComponent = () => {
               Popular events
             </Typography>
 
-            {popularEvents.length > 0 ? (
-              /* Existing scroll container */
+            {popularEventsLoading ? (
+              <Box
+                sx={{
+                  padding: { xs: 2, sm: 4, md: 8 },
+                  display: 'flex',
+                  overflowX: 'auto',
+                  gap: 3,
+                }}
+              >
+                {[...Array(5)].map((_, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      width: 320,
+                      height: 400,
+                      borderRadius: 2,
+                      bgcolor: 'background.paper',
+                      boxShadow: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      p: 2,
+                      opacity: 0.7,
+                      flex: 'none',
+                    }}
+                  >
+                    <Box sx={{ height: 60, bgcolor: 'grey.200', borderRadius: 1, mb: 2 }} />
+                    <Box sx={{ height: 30, width: '70%', bgcolor: 'grey.200', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ height: 100, bgcolor: 'grey.200', borderRadius: 1, mb: 2 }} />
+                    <Box sx={{ height: 20, width: '60%', bgcolor: 'grey.200', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ height: 20, width: '80%', bgcolor: 'grey.200', borderRadius: 1, mb: 1 }} />
+                    <Box sx={{ height: 20, width: '50%', bgcolor: 'grey.200', borderRadius: 1, mb: 2 }} />
+                    <Box sx={{ height: 40, bgcolor: 'grey.200', borderRadius: 10, mt: 'auto' }} />
+                  </Box>
+                ))}
+              </Box>
+            ) : (popularEvents && popularEvents.length > 0) ? (
               <Box
                 sx={{
                   position: 'relative',
@@ -336,7 +394,7 @@ const Home: PageComponent = () => {
                   },
                 }}
               >
-                {/* Existing wrapper for infinite scroll */}
+                {console.log('Rendering popular events:', popularEvents)}
                 <Box
                   sx={{
                     display: 'flex',
@@ -630,7 +688,6 @@ const Home: PageComponent = () => {
   );
 };
 
-// Add this to tell the Layout if it's a landing page
 Home.isLandingPage = true;
 
 export const getStaticProps = async () => ({

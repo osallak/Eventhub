@@ -132,12 +132,17 @@ const isValidationErrors = (obj: unknown): obj is Record<string, string[]> => {
 
 export const getEvents = async (
   fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
-  options: { page: number; per_page: number }
+  options: { page: number; per_page: number; popular?: boolean }
 ): Promise<PaginatedResponse<Event>> => {
   const queryParams = new URLSearchParams({
     page: options.page.toString(),
     per_page: options.per_page.toString(),
   });
+  
+  // Add popular filter if specified
+  if (options.popular) {
+    queryParams.append('popular', 'true');
+  }
 
   const url = `${API_ROUTES.Events.List}?${queryParams.toString()}`;
 
