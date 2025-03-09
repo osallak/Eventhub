@@ -62,7 +62,8 @@ interface PaginatedResponse<T> {
 
 export const createEvent = async (
   fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
-  formData: any
+  formData: any,
+  token: string
 ): Promise<any> => {
   // Transform the form data to match API requirements
   const payload: CreateEventPayload = {
@@ -102,27 +103,27 @@ export const createEvent = async (
     payload.currency = formData.currency;
   }
 
-  try {
-    const response = await fetchApi(API_ROUTES.Events.Create, {
-      method: 'POST',
-      data: payload,
-    });
+  const response = await fetchApi(API_ROUTES.Events.Create, {
+    method: 'POST',
+    data: payload,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!response.success) {
-      const errors = isValidationErrors(response.errors)
-        ? response.errors
-        : {
-            general: Array.isArray(response.errors)
-              ? response.errors
-              : [String(response.errors || 'Unknown error')],
-          };
-      throw new ValidationError('Validation failed', errors);
-    }
-
-    return response.data;
-  } catch (error: unknown) {
-    throw error;
+  if (!response.success) {
+    const errors = isValidationErrors(response.errors)
+      ? response.errors
+      : {
+          general: Array.isArray(response.errors)
+            ? response.errors
+            : [String(response.errors || 'Unknown error')],
+        };
+    throw new ValidationError('Validation failed', errors);
   }
+
+  return response.data;
 };
 
 const isValidationErrors = (obj: unknown): obj is Record<string, string[]> => {
@@ -131,29 +132,27 @@ const isValidationErrors = (obj: unknown): obj is Record<string, string[]> => {
 
 export const getEvents = async (
   fetchApi: <T>(url: string, options?: any) => Promise<ApiResponse<T>>,
-  options: { page: number; per_page: number }
+  options: { page: number; per_page: number; popular?: boolean }
 ): Promise<PaginatedResponse<Event>> => {
   const queryParams = new URLSearchParams({
     page: options.page.toString(),
     per_page: options.per_page.toString(),
   });
+  
+  // Add popular filter if specified
+  if (options.popular) {
+    queryParams.append('popular', 'true');
+  }
 
   const url = `${API_ROUTES.Events.List}?${queryParams.toString()}`;
 
-  try {
-    const response = await fetchApi<{ status: string; data: PaginatedResponse<Event> }>(url, {
-      method: 'GET',
-    });
+  const response = await fetchApi<{ status: string; data: PaginatedResponse<Event> }>(url, {
+    method: 'GET',
+  });
 
-    if (!response.success || !response.data || response.data.status !== 'success') {
-      throw new Error(response.errors?.toString() || 'Failed to fetch events');
-    }
-
-    // Add debug log to see the response structure
-
-    // Return the data property from the response
-    return response.data.data;
-  } catch (error: unknown) {
-    throw error;
+  if (!response.success || !response.data || response.data.status !== 'success') {
+    throw new Error(response.errors?.toString() || 'Failed to fetch events');
   }
+
+  return response.data.data;
 };

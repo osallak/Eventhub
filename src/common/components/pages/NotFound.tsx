@@ -5,14 +5,12 @@ import Button from '@mui/material/Button';
 import NextLink from 'next/link';
 import Routes from '@common/defs/routes';
 import { Box } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 
 const NotFound = () => {
-  const { t } = useTranslation(['404']);
   return (
     <Container className="flex flex-col items-center justify-center pt-12" maxWidth="xs">
       <Typography variant="h3" paragraph className="mb-6" textAlign="center">
-        {t('404:not_found')}
+        Page Not Found
       </Typography>
       <Typography
         variant="body1"
@@ -21,9 +19,9 @@ const NotFound = () => {
         textAlign="center"
         sx={{ color: 'text.secondary' }}
       >
-        {t('404:description')}
+        Sorry, we couldn't find the page you're looking for.
         <br />
-        {t('404:suggestion')}
+        Perhaps you've mistyped the URL? Be sure to check your spelling.
       </Typography>
       <NotFoundIllustration
         sx={{
@@ -34,7 +32,7 @@ const NotFound = () => {
       />
       <Box sx={{ textAlign: 'center' }}>
         <Button component={NextLink} href={Routes.Common.Home} size="large" variant="contained">
-          {t('404:return_home')}
+          Return Home
         </Button>
       </Box>
     </Container>

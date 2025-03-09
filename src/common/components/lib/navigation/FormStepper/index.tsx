@@ -8,7 +8,6 @@ import { Any, AnyObject } from '@common/defs/types';
 import { alpha } from '@mui/material/styles';
 import useStepper from '@common/hooks/useStepper';
 import Skeleton from '@mui/material/Skeleton';
-import { useTranslation } from 'react-i18next';
 
 export type StepComponent<T, P = Any> = (
   props: P & {
@@ -52,7 +51,6 @@ const FormStepper = <FormData extends AnyObject, FORM_STEP_ID>({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const formRef = useRef<FormStepRef>();
-  const { t } = useTranslation(['common']);
   const {
     loaded,
     setStepData,
@@ -118,7 +116,7 @@ const FormStepper = <FormData extends AnyObject, FORM_STEP_ID>({
     if (previousLabel) {
       return previousLabel;
     }
-    return isFirstStep ? t('common:cancel') : t('common:previous');
+    return isFirstStep ? 'Cancel' : 'Previous';
   };
   const getNextLabel = () => {
     if (isLastStep && endLabel) {
@@ -130,7 +128,7 @@ const FormStepper = <FormData extends AnyObject, FORM_STEP_ID>({
     if (nextLabel) {
       return nextLabel;
     }
-    return isLastStep ? t('common:finish') : t('common:next');
+    return isLastStep ? 'Finish' : 'Next';
   };
   return (
     <>

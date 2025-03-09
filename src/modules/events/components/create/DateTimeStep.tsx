@@ -3,7 +3,6 @@ import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import TimezoneSelect, { allTimezones } from 'react-timezone-select';
 import { EventFormData } from '../../types/form';
 import { getInputStyles } from './styles/inputStyles';
@@ -22,7 +21,6 @@ interface ValidationErrors {
 }
 
 export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: DateTimeStepProps) => {
-  const { t } = useTranslation();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const theme = useTheme();
@@ -45,7 +43,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
     if (touched.startDate && formData.startDate) {
       const selectedDate = dayjs(formData.startDate).startOf('day');
       if (selectedDate.isBefore(today)) {
-        newErrors.startDate = t('Date cannot be in the past');
+        newErrors.startDate = 'Date cannot be in the past';
         isValid = false;
       }
     }
@@ -56,7 +54,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
       const endTime = dayjs(formData.endTime);
 
       if (endTime.isBefore(startTime)) {
-        newErrors.endTime = t('End time must be after start time');
+        newErrors.endTime = 'End time must be after start time';
         isValid = false;
       }
     }
@@ -79,7 +77,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
         if (endTime.isBefore(startTime)) {
           setErrors((prev) => ({
             ...prev,
-            endTime: t('End time must be after start time'),
+            endTime: 'End time must be after start time',
           }));
           onValidationChange(false);
           return;
@@ -198,7 +196,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
         {/* Event Date and Timezone */}
         <Grid item xs={12} sm={6}>
           <DatePicker
-            label={t('Event Date')}
+            label="Event Date"
             value={convertToDateValue(formData.startDate)}
             onChange={handleDateChange}
             onClose={() => handleBlur('startDate')}
@@ -229,7 +227,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
               timezones={allTimezones}
               labelStyle="altName"
               styles={timezoneSelectStyles}
-              placeholder={t('Select event time zone')}
+              placeholder="Select event time zone"
             />
           </FormControl>
         </Grid>
@@ -238,7 +236,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
         <Grid item xs={12} container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TimePicker
-              label={t('Start Time')}
+              label="Start Time"
               value={convertToDateValue(formData.startTime)}
               onChange={(time) => handleTimeChange('startTime', time)}
               onClose={() => {
@@ -265,7 +263,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
           </Grid>
           <Grid item xs={12} sm={6}>
             <TimePicker
-              label={t('End Time')}
+              label="End Time"
               value={convertToDateValue(formData.endTime)}
               onChange={(time) => handleTimeChange('endTime', time)}
               onClose={() => {
@@ -296,7 +294,7 @@ export const DateTimeStep = ({ formData, onFormChange, onValidationChange }: Dat
             <Box sx={{ width: { xs: '100%', sm: '50%', md: '40%' } }}>
               <TextField
                 fullWidth
-                label={t('Duration')}
+                label="Duration"
                 value={calculateDuration()}
                 InputProps={{ readOnly: true }}
                 variant="outlined"

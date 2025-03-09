@@ -17,9 +17,8 @@ import {
 import Grid from '@mui/material/Grid';
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { Routes } from '@common/constants/routes';
 import { User } from '@modules/users/defs/types';
 
@@ -81,7 +80,6 @@ const Profile = () => {
   const router = useRouter();
   const { username } = router.query;
   const { user, isAuthenticated, initialized } = useAuth();
-  const { t } = useTranslation();
 
   // Get the actual user data from the nested structure
   const actualUser = user?.data || user;
@@ -97,27 +95,11 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'past'>('all');
 
-  console.log('Profile component render:', {
-    hasUser: !!user,
-    user,
-    isAuthenticated,
-    initialized,
-    isPublicView: Boolean(username),
-  });
-
   // If username is in the URL, it's a public view
   const isPublicView = Boolean(username);
 
   // Update userData when user data is available
   useEffect(() => {
-    console.log('Profile userData effect:', {
-      isPublicView,
-      hasUser: !!user,
-      userData: user,
-      userEvents: user?.createdEvents,
-      eventsCount: user?.createdEvents?.length,
-    });
-
     if (isPublicView) {
       // TODO: Fetch public profile data from API
       // For now, show error or redirect
@@ -152,14 +134,6 @@ const Profile = () => {
     const eventDate = dayjs(event.startDate);
     const now = dayjs();
     return eventFilter === 'upcoming' ? eventDate.isAfter(now) : eventDate.isBefore(now);
-  });
-
-  console.log('Profile render:', {
-    hasUserData: !!userData,
-    userDataEvents: userData?.createdEvents,
-    eventsCount: userData?.createdEvents?.length,
-    filteredEvents,
-    filteredCount: filteredEvents.length,
   });
 
   // Add form handlers
@@ -215,7 +189,7 @@ const Profile = () => {
             color: 'text.primary',
           }}
         >
-          {t('Profile')}
+          Profile
         </Typography>
 
         <Stack spacing={4}>
@@ -272,7 +246,7 @@ const Profile = () => {
                           px: 1,
                         }}
                       >
-                        {t('Upload Photo')}
+                        Upload Photo
                       </Typography>
                     </Box>
                   )}
@@ -287,7 +261,7 @@ const Profile = () => {
                   onClick={isEditing ? handleSave : () => setIsEditing(true)}
                   sx={{ minWidth: 150 }} // Ensure consistent width
                 >
-                  {isEditing ? t('Save Changes') : t('Edit Profile')}
+                  {isEditing ? 'Save Changes' : 'Edit Profile'}
                 </LoadingButton>
               </Stack>
 
@@ -295,7 +269,7 @@ const Profile = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label={t('First Name')}
+                    label="First Name"
                     fullWidth
                     value={formData.firstName}
                     onChange={handleInputChange('firstName')}
@@ -303,12 +277,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your first name')}
+                    placeholder="Enter your first name"
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label={t('Last Name')}
+                    label="Last Name"
                     fullWidth
                     value={formData.lastName}
                     onChange={handleInputChange('lastName')}
@@ -316,12 +290,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your last name')}
+                    placeholder="Enter your last name"
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label={t('Username')}
+                    label="Username"
                     fullWidth
                     value={formData.username}
                     onChange={handleInputChange('username')}
@@ -329,12 +303,12 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your username')}
+                    placeholder="Enter your username"
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label={t('Email')}
+                    label="Email"
                     fullWidth
                     value={formData.email}
                     onChange={handleInputChange('email')}
@@ -343,7 +317,7 @@ const Profile = () => {
                     InputProps={{
                       readOnly: !isEditing,
                     }}
-                    placeholder={t('Enter your email')}
+                    placeholder="Enter your email"
                   />
                 </Grid>
               </Grid>
@@ -365,7 +339,7 @@ const Profile = () => {
                   color: 'text.primary',
                 }}
               >
-                {t('Created Events')}
+                Created Events
               </Typography>
               <FormControl
                 size="small"
@@ -380,9 +354,9 @@ const Profile = () => {
                   value={eventFilter}
                   onChange={(e) => setEventFilter(e.target.value as typeof eventFilter)}
                 >
-                  <MenuItem value="all">{t('All Events')}</MenuItem>
-                  <MenuItem value="upcoming">{t('Upcoming')}</MenuItem>
-                  <MenuItem value="past">{t('Past')}</MenuItem>
+                  <MenuItem value="all">All Events</MenuItem>
+                  <MenuItem value="upcoming">Upcoming</MenuItem>
+                  <MenuItem value="past">Past</MenuItem>
                 </Select>
               </FormControl>
             </Stack>
@@ -404,7 +378,7 @@ const Profile = () => {
                   py: 4,
                 }}
               >
-                {t('No events found')}
+                No events found
               </Typography>
             )}
           </Box>
@@ -432,20 +406,7 @@ const ProfilePage = () => {
   const { isAuthenticated, initialized, user } = useAuth();
   const router = useRouter();
 
-  console.log('ProfilePage render:', {
-    isAuthenticated,
-    initialized,
-    hasUser: !!user,
-    currentPath: router.asPath,
-  });
-
   useEffect(() => {
-    console.log('ProfilePage auth effect:', {
-      isAuthenticated,
-      initialized,
-      hasUser: !!user,
-    });
-
     if (!initialized) {
       return;
     }
@@ -458,10 +419,6 @@ const ProfilePage = () => {
   }, [isAuthenticated, initialized, router, user]);
 
   if (!initialized || !isAuthenticated) {
-    console.log('ProfilePage showing loading screen:', {
-      initialized,
-      isAuthenticated,
-    });
     return <LoadingScreen />;
   }
 

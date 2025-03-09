@@ -1,4 +1,4 @@
-import { Paper, Typography, Box } from '@mui/material';
+import { Paper, Typography, Box, TextField } from '@mui/material';
 import { Event } from '../../../types/event';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -6,6 +6,7 @@ import timezone from 'dayjs/plugin/timezone';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PublicIcon from '@mui/icons-material/Public';
+import { DateTimeStep } from '../../create/DateTimeStep';
 
 // Add plugins
 dayjs.extend(utc);
@@ -13,32 +14,15 @@ dayjs.extend(timezone);
 
 interface EventDateTimeProps {
   event: Event;
+  isEditing?: boolean;
+  onEdit?: (dateTime: Partial<Event>) => void;
 }
 
-export const EventDateTime = ({ event }: EventDateTimeProps) => {
-  // Log raw event data first
-  console.log('Raw event data:', {
-    event,
-    rawStartDate: event.startDate,
-    rawStartTime: event.startTime,
-    rawEndTime: event.endTime,
-    eventKeys: Object.keys(event),
-  });
-
+export const EventDateTime = ({ event, isEditing, onEdit }: EventDateTimeProps) => {
   const formatDateTime = (dateStr: string, startTimeStr: string, endTimeStr: string) => {
     const date = dayjs(dateStr);
     const startTime = dayjs(startTimeStr);
     const endTime = dayjs(endTimeStr);
-
-    // Debug log
-    console.log('DateTime formatting:', {
-      dateStr,
-      startTimeStr,
-      endTimeStr,
-      formattedDate: date.format('dddd, MMMM D, YYYY'),
-      formattedStartTime: startTime.format('h:mm A'),
-      formattedEndTime: endTime.format('h:mm A'),
-    });
 
     return {
       date: date.format('dddd, MMMM D, YYYY'),
@@ -46,18 +30,24 @@ export const EventDateTime = ({ event }: EventDateTimeProps) => {
     };
   };
 
-  // Debug log the event data
-  console.log('Event data:', {
-    startDate: event.startDate,
-    startTime: event.startTime,
-    endTime: event.endTime,
-  });
+  const datetime = formatDateTime(event.startDate, event.startTime, event.endTime);
 
-  const datetime = formatDateTime(
-    event.startDate,
-    event.startTime || event.startDate,
-    event.endTime || event.startDate
-  );
+  if (isEditing && onEdit) {
+    return (
+      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Date and Time
+        </Typography>
+        <DateTimeStep
+          formData={event}
+          onFormChange={(field, value) => {
+            onEdit({ [field]: value });
+          }}
+          onValidationChange={() => {}} // We'll handle validation at the form level
+        />
+      </Paper>
+    );
+  }
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>

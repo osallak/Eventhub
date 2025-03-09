@@ -2,6 +2,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Dynamically import the map component with no SSR
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -45,42 +46,65 @@ export const LocationMap = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) {
-      return;
+    // Cleanup previous map instance
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
     }
 
-    const initialCenter = initialCoordinates || [lng, lat];
+    if (!mapContainer.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialCenter,
-      zoom,
-    });
+    try {
+      // Initialize mapbox
+      if (typeof mapboxgl !== 'undefined' && process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-    marker.current = new mapboxgl.Marker({
-      draggable: true,
-    })
-      .setLngLat(initialCenter)
-      .addTo(map.current);
-  }, []);
+        const defaultCoordinates: [number, number] = [-7.2446531, 33.0662038];
+        const coordinates = initialCoordinates || defaultCoordinates;
+
+        const mapInstance = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: coordinates,
+          zoom: 15,
+        });
+
+        // Store map instance
+        map.current = mapInstance;
+
+        // Add marker after map loads
+        mapInstance.on('load', () => {
+          if (marker.current) {
+            marker.current.remove();
+          }
+
+          marker.current = new mapboxgl.Marker({
+            draggable: true,
+          })
+            .setLngLat(coordinates)
+            .addTo(mapInstance);
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [initialCoordinates]);
 
   return (
     <Box
+      ref={mapContainer}
       sx={{
         width: '100%',
-        overflow: 'hidden',
-        '& > div': {
-          width: '100% !important',
-          maxWidth: '100%',
-          '& .mapboxgl-map': {
-            maxWidth: '100%',
-            overflow: 'hidden',
-          },
-        },
+        height: '400px',
+        borderRadius: 1,
       }}
-    >
-      <MapComponent onLocationSelect={onLocationSelect} />
-    </Box>
+    />
   );
 };

@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import 'dayjs/locale/fr';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 const monthsOptions = Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
   value: month,
@@ -29,7 +28,6 @@ interface Props {
 const RHFMonthSelect = (props: Props) => {
   const { name, helperText, label, sx, size } = props;
   const { control, watch, setValue } = useFormContext();
-  const { t } = useTranslation(['common']);
   const [month, setMonth] = useState<string>('');
   const value = watch(name);
   useEffect(() => {
@@ -81,7 +79,7 @@ const RHFMonthSelect = (props: Props) => {
                 }}
               >
                 <MenuItem disabled value="">
-                  <em>{t('common:month')}</em>
+                  <em>Month</em>
                 </MenuItem>
                 {monthsOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>

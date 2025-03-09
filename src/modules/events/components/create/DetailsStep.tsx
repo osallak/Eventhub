@@ -12,8 +12,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { EventFormData } from '../../types/form';
 import { getInputStyles } from './styles/inputStyles';
 
 interface DetailsStepProps {
@@ -22,7 +20,6 @@ interface DetailsStepProps {
 }
 
 export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
-  const { t } = useTranslation();
   const theme = useTheme();
   const inputStyles = getInputStyles(theme);
   const [newRule, setNewRule] = useState('');
@@ -64,9 +61,13 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
           <TextField
             fullWidth
             type="number"
-            label={t('Maximum Participants')}
-            value={formData.maxParticipants || ''}
-            onChange={(e) => onFormChange('maxParticipants', e.target.value)}
+            label="Maximum Participants"
+            value={formData.maxParticipants > 0 ? formData.maxParticipants : ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onFormChange('maxParticipants', value === '' ? -1 : Number(value));
+            }}
+            placeholder="Leave empty for unlimited"
             InputProps={{ inputProps: { min: 1 } }}
             sx={inputStyles}
           />
@@ -77,7 +78,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
           <TextField
             fullWidth
             type="number"
-            label={t('Minimum Age')}
+            label="Minimum Age"
             value={formData.minAge || ''}
             onChange={(e) => onFormChange('minAge', e.target.value)}
             InputProps={{ inputProps: { min: 0 } }}
@@ -95,7 +96,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
                 color="primary"
               />
             }
-            label={t('This is a paid event')}
+            label="This is a paid event"
             sx={{
               color: 'text.secondary',
               mb: 2,
@@ -106,7 +107,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
               <TextField
                 fullWidth
                 type="number"
-                label={t('Price')}
+                label="Price"
                 value={formData.price || ''}
                 onChange={(e) => onFormChange('price', e.target.value)}
                 disabled={!formData.isPaid}
@@ -120,7 +121,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
               <TextField
                 select
                 fullWidth
-                label={t('Currency')}
+                label="Currency"
                 value={formData.currency || ''}
                 onChange={(e) => onFormChange('currency', e.target.value)}
                 disabled={!formData.isPaid}
@@ -146,7 +147,7 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
           <Box sx={{ mb: 2 }}>
             <TextField
               fullWidth
-              label={t('Add Rule')}
+              label="Add Rule"
               value={newRule}
               onChange={(e) => setNewRule(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddRule()}
@@ -198,10 +199,10 @@ export const DetailsStep = ({ formData, onFormChange }: DetailsStepProps) => {
             fullWidth
             multiline
             rows={4}
-            label={t('Additional Notes')}
+            label="Additional Notes"
             value={formData.notes || ''}
             onChange={(e) => onFormChange('notes', e.target.value)}
-            placeholder={t('Any additional information for participants...')}
+            placeholder="Any additional information for participants..."
           />
         </Grid>
       </Grid>

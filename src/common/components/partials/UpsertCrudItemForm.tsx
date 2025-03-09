@@ -16,7 +16,6 @@ import { useSnackbar } from 'notistack';
 import { Tab, Tabs } from '@mui/material';
 import useUploads from '@modules/uploads/hooks/api/useUploads';
 import { useUploadFormContext } from '@common/contexts/UploadFormContext';
-import { useTranslation } from 'react-i18next';
 import _ from 'lodash';
 
 export interface CurrentFormStepRef<
@@ -120,8 +119,6 @@ const UpsertCrudItemForm = <
     uploadsIdsToDelete: [],
     filesToUpload: [],
   };
-
-  const { t } = useTranslation(['common']);
 
   const {
     handleSubmit,
@@ -250,7 +247,7 @@ const UpsertCrudItemForm = <
                       onClick={() => router.push(routes.ReadAll)}
                       sx={{ marginRight: 2 }}
                     >
-                      {t('common:return')}
+                      Return
                     </Button>
                     <LoadingButton
                       size="large"
@@ -258,7 +255,7 @@ const UpsertCrudItemForm = <
                       variant="contained"
                       loading={isSubmitting}
                     >
-                      {t('common:save')}
+                      Save
                     </LoadingButton>
                     {props.afterFooter}
                   </Stack>

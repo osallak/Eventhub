@@ -46,10 +46,6 @@ const useApi = () => {
 
       const method = options?.method ?? (options?.data ? 'POST' : 'GET');
       const url = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
-      const verbose = options?.verbose ?? false;
-
-      if (verbose) {
-      }
 
       const requestOptions = {
         method,

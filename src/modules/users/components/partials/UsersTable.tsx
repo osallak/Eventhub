@@ -8,8 +8,7 @@ import { GridColumns } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 import Namespaces from '@common/defs/namespaces';
 import { CrudRow } from '@common/defs/types';
-import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface Row extends CrudRow {
   email: string;
@@ -18,7 +17,6 @@ interface Row extends CrudRow {
 }
 
 const UsersTable = () => {
-  const { t, i18n } = useTranslation(['user']);
   const columns: GridColumns<Row> = [
     {
       field: 'id',
@@ -27,12 +25,12 @@ const UsersTable = () => {
     },
     {
       field: 'email',
-      headerName: t('user:list.email'),
+      headerName: 'Email',
       flex: 1,
     },
     {
       field: 'roles',
-      headerName: t('user:list.role'),
+      headerName: 'Role',
       type: 'boolean',
       width: 125,
       renderCell: (params) => {
@@ -46,17 +44,13 @@ const UsersTable = () => {
     },
     {
       field: 'createdAt',
-      headerName: t('user:list.created_at'),
+      headerName: 'Created At',
       type: 'dateTime',
       flex: 1,
       renderCell: (params) => dayjs(params.row.createdAt).format('DD/MM/YYYY hh:mm'),
     },
   ];
   const [translatedColumns, setTranslatedColumns] = useState<GridColumns<Row>>(columns);
-
-  useEffect(() => {
-    setTranslatedColumns(columns);
-  }, [t, i18n.language]);
 
   const itemToRow = (item: User): Row => {
     return {

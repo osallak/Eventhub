@@ -1,7 +1,7 @@
 import { ErrorAlert } from '@common/components/ErrorAlert';
 import { LoadingOverlay } from '@common/components/LoadingOverlay';
 import { Routes } from '@common/constants/routes';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 import { BasicInfoStep } from '@modules/events/components/create/BasicInfoStep';
 import { DateTimeStep } from '@modules/events/components/create/DateTimeStep';
 import { DetailsStep } from '@modules/events/components/create/DetailsStep';
@@ -34,6 +34,7 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fetchApi = useApi();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     if (mode === 'edit' && id) {
@@ -151,7 +152,14 @@ const CreateEvent = ({ mode = 'create' }: CreateEventProps) => {
     setError(null);
 
     try {
-      const response = await createEvent(fetchApi, formData);
+      // Get token directly from localStorage like in edit.tsx
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      await createEvent(fetchApi, formData, token);
 
       enqueueSnackbar('Event created successfully', {
         variant: 'success',

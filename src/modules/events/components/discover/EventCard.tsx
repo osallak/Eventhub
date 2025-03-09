@@ -1,5 +1,5 @@
 import { Routes } from '@common/constants/routes';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { Event } from '@modules/events/types/event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
@@ -19,11 +19,9 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const isPastEvent = dayjs(event.startDate).isBefore(dayjs(), 'day');
-
-  console.log('EventCard auth state:', { isAuthenticated }); // Debug log
 
   // Calculate if event is full
   const hasLimitedSpots = event.maxParticipants !== undefined;
@@ -52,7 +50,6 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
   const typeInfo = getEventTypeInfo(event.eventType);
 
   const getJoinButtonState = () => {
-    console.log('getJoinButtonState called with isAuthenticated:', isAuthenticated); // Debug log
     if (!isAuthenticated) {
       return {
         disabled: false,
@@ -102,9 +99,7 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
       const loginUrl = `${Routes.Auth.Login}?returnUrl=${encodeURIComponent(currentPath)}`;
 
       router.push(loginUrl);
-      return;
     }
-    // Handle join logic for authenticated users
   };
 
   const handleEditEvent = () => {
@@ -201,29 +196,27 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
     );
   };
 
-  // Move getLocationInfo before using it
-  const locationInfo = getLocationInfo();
-
-  // Add debug logs
-  console.log('Event data:', {
-    id: event.id,
-    type: event.eventType,
-    venue: event.venueName,
-    city: event.city,
-    location: locationInfo,
-  });
-
   // Only show meeting link section for virtual/hybrid events
   const showMeetingLink = ['virtual', 'hybrid'].includes(event.eventType?.toLowerCase());
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on a button
+    if ((e.target as HTMLElement).tagName === 'BUTTON') {
+      return;
+    }
+    router.push(`/events/${event.id}`);
+  };
+
   return (
     <Card
+      onClick={handleCardClick}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         bgcolor: 'background.paper',
-        transition: 'all 0.2s ease-in-out',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: 'pointer',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: (theme) => theme.shadows[4],
@@ -256,7 +249,7 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
           }}
         />
         <Chip
-          label={event.isPaid ? formatPrice(event.price || 0, event.currency) : 'Free'}
+          label={event.isPaid ? formatPrice(Number(event.price), event.currency) : 'Free'}
           color={event.isPaid ? 'primary' : 'success'}
           size="small"
           sx={{
@@ -344,7 +337,7 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
         </Stack>
       </Box>
 
-      {/* Action Button */}
+      {/* Action Button - Stop propagation to prevent card click when clicking button */}
       <Box
         sx={{
           p: 2,
@@ -356,7 +349,14 @@ export const EventCard = ({ event, isOwner = false }: EventCardProps) => {
         <Button
           variant="contained"
           disabled={buttonState.disabled}
-          onClick={!isAuthenticated ? handleJoinClick : () => router.push(`/events/${event.id}`)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click
+            if (!isAuthenticated) {
+              handleJoinClick();
+            } else {
+              router.push(`/events/${event.id}`);
+            }
+          }}
           sx={{
             minWidth: '140px',
             height: '36px',

@@ -9,7 +9,6 @@ import Box from '@mui/material/Box';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { menuItems, profileMenuItems } from '../defs/menu-items';
 import Footer from './Footer';
 
@@ -22,7 +21,6 @@ const Layout = (props: ILayoutProps) => {
   const { children, isLandingPage = false } = props;
   const [display, setDisplay] = useState(true);
   const underMaintenance = process.env.NEXT_PUBLIC_UNDER_MAINTENANCE === 'true';
-  const { t } = useTranslation('common');
   const router = useRouter();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,10 +64,10 @@ const Layout = (props: ILayoutProps) => {
       >
         <Box sx={{ padding: 1 }}>
           <Typography textAlign="center" marginBottom={2}>
-            {t('maintenance_message')}
+            We are currently performing maintenance.
           </Typography>
           <Typography textAlign="center" marginBottom={2}>
-            {t('maintenance_thanks')}
+            Thank you for your patience.
           </Typography>
           <Button
             style={{
@@ -95,7 +93,7 @@ const Layout = (props: ILayoutProps) => {
             }}
           >
             <ArrowBackIcon />
-            {t('return')}
+            Return
           </Button>
         </Box>
       </Box>

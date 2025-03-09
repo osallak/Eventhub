@@ -1,6 +1,6 @@
 import FormProvider, { RHFTextField } from '@common/components/lib/react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import useAuth, { ResetPasswordInput } from '@modules/auth/hooks/api/useAuth';
+import useAuth, { ResetPasswordInput } from '@modules/auth/hooks/useAuth';
 import { LockOpen } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import Card from '@mui/material/Card';
@@ -10,7 +10,6 @@ import Link from '@mui/material/Link';
 import { useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import Routes from '@common/defs/routes';
-import { useTranslation } from 'react-i18next';
 
 interface ResetPasswordProps {
   token: string;
@@ -18,16 +17,15 @@ interface ResetPasswordProps {
 type ResetPasswordInputForm = Omit<ResetPasswordInput, 'token'>;
 const ResetPassword = (props: ResetPasswordProps) => {
   const { resetPassword } = useAuth();
-  const { t } = useTranslation(['auth', 'common']);
   const ResetPasswordSchema = Yup.object().shape({
     email: Yup.string()
-      .email(t('common:email_format_incorrect'))
-      .required(t('common:field_required')),
-    password: Yup.string().max(191, 'common:field_too_long').required(t('common:field_required')),
+      .email('Email format is incorrect')
+      .required('This field is required'),
+    password: Yup.string().max(191, 'Field is too long').required('This field is required'),
     passwordConfirmation: Yup.string()
-      .max(191, 'common:field_too_long')
-      .required(t('common:field_required'))
-      .oneOf([Yup.ref('password')], t('auth:passwords_not_match')),
+      .max(191, 'Field is too long')
+      .required('This field is required')
+      .oneOf([Yup.ref('password')], 'Passwords do not match'),
   });
   const methods = useForm<ResetPasswordInputForm>({
     resolver: yupResolver(ResetPasswordSchema),
@@ -65,21 +63,21 @@ const ResetPassword = (props: ResetPasswordProps) => {
           fontWeight: 'bold',
         }}
       >
-        {t('auth:change_password')}
+        Change Password
       </Typography>
       <Card sx={{ maxWidth: '450px', margin: 'auto' }}>
         <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={4} sx={{ padding: 5 }}>
             <Grid item xs={12}>
-              <RHFTextField name="email" label={t('common:email')} />
+              <RHFTextField name="email" label="Email" />
             </Grid>
             <Grid item xs={12}>
-              <RHFTextField name="password" label={t('common:password')} type="password" />
+              <RHFTextField name="password" label="Password" type="password" />
             </Grid>
             <Grid item xs={12}>
               <RHFTextField
                 name="passwordConfirmation"
-                label={t('auth:confirm_password')}
+                label="Confirm Password"
                 type="password"
               />
             </Grid>
@@ -92,14 +90,14 @@ const ResetPassword = (props: ResetPasswordProps) => {
                 loadingPosition="start"
                 loading={isSubmitting}
               >
-                {t('auth:change_password')}
+                Change Password
               </LoadingButton>
             </Grid>
             <Grid item xs={12} sx={{ textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                {t('auth:retrieved_password_question')}
+                Remember your password?
                 {` `}
-                <Link href={Routes.Auth.Login}>{t('auth:click_here')}</Link>
+                <Link href={Routes.Auth.Login}>Click here</Link>
               </Typography>
             </Grid>
           </Grid>

@@ -1,6 +1,6 @@
 import { Routes } from '@common/constants/routes';
 import { useTheme as useCustomTheme } from '@common/contexts/ThemeContext';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { AccountCircle } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import DarkModeIcon from '@mui/icons-material/DarkMode';

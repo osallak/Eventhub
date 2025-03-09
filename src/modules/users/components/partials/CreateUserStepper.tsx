@@ -4,7 +4,6 @@ import Step1 from '@modules/users/components/partials/create/Step1';
 import Step2 from '@modules/users/components/partials/create/Step2';
 import useUsers, { CreateOneInput } from '@modules/users/hooks/api/useUsers';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'react-i18next';
 
 enum CREATE_USER_STEP_ID {
   STEP1 = 'step1',
@@ -15,17 +14,16 @@ interface CreateUserStepperProps {}
 const CreateUserStepper = (_props: CreateUserStepperProps) => {
   const { createOne } = useUsers();
   const router = useRouter();
-  const { t } = useTranslation(['user']);
 
   const steps: FormStep<CREATE_USER_STEP_ID>[] = [
     {
       id: CREATE_USER_STEP_ID.STEP1,
-      label: t('user:form.step1_label'),
+      label: 'Basic Information',
       component: Step1,
     },
     {
       id: CREATE_USER_STEP_ID.STEP2,
-      label: t('user:form.step2_label'),
+      label: 'Additional Details',
       component: Step2,
     },
   ];

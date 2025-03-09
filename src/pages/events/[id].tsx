@@ -1,67 +1,133 @@
+import useApi from '@common/hooks/useApi';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { EventPage } from '../../modules/events/components/single/EventPage';
 import { Event } from '../../modules/events/types/event';
-import { useAuth } from '../../modules/auth/hooks/useAuth';
-import { withAuth } from '../../modules/auth/hocs/withAuth';
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import useApi from '@common/hooks/useApi';
-import { AUTH_MODE } from '../../modules/auth/types/auth.types';
+import { useSnackbar } from 'notistack';
 
 interface EventPageProps {
-  initialEvent: Event; // renamed to indicate it's initial data
+  initialEvent: Event;
 }
 
 const SingleEventPage = ({ initialEvent }: EventPageProps) => {
-  const { user } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
   const api = useApi();
-  const [event, setEvent] = useState<Event>(initialEvent);
-  const isOwner = user?.id === event.creator?.id;
+  const { enqueueSnackbar } = useSnackbar();
 
-  // Fetch fresh event data when needed (after join/leave)
+  const [event, setEvent] = useState<Event>(initialEvent);
+  const isOwner = auth.user?.id === event?.creator?.id;
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleJoin = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        enqueueSnackbar('Please login to join events', { variant: 'error' });
+        return;
+      }
+
+      const response = await fetch(
+        new URL(`/api/events/${event.id}/join`, process.env.NEXT_PUBLIC_API_URL).toString(),
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        const updatedEvent = await refreshEventData();
+        if (updatedEvent) {
+          setEvent(updatedEvent);
+          enqueueSnackbar('Successfully joined event!', { variant: 'success' });
+        }
+      } else {
+        enqueueSnackbar(data.message || 'Failed to join event', { variant: 'error' });
+      }
+    } catch (error) {
+      console.error('Error joining event:', error);
+      enqueueSnackbar('An error occurred while joining the event', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const refreshEventData = async () => {
     try {
-      const response = await api(`/events/${event.id}`);
-      if (response.success) {
-        setEvent(response.data);
+      const response = await fetch(
+        new URL(`/api/events/${event.id}`, process.env.NEXT_PUBLIC_API_URL).toString(),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        return data.data;
       }
     } catch (error) {
       console.error('Failed to refresh event data:', error);
     }
-  };
-
-  const handleJoin = async () => {
-    try {
-      const response = await api(`/events/${event.id}/join`, {
-        method: 'POST',
-        displaySuccess: true,
-      });
-      if (response.success) {
-        await refreshEventData();
-      }
-    } catch (error) {
-      console.error('Failed to join event:', error);
-    }
+    return null;
   };
 
   const handleLeave = async () => {
     try {
-      const response = await api(`/events/${event.id}/leave`, {
-        method: 'POST',
-        displaySuccess: true,
-      });
-      if (response.success) {
-        await refreshEventData();
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        enqueueSnackbar('Please login to leave events', { variant: 'error' });
+        return;
+      }
+
+      const response = await fetch(
+        new URL(`/api/events/${event.id}/leave`, process.env.NEXT_PUBLIC_API_URL).toString(),
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        const updatedEvent = await refreshEventData();
+        if (updatedEvent) {
+          setEvent(updatedEvent);
+          enqueueSnackbar('Successfully left event', { variant: 'success' });
+        }
+      } else {
+        enqueueSnackbar(data.message || 'Failed to leave event', { variant: 'error' });
       }
     } catch (error) {
       console.error('Failed to leave event:', error);
+      enqueueSnackbar('Failed to leave event', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEdit = () => {
     router.push(`/events/${event.id}/edit`);
   };
+
+  if (!event || isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <EventPage
@@ -77,31 +143,36 @@ const SingleEventPage = ({ initialEvent }: EventPageProps) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
 
+  if (!id) {
+    return { notFound: true };
+  }
+
   try {
-    // Using fetch for SSR since we can't use hooks here
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`);
+    const url = new URL('/api/events/' + id, process.env.NEXT_PUBLIC_API_URL).toString();
+    const response = await fetch(url);
+    
     const data = await response.json();
 
-    if (!data || data.status === 'error') {
-      return {
-        notFound: true,
-      };
+
+    if (!response.ok) {
+      console.error('Server response not OK:', data);
+      return { notFound: true };
+    }
+
+    if (!data || !data.data) {
+      console.error('Invalid data structure:', data);
+      return { notFound: true };
     }
 
     return {
       props: {
-        initialEvent: data.data, // renamed to match the prop name
+        initialEvent: data.data,
       },
     };
   } catch (error) {
-    console.error('Failed to fetch event:', error);
-    return {
-      notFound: true,
-    };
+    console.error('Error fetching event:', error);
+    return { notFound: true };
   }
 };
 
-export default withAuth(SingleEventPage, {
-  mode: AUTH_MODE.OPTIONAL,
-  redirectUrl: '/auth/login',
-});
+export default SingleEventPage;

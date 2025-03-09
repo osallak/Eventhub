@@ -23,9 +23,8 @@ import {
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/router';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import useAuth from '@modules/auth/hooks/useAuth';
 
 const searchFieldStyles = {
   '& .MuiOutlinedInput-root': {
@@ -101,7 +100,6 @@ const DiscoverEvents = () => {
   const router = useRouter();
   const { category } = router.query;
   const fetchApi = useApi();
-  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
 
   // Initialize filters with category from URL if present
@@ -134,12 +132,12 @@ const DiscoverEvents = () => {
       });
       setAllEvents(response.data as unknown as Event[]);
     } catch (error) {
-      enqueueSnackbar(t('Failed to fetch events'), { variant: 'error' });
+      enqueueSnackbar('Failed to fetch events', { variant: 'error' });
       setAllEvents([]);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchApi, enqueueSnackbar, t]);
+  }, [fetchApi, enqueueSnackbar]);
 
   useEffect(() => {
     fetchEvents();
@@ -336,22 +334,62 @@ const DiscoverEvents = () => {
             <LoadingOverlay />
           ) : (
             <>
-              <Grid container spacing={3}>
-                {filteredEvents.map((event) => {
-                  const isOwner = event.creator?.id === user?.data?.id;
-                  return (
-                    <Grid item xs={12} sm={6} md={4} key={event.id}>
-                      <EventCard event={event} isOwner={!!isOwner} />
-                    </Grid>
-                  );
-                })}
-              </Grid>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
-              />
+              {filteredEvents.length > 0 ? (
+                <>
+                  <Grid container spacing={3}>
+                    {filteredEvents.map((event) => {
+                      const isOwner = event.creator?.id === user?.data?.id;
+                      return (
+                        <Grid item xs={12} sm={6} md={4} key={event.id}>
+                          <EventCard event={event} isOwner={!!isOwner} />
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(_, value) => setPage(value)}
+                    sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
+                  />
+                </>
+              ) : (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 8,
+                    px: 4,
+                    borderRadius: 4,
+                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'),
+                    border: '1px dashed',
+                    borderColor: (theme) =>
+                      theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300',
+                    minHeight: '60vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mb: 4,
+                  }}
+                >
+                  <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
+                    No Events Found
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+                    {searchTerm || Object.values(filters).some(Boolean)
+                      ? "We couldn't find any events matching your search criteria. Try adjusting your filters or search terms."
+                      : 'There are no events available at the moment. Check back later or create your own event!'}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => router.push('/events/create')}
+                    sx={{ px: 4 }}
+                  >
+                    Create Event
+                  </Button>
+                </Box>
+              )}
             </>
           )}
         </Box>
@@ -382,7 +420,7 @@ const DiscoverEvents = () => {
             borderRadius: 2,
           }}
         >
-          Show Filtersssss
+          Show Filters
         </Button>
       </Box>
 
@@ -419,7 +457,7 @@ const DiscoverEvents = () => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Filtersssss
+              Filters
             </Typography>
             <IconButton onClick={() => setMobileFiltersOpen(false)}>
               <CloseIcon />

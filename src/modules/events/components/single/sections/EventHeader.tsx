@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Stack, Chip } from '@mui/material';
 import { Event } from '../../../types/event';
 import EditIcon from '@mui/icons-material/Edit';
+import useAuth from '@modules/auth/hooks/useAuth';
 
 interface EventHeaderProps {
   event: Event;
@@ -19,6 +20,18 @@ export const EventHeader = ({
   onJoin,
   onLeave,
 }: EventHeaderProps) => {
+  const isButtonDisabled =
+    event.maxParticipants && event.participants?.length >= event.maxParticipants;
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (hasJoined) {
+      onLeave?.();
+    } else {
+      onJoin?.();
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -50,9 +63,10 @@ export const EventHeader = ({
             </Button>
           ) : (
             <Button
-              variant={hasJoined ? 'outlined' : 'contained'}
+              variant="contained"
               color={hasJoined ? 'error' : 'primary'}
-              onClick={hasJoined ? onLeave : onJoin}
+              onClick={handleClick}
+              disabled={!hasJoined && isButtonDisabled}
               sx={{ minWidth: 120 }}
             >
               {hasJoined ? 'Leave Event' : 'Join Event'}

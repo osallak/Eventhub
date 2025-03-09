@@ -2,7 +2,7 @@ import { ComponentType, FC, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { AUTH_MODE, WithAuthOptions } from '../types/auth.types';
 import { Routes } from '@common/constants/routes';
-import useAuth from '../hooks/api/useAuth';
+import useAuth from '../hooks/useAuth';
 import { CircularProgress, Box } from '@mui/material';
 
 const withAuth = ({

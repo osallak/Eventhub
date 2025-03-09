@@ -6,7 +6,6 @@ import {
   DialogProps,
   Button,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 
 export interface ConfirmDialogProps extends Omit<DialogProps, 'title' | 'content'> {
   title: React.ReactNode;
@@ -28,7 +27,6 @@ const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   cancellable = cancellable ?? true;
 
-  const { t } = useTranslation(['common']);
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose} {...other}>
       <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle>
@@ -39,7 +37,7 @@ const ConfirmDialog = ({
         <DialogActions>
           {cancellable && (
             <Button color="inherit" onClick={onClose}>
-              {t('common:cancel')}
+              Cancel
             </Button>
           )}
           {action}

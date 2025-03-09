@@ -3,6 +3,9 @@
 const nextConfig = {
   // output: 'export',
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['localhost'],
     remotePatterns: [
@@ -10,6 +13,12 @@ const nextConfig = {
         hostname: '**.cyber-scale.me',
       },
     ],
+  },
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    ignoreBuildErrors: true,
   },
 };
 

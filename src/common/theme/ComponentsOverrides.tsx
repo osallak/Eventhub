@@ -1,10 +1,24 @@
 import { Theme } from '@mui/material/styles/createTheme';
 import { Components } from '@mui/material/styles/components';
+import { GridValidRowModel } from '@mui/x-data-grid';
 
 import { forwardRef } from 'react';
 import NextLink from 'next/link';
 import { LinkProps } from '@mui/material/Link';
 import { Any } from '@common/defs/types';
+
+type StyleProps = {
+  theme: Theme;
+  ownerState: any;
+};
+
+declare module '@mui/material/styles' {
+  interface Components {
+    MuiDataGrid?: {
+      styleOverrides?: Partial<Record<string, any>>;
+    };
+  }
+}
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 

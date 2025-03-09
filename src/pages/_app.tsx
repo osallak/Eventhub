@@ -7,8 +7,8 @@ import SnackbarProvider from '@common/contexts/SnackbarProvider';
 import { ThemeProvider } from '@common/contexts/ThemeContext';
 import Layout from '@common/layout/Layout';
 import GlobalStyles from '@common/theme/GlobalStyles';
-import { AuthProvider } from '@modules/auth/contexts/AuthContext';
-import useAuth from '@modules/auth/hooks/api/useAuth';
+import { AuthProvider } from '@modules/auth/contexts';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { StyledEngineProvider } from '@mui/material/styles';
@@ -72,21 +72,21 @@ const AppWrapper = (props: AppProps) => {
       <CssBaseline />
       <StyledEngineProvider injectFirst>
         <ThemeProvider>
-          <AuthProvider>
-            <GlobalStyles />
-            <DataProvider>
-              <RoutingHistoryProvider>
-                <SnackbarProvider>
+          <SnackbarProvider>
+            <AuthProvider>
+              <GlobalStyles />
+              <DataProvider>
+                <RoutingHistoryProvider>
                   <DialogProvider>
                     <ProgressBar />
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <App {...props} />
                     </LocalizationProvider>
                   </DialogProvider>
-                </SnackbarProvider>
-              </RoutingHistoryProvider>
-            </DataProvider>
-          </AuthProvider>
+                </RoutingHistoryProvider>
+              </DataProvider>
+            </AuthProvider>
+          </SnackbarProvider>
         </ThemeProvider>
       </StyledEngineProvider>
     </>
